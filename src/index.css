@@ -1,0 +1,51 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+@import 'tailwindcss';
+
+@theme {
+  /* =========================
+     Brand
+  ========================= */
+  --color-primary: #c485f8;
+  --color-primary-light: #f1eff4;
+  --color-primary-background: #fbf5ff;
+
+  /* =========================
+     Grayscale
+  ========================= */
+  --color-gray-900: #121212;
+  --color-gray-700: #666666;
+  --color-gray-500: #9d9d9d;
+  --color-gray-300: #cfcfcf;
+  --color-gray-200: #e0e0e0;
+  --color-gray-50: #fcfcfc;
+
+  /* =========================
+     Other
+  ========================= */
+  --color-black: #060600;
+  --color-dark-gray: #31302e;
+  --color-text-black: #000000;
+  --color-white: #ffffff;
+  --color-error: #eb2b2b;
+
+  /* Navigation */
+  --color-nav-active-icon: #f1e5fc;
+
+  /* =========================
+     Typography
+  ========================= */
+  --font-sans: 'Pretendard', Arial, sans-serif;
+
+  /* =========================
+     Radius 
+  ========================= */
+  --radius-button: 10px;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-900);
+  font-family: 'Pretendard', Arial, sans-serif;
+}
