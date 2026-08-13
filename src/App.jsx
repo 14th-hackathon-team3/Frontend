@@ -1,5 +1,7 @@
+import FamilyOnboardingPage from './pages/family/onboarding/FamilyOnboardingPage';
+
 function App() {
-  return <div>엄마 아프지마…</div>;
+  return <FamilyOnboardingPage />;
 }
 
 export default App;
