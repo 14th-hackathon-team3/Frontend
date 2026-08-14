@@ -607,7 +607,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
       </div>
 
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2">
-        <BottomNavigation activeKey="todo" items={navigationItems} onChange={onNavigate} />
+        <BottomNavigation activeKey="todo" items={navigationItems.filter((item) => item.key !== 'record')} onChange={onNavigate} />
       </div>
     </main>
   );

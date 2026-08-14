@@ -36,7 +36,7 @@ const ProfilePage = ({ profile, onBack, onEdit }) => {
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-[402px] flex-col bg-[#edeaf5] pb-[67px]">
       <header className="relative flex h-[112px] items-end justify-center border-b border-gray-300 bg-gray-50 pb-[15px]">
-        <button type="button" onClick={onBack} aria-label="마이페이지로 돌아가기" className="absolute bottom-[15px] left-[28px] flex size-[24px] items-center justify-center"><img src={backButton} alt="" className="h-[17px] w-[10px]" /></button>
+        <button type="button" onClick={onBack} aria-label="마이페이지로 돌아가기" className="absolute bottom-[15px] left-[28px] flex size-[24px] items-center justify-center"><img src={backButton} alt="" className="h-[21px] w-[13px]" /></button>
         <h1 className="text-[20px] font-medium text-text-black">MyPage</h1>
       </header>
       <h2 className="mt-[27px] text-center text-[26px] font-semibold text-primary">my Profile</h2>
