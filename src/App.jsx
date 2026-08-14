@@ -1,7 +1,7 @@
-import RecordPage from './pages/my/record/RecordPage';
+import FamilyOnboardingPage from './pages/family/onboarding/FamilyOnboardingPage';
 
 function App() {
-  return <RecordPage />;
+  return <FamilyOnboardingPage />;
 }
 
 export default App;
