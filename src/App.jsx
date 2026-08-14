@@ -1,5 +1,7 @@
+import RecordPage from './pages/my/record/RecordPage';
+
 function App() {
-  return <div>엄마 아프지마…</div>;
+  return <RecordPage />;
 }
 
 export default App;
