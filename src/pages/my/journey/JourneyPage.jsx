@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import BottomNavigation from '../../../components/BottomNavigation';
 import backButton from '../../../assets/back_button.svg';
 import menuBookIcon from '../../../assets/recoveryjourney_menu_book.svg';
@@ -7,6 +7,8 @@ import folderFlap from '../../../assets/Record_folder_flap.svg';
 import activityFolderFlap from '../../../assets/Record_folder_activity_flap.svg';
 import memoImage from '../../../assets/Record_memo.png';
 import hiddenInfoIcon from '../../../assets/hidden_info.png';
+
+const PRIVATE_CARDS_STORAGE_KEY = 'recoveryJourneyPrivateCards';
 
 const navigationItems = [
   { key: 'journey', label: '회복 여정' },
@@ -170,7 +172,19 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
   const [view, setView] = useState('journey');
   const [isWeekView, setIsWeekView] = useState(false);
   const [privateCard, setPrivateCard] = useState(null);
-  const [privateCards, setPrivateCards] = useState([]);
+  const [privateCards, setPrivateCards] = useState(() => {
+    try {
+      const savedCards = window.localStorage.getItem(PRIVATE_CARDS_STORAGE_KEY);
+      const parsedCards = savedCards ? JSON.parse(savedCards) : [];
+
+      return Array.isArray(parsedCards) ? parsedCards : [];
+    } catch {
+      return [];
+    }
+  });
+  useEffect(() => {
+    window.localStorage.setItem(PRIVATE_CARDS_STORAGE_KEY, JSON.stringify(privateCards));
+  }, [privateCards]);
   const days = ['월', '화', '수', '목', '금', '토', '일'];
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - todayWeekday + (weekOffset * 7));
