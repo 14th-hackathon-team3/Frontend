@@ -4,6 +4,7 @@ import notificationIcon from '../../../assets/Home_notification.svg';
 import waveBackground from '../../../assets/Vector 87.png';
 import milkImage from '../../../assets/milk.png';
 import medicationImage from '../../../assets/image.png';
+import babyImage from '../../../assets/Home_baby.png';
 
 const navigationItems = [
   { key: 'journey', label: '회복 여정' },
@@ -25,6 +26,18 @@ const weekSteps = [
   { label: '5주', position: 'left-[177px]', color: 'bg-primary', current: true },
   { label: '6주', position: 'left-[254px]', color: 'bg-[#cfcfcf]' },
   { label: '8주', position: 'right-[4px]', color: 'bg-[#cfcfcf]' },
+];
+
+const dayMarkers = [
+  { day: 32, left: 6, top: 97 },
+  { day: 33, left: 45, top: 59 },
+  { day: 34, left: 89, top: 31 },
+  { day: 35, left: 138, top: 12 },
+  { day: 36, left: 189, top: 4, current: true },
+  { day: 37, left: 240, top: 12 },
+  { day: 38, left: 289, top: 31 },
+  { day: 39, left: 330, top: 61 },
+  { day: 40, left: 365, top: 100 },
 ];
 
 const RecoveryInfoModal = ({ onClose }) => (
@@ -50,11 +63,18 @@ const Homepage = ({ onNavigate = () => {} }) => {
       <button type="button" aria-label="알림" className="absolute right-[27px] top-[55px] z-10 flex size-[43px] items-center justify-center rounded-full bg-primary"><img src={notificationIcon} alt="" className="size-[22px] brightness-0 invert" /></button>
       <header className="px-[35px] pt-[43px]"><span className="inline-flex rounded-full bg-primary px-[10px] py-[2px] text-[11px] font-semibold tracking-[0.33px] text-white">산후 5주차</span><h1 className="mt-1 text-[24px] font-medium tracking-[-0.48px] text-[#121212]">오늘의 회복 여정, 함께 살펴볼까요?</h1><p className="mt-[6px] text-[12px] tracking-[-0.36px] text-[#666]">출산 5주차 · 회복 여정 36일째</p></header>
 
-      <section className="relative mt-[44px] h-[300px] overflow-hidden" aria-label="회복 여정 Day 36">
-        <img src={waveBackground} alt="" className="absolute -left-[20px] top-[36px] h-[270px] w-[443px] opacity-70" />
-        <div className="absolute left-1/2 top-[82px] size-[106px] -translate-x-1/2 rounded-full bg-[#e8ccff]/80" aria-hidden="true" />
+      <section className="relative mt-0 h-[286px] overflow-hidden" aria-label="회복 여정 Day 36">
+        <div aria-hidden="true" className="absolute -left-[21px] top-[32px] h-[309px] w-[443px] rounded-[50%] bg-[#dfc5f8]" />
+        <img src={waveBackground} alt="" className="absolute -left-[15px] top-[50px] h-[143px] w-[434px] opacity-45" />
+        <img src={babyImage} alt="아기" className="absolute left-[96px] top-[85px] h-[146px] w-[219px] object-cover opacity-80" />
         <p className="absolute left-1/2 top-[191px] -translate-x-1/2 text-[52px] font-bold tracking-[-1px] text-white">Day 36</p>
-        <div className="absolute inset-x-0 top-0 flex justify-center gap-[14px] text-[8px] text-primary"><span className="mt-[39px]">34</span><span className="mt-[20px]">35</span><button type="button" onClick={() => setIsRecoveryInfoOpen(true)} className="relative -mt-[7px] flex size-[31px] items-center justify-center rounded-full bg-[#602dc7] text-[12px] font-semibold text-white">36</button><span className="mt-[20px]">37</span><span className="mt-[39px]">38</span></div>
+        <div className="absolute inset-0 text-[8px] text-primary">
+          {dayMarkers.map(({ day, left, top, current }) => current ? (
+            <button key={day} type="button" onClick={() => setIsRecoveryInfoOpen(true)} className="absolute flex size-[31px] items-center justify-center rounded-full bg-[#602dc7] text-[12px] font-semibold text-white" style={{ left, top }}>{day}</button>
+          ) : (
+            <span key={day} className="absolute flex size-[31px] items-center justify-center rounded-full bg-[#fbf1ff]" style={{ left, top }}>{day}</span>
+          ))}
+        </div>
       </section>
 
       <button type="button" onClick={() => setIsRecoveryInfoOpen(true)} className="mx-auto -mt-[22px] block h-[120px] w-[358px] rounded-[24px] bg-gray-50 px-5 text-left shadow-sm" aria-label="산후 회복 진행 정보 보기">
