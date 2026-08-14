@@ -107,7 +107,7 @@ const calendarDays = [
   { date: 7, label: '일' },
 ];
 
-const TodoPage = () => {
+const TodoPage = ({ onNavigate = () => {} }) => {
   const [activeTab, setActiveTab] = useState('my');
   const [selectedDate, setSelectedDate] = useState(2);
   const [selectedTodo, setSelectedTodo] = useState(null);
@@ -580,7 +580,7 @@ const TodoPage = () => {
       )}
 
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2">
-        <BottomNavigation activeKey="todo" items={navigationItems} onChange={() => {}} />
+        <BottomNavigation activeKey="todo" items={navigationItems} onChange={onNavigate} />
       </div>
     </main>
   );
