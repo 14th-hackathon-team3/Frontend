@@ -143,6 +143,7 @@ const TodoPage = () => {
       id: 4,
       text: '산모에게 물 가져다주기',
       role: 'partner',
+      assignee: '담당자',
       completed: false,
       isPrivate: false,
     },
@@ -150,6 +151,7 @@ const TodoPage = () => {
       id: 5,
       text: '오늘 식사 준비하기',
       role: 'partner',
+      assignee: '담당자',
       completed: false,
       isPrivate: false,
     },
@@ -157,6 +159,7 @@ const TodoPage = () => {
       id: 6,
       text: '아기 돌봄 30분 맡기',
       role: 'partner',
+      assignee: '담당자',
       completed: false,
       isPrivate: false,
     },
@@ -164,6 +167,7 @@ const TodoPage = () => {
       id: 7,
       text: '산모 휴식 시간 확보하기',
       role: 'partner',
+      assignee: '담당자',
       completed: false,
       isPrivate: false,
     },
@@ -171,6 +175,7 @@ const TodoPage = () => {
       id: 8,
       text: '집안일 한 가지 대신하기',
       role: 'partner',
+      assignee: '담당자',
       completed: false,
       isPrivate: false,
     },
@@ -374,7 +379,8 @@ const TodoPage = () => {
           {/* TODO 리스트 */}
           <div className="ml-[27px] mt-[33px] flex flex-col items-start gap-[15px]">
             {sortedTodos.map((todo) => (
-              <div key={todo.id} className="flex h-[19.5px] items-center gap-[15px]">
+              <div key={todo.id} className="flex h-[19.5px] w-[306px] items-center gap-[15px]">
+                {' '}
                 <button
                   type="button"
                   onClick={() => toggleTodo(todo.id)}
@@ -397,7 +403,6 @@ const TodoPage = () => {
                     </svg>
                   )}
                 </button>
-
                 {editingTodoId === todo.id ? (
                   <input
                     type="text"
@@ -438,8 +443,18 @@ const TodoPage = () => {
                     {todo.text}
                   </button>
                 )}
-
                 {todo.role === 'mom' && todo.isPrivate && <PrivateIcon />}
+                {activeTab === 'partner' && (
+                  <span
+                    className="
+                      ml-auto shrink-0
+                      text-[12px] font-normal leading-[18px]
+                      tracking-[-0.36px] text-gray-900
+                    "
+                  >
+                    {todo.assignee}
+                  </span>
+                )}
               </div>
             ))}
           </div>
