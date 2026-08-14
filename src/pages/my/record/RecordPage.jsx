@@ -14,7 +14,7 @@ import ActivityMemoRecordPage from './ActivityMemoRecordPage';
 const navigationItems = [{ key: 'journey', label: '회복 여정' }, { key: 'record', label: '기록' }, { key: 'home', label: '홈' }, { key: 'todo', label: '할 일' }, { key: 'mypage', label: '마이페이지' }];
 const recordCards = [{ id: 'activity-memo', title: '활동량/메모', top: 'top-0', titleTop: 'top-6', background: 'bg-primary/10', flap: activityFolderFlap, tabOpacity: 'opacity-100' }, { id: 'skin-hair', title: '피부/모발', top: 'top-[50px]', titleTop: 'top-[74px]', background: 'bg-primary/40', tabOpacity: 'opacity-40' }, { id: 'pain-feeding', title: '통증/수유', top: 'top-[100px]', titleTop: 'top-[124px]', background: 'bg-primary/60', tabOpacity: 'opacity-60' }, { id: 'mood-sleep', title: '감정/수면', top: 'top-[153px]', titleTop: 'top-[177px]', background: 'bg-primary', tabOpacity: 'opacity-100' }];
 
-const RecordPage = () => {
+const RecordPage = ({ onNavigate = () => {} }) => {
   const [screen, setScreen] = useState('main');
   const openCard = (cardId) => {
     if (cardId === 'mood-sleep') setScreen('mood-sleep');
@@ -37,7 +37,7 @@ const RecordPage = () => {
         {recordCards.map((card) => <button key={`${card.id}-action`} type="button" onClick={() => openCard(card.id)} className={`absolute left-0 w-full ${card.id === 'pain-feeding' ? 'z-30 h-[60px]' : card.id === 'mood-sleep' ? 'top-[160px] z-20 h-[321px]' : 'z-20 h-[53px]'} ${card.id === 'mood-sleep' ? '' : card.top}`} aria-label={`${card.title} 기록하기`} />)}
         {recordCards.map((card) => <span key={`${card.id}-title`} className={`pointer-events-none absolute left-[29px] z-10 ${card.titleTop} text-[20px] font-medium leading-[30px] tracking-[-0.4px] text-white`}>{card.title}</span>)}
       </section>
-      <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2"><BottomNavigation activeKey="record" items={navigationItems} onChange={() => {}} /></div>
+      <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2"><BottomNavigation activeKey="record" items={navigationItems} onChange={onNavigate} /></div>
     </main>
   );
 };
