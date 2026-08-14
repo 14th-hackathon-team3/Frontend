@@ -1,7 +1,7 @@
-import JourneyPage from './pages/my/journey/JourneyPage';
+import FamilyOnboardingPage from './pages/family/onboarding/FamilyOnboardingPage';
 
 function App() {
-  return <JourneyPage />;
+  return <FamilyOnboardingPage />;
 }
 
 export default App;
