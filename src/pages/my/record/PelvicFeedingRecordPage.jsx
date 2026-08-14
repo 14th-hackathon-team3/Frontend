@@ -45,7 +45,7 @@ const PelvicFeedingRecordPage = ({ onBack, onNext }) => {
         <section>
           <h2 className="text-[20px] font-medium leading-[30px] tracking-[-0.4px]">골반저 증상</h2>
           <div className="-mx-[10px] mt-[15px] grid grid-cols-4 gap-[6px]">
-            {pelvicSymptoms.map((symptom) => <ChoiceButton key={symptom} isSelected={pelvicSymptom === symptom} onClick={() => setPelvicSymptom(symptom)} className={`rounded-[15px] ${symptom === '복부 갈라짐' ? 'whitespace-nowrap px-0 text-[7px]' : symptom === '복부 처짐' ? 'whitespace-nowrap px-0 text-[10px]' : 'text-[clamp(12px,3.98vw,16px)]'}`}>{symptom}</ChoiceButton>)}
+            {pelvicSymptoms.map((symptom) => <ChoiceButton key={symptom} isSelected={pelvicSymptom === symptom} onClick={() => setPelvicSymptom(symptom)} className={`rounded-[15px] ${symptom === '복부 갈라짐' ? 'whitespace-nowrap px-0 text-[6px]' : symptom === '복부 처짐' ? 'whitespace-nowrap px-0 text-[10px]' : 'text-[clamp(12px,3.98vw,16px)]'}`}>{symptom}</ChoiceButton>)}
           </div>
         </section>
 

@@ -97,19 +97,22 @@ const PrivateIcon = () => (
   </span>
 );
 
-const calendarDays = [
-  { date: 1, label: '월' },
-  { date: 2, label: '오늘', isToday: true },
-  { date: 3, label: '수' },
-  { date: 4, label: '목' },
-  { date: 5, label: '금' },
-  { date: 6, label: '토' },
-  { date: 7, label: '일' },
-];
+const calendarDays = ['월', '화', '수', '목', '금', '토', '일'];
 
 const TodoPage = ({ onNavigate = () => {} }) => {
   const [activeTab, setActiveTab] = useState('my');
-  const [selectedDate, setSelectedDate] = useState(2);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayWeekday = (today.getDay() + 6) % 7;
+  const [selectedDayIndex, setSelectedDayIndex] = useState(todayWeekday);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - todayWeekday + (weekOffset * 7));
+  const weekDates = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + index);
+    return date;
+  });
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editText, setEditText] = useState('');
@@ -207,7 +210,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
         {/* 캘린더 */}
         <section
           className="
-            h-[120px] w-[360px]
+            relative h-[120px] w-[360px]
             rounded-[20px] bg-gray-50
           "
           aria-label="주간 캘린더"
@@ -225,20 +228,23 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 tracking-[-0.6px] text-gray-900
               "
             >
-              6월
+              {weekDates[0].getMonth() + 1}월
             </p>
 
+            <button type="button" aria-label="이전 주" onClick={() => setWeekOffset((offset) => offset - 1)} className="absolute left-2 top-[54px] text-[22px] text-gray-900">‹</button>
+            <button type="button" aria-label="다음 주" onClick={() => setWeekOffset((offset) => offset + 1)} className="absolute right-2 top-[54px] text-[22px] text-gray-900">›</button>
             <div className="flex h-[61px] w-[305px] items-center gap-[10px]">
-              {calendarDays.map((item) => {
-                const isSelected = selectedDate === item.date;
+              {weekDates.map((date, index) => {
+                const isSelected = selectedDayIndex === index;
+                const isToday = date.getTime() === today.getTime();
 
                 return (
                   <button
-                    key={item.date}
+                    key={date.toISOString()}
                     type="button"
-                    onClick={() => setSelectedDate(item.date)}
+                    onClick={() => setSelectedDayIndex(index)}
                     aria-pressed={isSelected}
-                    aria-label={`${item.date}일 ${item.label}`}
+                    aria-label={`${date.getMonth() + 1}월 ${date.getDate()}일`}
                     className="
                       flex h-[61px] w-[35px]
                       flex-col items-center gap-[12px]
@@ -252,16 +258,16 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                         ${isSelected ? 'bg-primary text-gray-50' : 'text-gray-900'}
                       `}
                     >
-                      {item.date}
+                      {date.getDate()}
                     </span>
 
                     <span
                       className={`
                         text-[12px] tracking-[-0.6px]
-                        ${item.isToday ? 'font-bold text-primary' : 'font-medium text-gray-900'}
+                        ${isToday ? 'font-bold text-primary' : 'font-medium text-gray-900'}
                       `}
                     >
-                      {item.label}
+                      {isToday ? '오늘' : calendarDays[index]}
                     </span>
                   </button>
                 );
