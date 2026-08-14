@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import BottomNavigation from '../../../components/BottomNavigation';
 
@@ -9,6 +9,7 @@ import taskIcon from '../../../assets/navigationbar_task.svg';
 import accountIcon from '../../../assets/navigationbar_account.svg';
 
 import todoStarIcon from '../../../assets/Todo_star.svg';
+import recordInfoIcon from '../../../assets/Record_info.png';
 
 const navigationItems = [
   {
@@ -86,6 +87,25 @@ const TodoPage = () => {
   const [activeTab, setActiveTab] = useState('my');
   const [selectedDate, setSelectedDate] = useState(2);
 
+  const todoScrollRef = useRef(null);
+  const [scrollThumbTop, setScrollThumbTop] = useState(0);
+  const [showRecommendationInfo, setShowRecommendationInfo] = useState(false);
+
+  const handleTodoScroll = (event) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+
+    const maxScroll = scrollHeight - clientHeight;
+
+    // Figma
+    const trackHeight = 309;
+    const thumbHeight = 250;
+    const maxThumbTop = trackHeight - thumbHeight;
+
+    const nextTop = maxScroll > 0 ? (scrollTop / maxScroll) * maxThumbTop : 0;
+
+    setScrollThumbTop(nextTop);
+  };
+
   const [todos, setTodos] = useState([
     // Mom 할 일
     {
@@ -115,6 +135,7 @@ const TodoPage = () => {
       id: 4,
       text: '산모에게 물 가져다주기',
       role: 'partner',
+      todoType: 'assigned',
       completed: false,
       isPrivate: false,
     },
@@ -122,6 +143,7 @@ const TodoPage = () => {
       id: 5,
       text: '오늘 식사 준비하기',
       role: 'partner',
+      todoType: 'assigned',
       completed: false,
       isPrivate: false,
     },
@@ -129,6 +151,7 @@ const TodoPage = () => {
       id: 6,
       text: '아기 돌봄 30분 맡기',
       role: 'partner',
+      todoType: 'common',
       completed: false,
       isPrivate: false,
     },
@@ -136,6 +159,7 @@ const TodoPage = () => {
       id: 7,
       text: '산모 휴식 시간 확보하기',
       role: 'partner',
+      todoType: 'assigned',
       completed: false,
       isPrivate: false,
     },
@@ -143,6 +167,23 @@ const TodoPage = () => {
       id: 8,
       text: '집안일 한 가지 대신하기',
       role: 'partner',
+      todoType: 'assigned',
+      completed: false,
+      isPrivate: false,
+    },
+    {
+      id: 9,
+      text: '세탁기 돌리기',
+      role: 'partner',
+      todoType: 'common',
+      completed: false,
+      isPrivate: false,
+    },
+    {
+      id: 10,
+      text: '간식 챙겨주기',
+      role: 'partner',
+      todoType: 'common',
       completed: false,
       isPrivate: false,
     },
@@ -165,6 +206,14 @@ const TodoPage = () => {
     activeTab === 'my' ? todo.role === 'mom' && !todo.isPrivate : todo.role === 'partner',
   );
   const sortedTodos = [...visibleTodos].sort((a, b) => Number(a.completed) - Number(b.completed));
+
+  const assignedTodos = todos
+    .filter((todo) => todo.role === 'partner' && todo.todoType === 'assigned')
+    .sort((a, b) => Number(a.completed) - Number(b.completed));
+
+  const commonTodos = todos
+    .filter((todo) => todo.role === 'partner' && todo.todoType === 'common')
+    .sort((a, b) => Number(a.completed) - Number(b.completed));
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[402px] bg-primary-light">
@@ -284,7 +333,7 @@ const TodoPage = () => {
           "
           aria-label="할 일 목록"
         >
-          {/* Mom / Partner */}
+          {/* Mom / Family */}
           <div className="ml-[19px] flex h-[50px] w-[320px]">
             <button
               type="button"
@@ -316,70 +365,243 @@ const TodoPage = () => {
 
             <button
               type="button"
-              onClick={() => setActiveTab('partner')}
-              aria-pressed={activeTab === 'partner'}
+              onClick={() => setActiveTab('family')}
+              aria-pressed={activeTab === 'family'}
               className={`
                 flex h-[50px] w-[160px] shrink-0
                 items-center justify-center gap-[10px]
                 rounded-[20px]
-                ${activeTab === 'partner' ? 'bg-primary' : 'bg-primary-background'}
+                ${activeTab === 'family' ? 'bg-primary' : 'bg-primary-background'}
               `}
             >
               <PartnerIcon
                 className={`
                     h-[24px] w-[24px]
-                    ${activeTab === 'partner' ? 'text-primary-background' : 'text-primary'}
+                    ${activeTab === 'family' ? 'text-primary-background' : 'text-primary'}
                 `}
               />
 
               <span
                 className={`
                   text-[16px] font-medium tracking-[0.48px]
-                  ${activeTab === 'partner' ? 'text-primary-background' : 'text-primary'}
+                  ${activeTab === 'family' ? 'text-primary-background' : 'text-primary'}
                 `}
               >
-                Partner
+                Family
               </span>
             </button>
           </div>
 
           {/* TODO 리스트 */}
-          <div className="ml-[27px] mt-[33px] flex flex-col items-start gap-[15px]">
-            {sortedTodos.map((todo) => (
-              <div key={todo.id} className="flex h-[19.5px] items-center gap-[15px]">
-                <button
-                  type="button"
-                  onClick={() => toggleTodo(todo.id)}
-                  className={`
+          <div className="relative ml-[27px] mt-[27px] h-[309px] w-[304px]">
+            <div
+              ref={todoScrollRef}
+              onScroll={handleTodoScroll}
+              className={`
+                flex h-full w-full flex-col items-start gap-[15px]
+                ${activeTab === 'family' ? 'todo-scroll overflow-y-auto' : ''}
+              `}
+            >
+              {activeTab === 'my' ? (
+                sortedTodos.map((todo) => (
+                  <div key={todo.id} className="flex h-[19.5px] w-full items-center gap-[15px]">
+                    <button
+                      type="button"
+                      onClick={() => toggleTodo(todo.id)}
+                      className={`
                         flex h-[19.5px] w-[19.5px] shrink-0
                         items-center justify-center rounded-[4.5px]
                         ${todo.completed ? 'bg-primary' : 'bg-[#D9D9D9]'}
-                    `}
-                  aria-label={todo.completed ? '할 일 완료 취소' : '할 일 완료'}
-                >
-                  {todo.completed && (
-                    <svg width="13" height="10" viewBox="0 0 13 10" fill="none" aria-hidden="true">
-                      <path
-                        d="M1 5L4.5 8.5L12 1"
-                        stroke="white"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </button>
+                      `}
+                      aria-label={todo.completed ? '할 일 완료 취소' : '할 일 완료'}
+                    >
+                      {todo.completed && (
+                        <svg
+                          width="13"
+                          height="10"
+                          viewBox="0 0 13 10"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M1 5L4.5 8.5L12 1"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </button>
 
-                <span
-                  className={`
+                    <span
+                      className={`
                         text-[16px] font-normal text-text-black
                         ${todo.completed ? 'line-through' : ''}
-                  `}
-                >
-                  {todo.text}
-                </span>
-              </div>
-            ))}
+                      `}
+                    >
+                      {todo.text}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex w-full flex-col gap-[15px]">
+                    <div className="relative flex items-center gap-[4px]">
+                      <p className="text-[16px] font-medium leading-normal text-primary">
+                        보호자님을 위한 추천 To-do
+                      </p>
+
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setShowRecommendationInfo((prev) => !prev)}
+                          aria-label="추천 To-do 안내 보기"
+                          aria-expanded={showRecommendationInfo}
+                          className="flex h-[16px] w-[16px] items-center justify-center"
+                        >
+                          <img src={recordInfoIcon} alt="" className="h-[16px] w-[16px]" />
+                        </button>
+
+                        {showRecommendationInfo && (
+                          <div
+                            className="
+                              absolute left-1/2 top-[28px] z-20
+                              w-[185px] -translate-x-1/2
+                              rounded-[10px] bg-gray-900
+                              px-[10px] py-[9px]
+                              text-center text-[9px] font-normal
+                              leading-[14px] text-white
+                            "
+                          >
+                            <span
+                              className="
+                                absolute -top-[8px] left-1/2
+                                h-0 w-0 -translate-x-1/2
+                                border-b-[8px] border-l-[6px] border-r-[6px]
+                                border-b-gray-900 border-l-transparent border-r-transparent
+                              "
+                            />
+                            온보딩에서 입력한 보호자 정보를 바탕으로,
+                            <br />
+                            산모의 회복을 위해 보호자님이 도와주면
+                            <br />
+                            좋은 일을 추천해드려요.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {assignedTodos.map((todo) => (
+                      <div key={todo.id} className="flex h-[19.5px] w-full items-center gap-[15px]">
+                        <button
+                          type="button"
+                          onClick={() => toggleTodo(todo.id)}
+                          className={`
+                            flex h-[19.5px] w-[19.5px] shrink-0
+                            items-center justify-center rounded-[4.5px]
+                            ${todo.completed ? 'bg-primary' : 'bg-[#D9D9D9]'}
+                          `}
+                          aria-label={todo.completed ? '할 일 완료 취소' : '할 일 완료'}
+                        >
+                          {todo.completed && (
+                            <svg
+                              width="13"
+                              height="10"
+                              viewBox="0 0 13 10"
+                              fill="none"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M1 5L4.5 8.5L12 1"
+                                stroke="white"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </button>
+
+                        <span
+                          className={`
+                            text-[16px] font-normal text-text-black
+                            ${todo.completed ? 'line-through' : ''}
+                          `}
+                        >
+                          {todo.text}
+                        </span>
+
+                        <span className="ml-auto mr-[18px] shrink-0 text-[12px] font-normal tracking-[-0.36px] text-gray-900">
+                          {todo.assignee || '담당자'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-[8px] flex w-full flex-col gap-[15px]">
+                    <p className="text-[16px] font-medium leading-normal text-primary">
+                      공통 To-do
+                    </p>
+
+                    {commonTodos.map((todo) => (
+                      <div key={todo.id} className="flex h-[19.5px] w-full items-center gap-[15px]">
+                        <button
+                          type="button"
+                          onClick={() => toggleTodo(todo.id)}
+                          className={`
+                            flex h-[19.5px] w-[19.5px] shrink-0
+                            items-center justify-center rounded-[4.5px]
+                            ${todo.completed ? 'bg-primary' : 'bg-[#D9D9D9]'}
+                          `}
+                          aria-label={todo.completed ? '할 일 완료 취소' : '할 일 완료'}
+                        >
+                          {todo.completed && (
+                            <svg
+                              width="13"
+                              height="10"
+                              viewBox="0 0 13 10"
+                              fill="none"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M1 5L4.5 8.5L12 1"
+                                stroke="white"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          )}
+                        </button>
+
+                        <span
+                          className={`
+                            text-[16px] font-normal text-text-black
+                            ${todo.completed ? 'line-through' : ''}
+                          `}
+                        >
+                          {todo.text}
+                        </span>
+
+                        <span className="ml-auto mr-[18px] shrink-0 text-[12px] font-normal tracking-[-0.36px] text-gray-900">
+                          {todo.assignee || '담당자'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {activeTab === 'family' && (
+              <div
+                className="pointer-events-none absolute right-0 top-0 h-[250px] w-[2px] bg-gray-900"
+                style={{
+                  transform: `translateY(${scrollThumbTop}px)`,
+                }}
+              />
+            )}
           </div>
         </section>
       </div>

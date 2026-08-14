@@ -49,3 +49,16 @@ body {
   color: var(--color-gray-900);
   font-family: 'Pretendard', Arial, sans-serif;
 }
+
+.todo-scroll {
+  scrollbar-width: none;
+
+  background-image: linear-gradient(#e5e5e5, #e5e5e5);
+  background-size: 2px 100%;
+  background-position: right top;
+  background-repeat: no-repeat;
+}
+
+.todo-scroll::-webkit-scrollbar {
+  display: none;
+}
