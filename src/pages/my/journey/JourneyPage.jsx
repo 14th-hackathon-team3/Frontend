@@ -58,9 +58,28 @@ const privacyOptions = [
   '음성메모',
 ];
 
-function JourneyPage() {
+const navigationItems = [
+  { key: 'journey', label: '회복 여정' },
+  { key: 'record', label: '기록' },
+  { key: 'home', label: '홈' },
+  { key: 'todo', label: '할 일' },
+  { key: 'mypage', label: '마이페이지' },
+];
+
+function JourneyPage({ onNavigate = () => {} }) {
   const [viewMode, setViewMode] = useState('day');
-  const [selectedDate, setSelectedDate] = useState(1);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayWeekday = (today.getDay() + 6) % 7;
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(today.getDate());
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - todayWeekday + (weekOffset * 7));
+  const weekDates = days.map((item, index) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + index);
+    return { ...item, date: date.getDate() };
+  });
 
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [privateItems, setPrivateItems] = useState([]);
@@ -171,6 +190,7 @@ function JourneyPage() {
             py-[17px]
           "
         >
+          <p className="absolute left-[28px] top-[17px] z-20 bg-gray-50 pr-1 text-[12px] font-medium text-gray-900">{weekStart.getMonth() + 1}월</p>
           <p
             className="
               font-sans
@@ -225,7 +245,7 @@ function JourneyPage() {
           </button>
 
           <div className="mt-[10px] flex items-start justify-between">
-            {days.map((item) => {
+            {weekDates.map((item) => {
               const selected = selectedDate === item.date;
 
               return (
@@ -279,6 +299,8 @@ function JourneyPage() {
               );
             })}
           </div>
+          <button type="button" onClick={() => { const nextStart = new Date(weekStart); nextStart.setDate(nextStart.getDate() - 7); setWeekOffset((offset) => offset - 1); setSelectedDate(nextStart.getDate()); }} aria-label="이전 주" className="absolute left-[10px] top-[55px] z-10 flex size-[20px] items-center justify-center rounded-full bg-dark-gray text-[16px] leading-none text-white">‹</button>
+          <button type="button" onClick={() => { const nextStart = new Date(weekStart); nextStart.setDate(nextStart.getDate() + 7); setWeekOffset((offset) => offset + 1); setSelectedDate(nextStart.getDate()); }} aria-label="다음 주" className="absolute right-[10px] top-[55px] z-10 flex size-[20px] items-center justify-center rounded-full bg-dark-gray text-[16px] leading-none text-white">›</button>
         </section>
 
         {/* 기록 다시 보기 */}
@@ -426,7 +448,7 @@ function JourneyPage() {
           px-[10px]
         "
       >
-        <BottomNavigation />
+        <BottomNavigation activeKey="journey" items={navigationItems} onChange={onNavigate} />
       </div>
 
       {/* 비공개 설정 바텀시트 */}
