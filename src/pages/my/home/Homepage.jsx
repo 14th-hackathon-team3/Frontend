@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import BottomNavigation from '../../../components/BottomNavigation';
 import notificationIcon from '../../../assets/Home_notification.svg';
 import heroBackground from '../../../assets/Ellipse 839.svg';
@@ -8,6 +8,7 @@ import babyImage from '../../../assets/Home_baby.png';
 import drinkImage from '../../../assets/Home_drink.png';
 import yogaImage from '../../../assets/Home_yoga.svg.svg';
 import progressCardImage from '../../../assets/Container.png';
+import { contentApi } from '../../../api/content';
 
 const navigationItems = [
   { key: 'journey', label: '회복 여정' },
@@ -35,13 +36,13 @@ const dialSlots = [
   { left: 364, top: 128 },
 ];
 
-const RecoveryInfoModal = ({ onClose }) => (
+const RecoveryInfoModal = ({ onClose, stageName }) => (
   <div className="fixed inset-0 z-[60] mx-auto w-full max-w-[402px] bg-[#3b3b3b]/20">
     <div className="absolute left-[calc(50%+7.5px)] top-[251px] w-[327px] -translate-x-1/2 drop-shadow-[0_4px_7.5px_rgba(49,48,46,0.2)]">
       <section role="dialog" aria-modal="true" aria-labelledby="recovery-info-title" className="relative rounded-[20px] bg-[#fcfcfc] pb-4 pr-[10px] pt-[10px]">
         <button type="button" onClick={onClose} aria-label="닫기" className="absolute right-[10px] top-[10px] flex size-5 items-center justify-center text-[23px] font-light leading-none text-black">×</button>
         <div className="px-4 pb-4 pl-[30px] pt-0">
-          <h2 id="recovery-info-title" className="text-left text-[18px] font-medium tracking-[-0.36px] text-black">산후 <span className="text-primary">3~6주차</span></h2>
+          <h2 id="recovery-info-title" className="text-left text-[18px] font-medium tracking-[-0.36px] text-black">산후 <span className="text-primary">{stageName}</span></h2>
           <ul className="mt-[10px] list-disc pl-[18px] text-left text-[11px] leading-[17px] tracking-[-0.33px] text-[#878787]">
         <li>가벼운 집안일, 아기와의 산책</li>
         <li>집에서 정상적인 목욕</li>
@@ -58,8 +59,13 @@ const RecoveryInfoModal = ({ onClose }) => (
 const Homepage = ({ onNavigate = () => {} }) => {
   const [isRecoveryInfoOpen, setIsRecoveryInfoOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(36);
+  const [recoveryStage, setRecoveryStage] = useState({ stage_name: '3~6주차', goal: '일상 기능 회복하기' });
   const dialStartX = useRef(null);
   const didDial = useRef(false);
+
+  useEffect(() => {
+    contentApi.getCurrentStage(5).then(setRecoveryStage).catch(() => {});
+  }, []);
 
   const moveDial = (direction) => {
     setSelectedDay((day) => Math.min(60, Math.max(1, day + direction)));
@@ -109,7 +115,7 @@ const Homepage = ({ onNavigate = () => {} }) => {
 
       <section className="mt-6"><h2 className="ml-[22px] text-[16px] font-medium tracking-[-0.32px] text-[#121212]">지금 나에게 필요한 회복</h2><div className="mt-[9px] flex gap-[13px] overflow-x-auto px-[22px] pb-2 [scrollbar-width:none]">{articles.map((article) => <button key={article.title} type="button" onClick={() => article.page && onNavigate(article.page)} className="w-[160px] shrink-0 overflow-hidden rounded-[13px] bg-gray-50 text-left shadow-sm"><div className={`h-[79px] ${article.imageBackground}`}><img src={article.image} alt="" className={`size-full ${article.imageClass}`} /></div><div className="h-[81px] p-[13px]"><p className="text-[8px] text-[#666]">{article.category}</p><p className="mt-1 whitespace-pre-line text-[11px] font-semibold leading-4 text-[#2b2b2b]">{article.title}</p></div></button>)}</div></section>
       <div className="fixed bottom-[22px] left-1/2 z-20 -translate-x-1/2"><BottomNavigation activeKey="home" items={navigationItems} onChange={onNavigate} /></div>
-      {isRecoveryInfoOpen && <RecoveryInfoModal onClose={() => setIsRecoveryInfoOpen(false)} />}
+      {isRecoveryInfoOpen && <RecoveryInfoModal stageName={recoveryStage.stage_name} onClose={() => setIsRecoveryInfoOpen(false)} />}
     </main>
   );
 };
