@@ -5,6 +5,7 @@ import waveBackground from '../../../assets/Vector 87.png';
 import milkImage from '../../../assets/milk.png';
 import medicationImage from '../../../assets/image.png';
 import babyImage from '../../../assets/Home_baby.png';
+import drinkImage from '../../../assets/Home_drink.png';
 
 const navigationItems = [
   { key: 'journey', label: '회복 여정' },
@@ -15,7 +16,7 @@ const navigationItems = [
 ];
 
 const articles = [
-  { category: 'Drug-Edu', title: '모유 수유 중 약을 먹어도 될까요?', image: milkImage },
+  { category: 'Swellnessy Drink', title: '리프팅 스무디를 통해\n피부 노화를 예방하세요!', image: milkImage, overlay: drinkImage },
   { category: 'Medication', title: '나에게 맞는 맞춤 복약 관리', image: medicationImage },
   { category: 'Recovery', title: '산후 회복을 위한 생활 가이드', image: milkImage },
 ];
@@ -70,7 +71,7 @@ const Homepage = ({ onNavigate = () => {} }) => {
         <p className="absolute left-1/2 top-[191px] -translate-x-1/2 text-[52px] font-bold tracking-[-1px] text-white">Day 36</p>
         <div className="absolute inset-0 text-[8px] text-primary">
           {dayMarkers.map(({ day, left, top, current }) => current ? (
-            <button key={day} type="button" onClick={() => setIsRecoveryInfoOpen(true)} className="absolute flex size-[31px] items-center justify-center rounded-full bg-[#602dc7] text-[12px] font-semibold text-white" style={{ left, top }}>{day}</button>
+            <button key={day} type="button" onClick={() => onNavigate('journey')} className="absolute flex size-[31px] items-center justify-center rounded-full bg-[#602dc7] text-[12px] font-semibold text-white" style={{ left, top }}>{day}</button>
           ) : (
             <span key={day} className="absolute flex size-[31px] items-center justify-center rounded-full bg-[#fbf1ff]" style={{ left, top }}>{day}</span>
           ))}
@@ -81,7 +82,7 @@ const Homepage = ({ onNavigate = () => {} }) => {
         <div className="relative h-full"><div className="absolute left-[17px] right-[17px] top-[56px] h-[2px] bg-[#e6d6f8]" /><div className="absolute left-[17px] top-[28px] h-[28px] w-[50%] rounded-t-full border-t-2 border-primary" />{weekSteps.map((step) => <span key={step.label} className={`absolute top-[48px] ${step.position} flex flex-col items-center text-[9px] ${step.current ? 'font-bold text-[#7b4f9f]' : 'text-[#9ba89a]'}`}><span className={`mb-1 flex size-[13px] items-center justify-center rounded-full ${step.color} ${step.current ? 'ring-4 ring-[#ead4ff]' : ''}`}>{step.completed && <span className="text-[9px] leading-[13px] text-white">✓</span>}</span>{step.label}</span>)}</div>
       </button>
 
-      <section className="mt-5"><h2 className="ml-[30px] text-[20px] font-medium tracking-[-0.4px] text-primary">AAC가 회복을 책임져드릴게요</h2><div className="mt-4 flex gap-[13px] overflow-x-auto px-[32px] pb-2 [scrollbar-width:none]">{articles.map((article) => <button key={article.title} type="button" className="w-[160px] shrink-0 overflow-hidden rounded-[13px] bg-gray-50 text-left shadow-sm"><img src={article.image} alt="" className="h-[79px] w-full object-cover" /><div className="h-[81px] p-[13px]"><p className="text-[8px] text-[#666]">{article.category}</p><p className="mt-1 text-[11px] font-semibold leading-4 text-[#2b2b2b]">{article.title}</p></div></button>)}</div></section>
+      <section className="mt-5"><h2 className="ml-[22px] text-[16px] font-medium tracking-[-0.32px] text-[#121212]">지금 나에게 필요한 회복</h2><div className="mt-[9px] flex gap-[13px] overflow-x-auto px-[22px] pb-2 [scrollbar-width:none]">{articles.map((article) => <button key={article.title} type="button" className="w-[160px] shrink-0 overflow-hidden rounded-[13px] bg-gray-50 text-left shadow-sm"><div className="relative h-[79px]"><img src={article.image} alt="" className="size-full object-cover" />{article.overlay && <img src={article.overlay} alt="리프팅 스무디" className="absolute left-1/2 top-0 h-[84px] w-[55px] -translate-x-1/2 object-cover" />}</div><div className="h-[81px] p-[13px]"><p className="text-[8px] text-[#666]">{article.category}</p><p className="mt-1 whitespace-pre-line text-[11px] font-semibold leading-4 text-[#2b2b2b]">{article.title}</p></div></button>)}</div></section>
       <div className="fixed bottom-[22px] left-1/2 z-20 -translate-x-1/2"><BottomNavigation activeKey="home" items={navigationItems} onChange={onNavigate} /></div>
       {isRecoveryInfoOpen && <RecoveryInfoModal onClose={() => setIsRecoveryInfoOpen(false)} />}
     </main>
