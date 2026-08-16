@@ -1,0 +1,19 @@
+import { apiRequest, tokenStorage } from './client';
+
+export const authApi = {
+  async login({ email, password }) {
+    const data = await apiRequest('/api/accounts/login/', { method: 'POST', body: { email, password } });
+    tokenStorage.setTokens(data);
+    return data;
+  },
+  signup: (payload) => apiRequest('/api/accounts/signup/', { method: 'POST', body: payload }),
+  refresh: async () => {
+    const data = await apiRequest('/api/accounts/token/refresh/', { method: 'POST', body: { refresh: tokenStorage.getRefreshToken() } });
+    tokenStorage.setTokens(data);
+    return data;
+  },
+  me: () => apiRequest('/api/accounts/me/', { auth: true }),
+  logout: () => apiRequest('/api/accounts/logout/', { method: 'POST', auth: true }),
+  uploadPhoto: (payload) => apiRequest('/api/accounts/me/photo/', { method: 'PATCH', body: payload, auth: true }),
+  withdraw: () => apiRequest('/api/accounts/withdraw/', { method: 'DELETE', auth: true }),
+};
