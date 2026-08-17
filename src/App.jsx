@@ -6,6 +6,7 @@ import RecordPage from './pages/my/record/RecordPage';
 import TodoPage from './pages/my/todo/TodoPage';
 import Mypage from './pages/my/mypage/Mypage';
 import RecoveryContentPage from './pages/my/content/RecoveryContentPage';
+import OnboardingPage from './pages/my/onboarding/OnboardingPage';
 
 const pages = {
   home: Homepage,
@@ -14,6 +15,7 @@ const pages = {
   todo: TodoPage,
   mypage: Mypage,
   recoveryContent: RecoveryContentPage,
+  onboarding: OnboardingPage,
 };
 
 function App() {

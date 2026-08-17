@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { authApi } from '../../../api/auth';
 
 const Signup = ({ onBack = () => {}, onComplete = () => {} }) => {
   const [form, setForm] = useState({ id: '', password: '', passwordConfirm: '', name: '' });
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const updateField = (field) => (event) => setForm((current) => ({ ...current, [field]: event.target.value }));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!form.id || !form.password || !form.passwordConfirm || !form.name) {
       setError('모든 항목을 입력해주세요.');
@@ -16,7 +18,20 @@ const Signup = ({ onBack = () => {}, onComplete = () => {} }) => {
       return;
     }
     setError('');
-    onComplete(form);
+    setIsSubmitting(true);
+    try {
+      const data = await authApi.signup({
+        email: form.id,
+        password: form.password,
+        password_confirm: form.passwordConfirm,
+        name: form.name,
+      });
+      onComplete(data);
+    } catch (requestError) {
+      setError(requestError.message || '회원가입에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const fields = [
@@ -32,7 +47,7 @@ const Signup = ({ onBack = () => {}, onComplete = () => {} }) => {
       <form onSubmit={handleSubmit} className="mt-[55px] space-y-10">
         {fields.map((field) => <label key={field.key} className="flex h-[39px] items-end gap-[50px]"><span className="flex h-[39px] w-[62px] items-center py-[10px] text-[16px] text-[#020913]">{field.label}</span><input value={form[field.key]} onChange={updateField(field.key)} type={field.type} autoComplete={field.autoComplete} placeholder={field.placeholder} className="h-[39px] w-[250px] rounded-[10px] border border-[#848991] bg-white px-3 text-[12px] text-text-black outline-none placeholder:text-[#848991] focus:border-primary" /></label>)}
         {error && <p className="pt-1 text-center text-[12px] text-[#eb2b2b]">{error}</p>}
-        <button type="submit" className="absolute left-[42px] top-[734px] h-[50px] w-[320px] rounded-[30px] bg-primary text-[16px] font-bold text-white">가입완료 →</button>
+        <button type="submit" disabled={isSubmitting} className="absolute left-[42px] top-[734px] h-[50px] w-[320px] rounded-[30px] bg-primary text-[16px] font-bold text-white disabled:opacity-60">{isSubmitting ? '가입 중...' : '가입완료 →'}</button>
       </form>
       <div className="absolute bottom-0 left-1/2 h-[31px] w-full max-w-[402px] -translate-x-1/2"><span className="absolute bottom-[9px] left-1/2 h-1 w-[120px] -translate-x-1/2 rounded-full bg-black" /></div>
     </main>

@@ -25,9 +25,15 @@ export class ApiError extends Error {
   }
 }
 
-export const apiRequest = async (path, { method = 'GET', body, auth = false } = {}) => {
+const parseResponse = async (response) => {
+  if (response.status === 204) return null;
+  return response.json().catch(() => null);
+};
+
+const request = async (path, { method, body, auth }) => {
   const headers = { Accept: 'application/json' };
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const isFormData = body instanceof FormData;
+  if (body !== undefined && !isFormData) headers['Content-Type'] = 'application/json';
   if (auth) {
     const accessToken = tokenStorage.getAccessToken();
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
@@ -36,12 +42,36 @@ export const apiRequest = async (path, { method = 'GET', body, auth = false } = 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
   });
-  const data = response.status === 204 ? null : await response.json().catch(() => null);
+  const data = await parseResponse(response);
+
+  return { response, data };
+};
+
+export const apiRequest = async (path, { method = 'GET', body, auth = false, retry = true } = {}) => {
+  let { response, data } = await request(path, { method, body, auth });
+
+  if (auth && retry && response.status === 401 && tokenStorage.getRefreshToken()) {
+    const refreshResult = await request('/api/accounts/token/refresh/', {
+      method: 'POST',
+      body: { refresh: tokenStorage.getRefreshToken() },
+      auth: false,
+    });
+
+    if (refreshResult.response.ok && refreshResult.data?.access) {
+      tokenStorage.setTokens(refreshResult.data);
+      ({ response, data } = await request(path, { method, body, auth }));
+    } else {
+      tokenStorage.clear();
+    }
+  }
 
   if (!response.ok) {
-    const message = data?.detail || data?.message || '요청을 처리하지 못했습니다.';
+    const fieldMessage = data && typeof data === 'object'
+      ? Object.values(data).flat().find((value) => typeof value === 'string')
+      : null;
+    const message = data?.detail || data?.message || fieldMessage || '요청을 처리하지 못했습니다.';
     throw new ApiError(message, response.status, data);
   }
   return data;

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { careApi } from '../../../api/care';
 
 import Header from '../../../components/Header';
 import ProgressBar from '../../../components/ProgressBar';
@@ -9,8 +10,10 @@ import FeedingStep from '../../../components/onboarding/FeedingStep';
 import PainStep from '../../../components/onboarding/PainStep';
 import ProcessingStep from '../../../components/onboarding/ProcessingStep';
 
-function OnboardingPage() {
+function OnboardingPage({ onNavigate = () => {} }) {
   const [step, setStep] = useState(1);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     birthType: '',
@@ -26,20 +29,28 @@ function OnboardingPage() {
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 4) {
       setStep((prev) => prev + 1);
       return;
     }
 
     if (step === 4) {
-      console.log('온보딩 최종 데이터:', formData);
-
-      // 추후 API 연동
-      // 예:
-      // await postOnboarding(formData);
-
-      setStep(5);
+      setError('');
+      setIsSubmitting(true);
+      try {
+        await careApi.createOnboarding({
+          birth_type: formData.birthType,
+          birth_date: formData.birthDate,
+          feeding_type: formData.feedingType,
+          pain_area: formData.painArea,
+        });
+        setStep(5);
+      } catch (requestError) {
+        setError(requestError.message || '온보딩 정보를 저장하지 못했습니다.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -53,10 +64,7 @@ function OnboardingPage() {
   };
 
   const handleSkip = () => {
-    console.log('온보딩 건너뛰기');
-
-    // 추후 홈 화면 이동
-    // navigate('/home');
+    onNavigate('home');
   };
 
   // Processing 화면
@@ -83,6 +91,7 @@ function OnboardingPage() {
       </div>
 
       <main className="px-[30px]">
+        {error && <p className="mt-3 text-center text-sm text-error">{error}</p>}
         {/* 진행바 */}
         <ProgressBar
           current={step}
@@ -103,6 +112,7 @@ function OnboardingPage() {
               updateFormData('birthType', value)
             }
             onNext={handleNext}
+            disabled={isSubmitting}
           />
         )}
 
