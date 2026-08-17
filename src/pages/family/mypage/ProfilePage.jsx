@@ -2,7 +2,7 @@ import { useState } from 'react';
 import backButton from '../../../assets/back_button.svg';
 import profileIcon from '../../../assets/Mypage_profile.svg';
 import nameIcon from '../../../assets/Mypage_name.svg';
-import idIcon from '../../../assets/Mypage_ID.svg';
+import idIcon from '../../../assets/mypage_ID.svg';
 import passwordIcon from '../../../assets/Mypage_password.svg';
 import profileEditIcon from '../../../assets/Mypage_profileedit.svg';
 import logoutIcon from '../../../assets/Mypage_logout.svg';
