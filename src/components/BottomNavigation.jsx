@@ -89,7 +89,14 @@ const NavigationIcon = ({ iconKey, className = '' }) => {
   }
 };
 
-const BottomNavigation = ({ activeKey, onChange, items = [], className = '' }) => {
+const BottomNavigation = ({
+  activeKey,
+  onChange,
+  items = [],
+  className = '',
+  activeBgClass = 'bg-primary',
+  activeIconClass = 'text-nav-active-icon',
+}) => {
   return (
     <nav
       className={`
@@ -114,12 +121,12 @@ const BottomNavigation = ({ activeKey, onChange, items = [], className = '' }) =
               flex h-[55px] w-[55px] shrink-0
               items-center justify-center
               rounded-full transition-colors
-              ${isActive ? 'bg-primary' : 'bg-dark-gray'}
+              ${isActive ? activeBgClass : 'bg-dark-gray'}
             `}
           >
             <NavigationIcon
               iconKey={item.key}
-              className={isActive ? 'text-nav-active-icon' : 'text-gray-500'}
+              className={isActive ? activeIconClass : 'text-gray-500'}
             />
           </button>
         );
