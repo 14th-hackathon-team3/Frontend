@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="626.751" height="612.735" viewBox="0 0 626.751 612.735" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Polygon 3" filter="url(#filter0_f_0_179)">
+<path d="M275.867 22.1065C294.108 -0.344738 327.782 -1.47921 347.599 19.5944C513.903 196.451 564.077 332.793 620.567 545.757C628.943 577.335 605.021 608.235 572.352 608.235H54.3205C19.8768 608.235 -4.22958 574.128 7.50405 541.744C98.1042 291.698 167.884 155.015 275.867 22.1065Z" fill="url(#paint0_radial_0_179)"/>
+</g>
+<defs>
+<filter id="filter0_f_0_179" x="0" y="0" width="626.751" height="612.735" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="2.25" result="effect1_foregroundBlur_0_179"/>
+</filter>
+<radialGradient id="paint0_radial_0_179" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(310.842 295.235) rotate(90) scale(414.5 431.688)">
+<stop offset="0.15" stop-color="#EBE9FF"/>
+<stop offset="1" stop-color="#6D68B1" stop-opacity="0.8"/>
+</radialGradient>
+</defs>
+</svg>
