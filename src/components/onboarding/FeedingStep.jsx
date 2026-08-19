@@ -1,11 +1,7 @@
 import SelectButton from '../SelectButton';
 import Button from '../Button';
 
-function FeedingStep({
-  value,
-  onChange,
-  onNext,
-}) {
+function FeedingStep({ value, onChange, onNext }) {
   return (
     <>
       <section className="mt-[10px]">
@@ -21,24 +17,15 @@ function FeedingStep({
       </section>
 
       <div className="mt-[64px] flex flex-col gap-[25px]">
-        <SelectButton
-          selected={value === 'breastfeeding'}
-          onClick={() => onChange('breastfeeding')}
-        >
+        <SelectButton selected={value === 'breast'} onClick={() => onChange('breast')}>
           모유수유
         </SelectButton>
 
-        <SelectButton
-          selected={value === 'formula'}
-          onClick={() => onChange('formula')}
-        >
+        <SelectButton selected={value === 'formula'} onClick={() => onChange('formula')}>
           분유수유
         </SelectButton>
 
-        <SelectButton
-          selected={value === 'mixed'}
-          onClick={() => onChange('mixed')}
-        >
+        <SelectButton selected={value === 'mixed'} onClick={() => onChange('mixed')}>
           혼합수유
         </SelectButton>
       </div>
