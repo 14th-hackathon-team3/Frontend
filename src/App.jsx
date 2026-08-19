@@ -12,6 +12,7 @@ import MyTodoPage from './pages/my/todo/TodoPage';
 import MyMypage from './pages/my/mypage/Mypage';
 import RecoveryContentPage from './pages/my/content/RecoveryContentPage';
 import MyOnboardingPage from './pages/my/onboarding/OnboardingPage';
+import MyRecoveryGuidePage from './pages/my/recovery/RecoveryGuidePage';
 
 // 가족 페이지
 import FamilyHomepage from './pages/family/home/Homepage';
@@ -19,6 +20,7 @@ import FamilyJourneyPage from './pages/family/journey/JourneyPage';
 import FamilyTodoPage from './pages/family/todo/TodoPage';
 import FamilyMypage from './pages/family/mypage/Mypage';
 import FamilyOnboardingPage from './pages/family/onboarding/FamilyOnboardingPage';
+import FamilyRecoveryGuidePage from './pages/family/recovery/FamilyRecoveryGuidePage';
 
 const myPages = {
   home: MyHomepage,
@@ -27,6 +29,7 @@ const myPages = {
   todo: MyTodoPage,
   mypage: MyMypage,
   recoveryContent: RecoveryContentPage,
+  recoveryGuide: MyRecoveryGuidePage,
   onboarding: MyOnboardingPage,
 };
 
@@ -35,6 +38,7 @@ const familyPages = {
   journey: FamilyJourneyPage,
   todo: FamilyTodoPage,
   mypage: FamilyMypage,
+  recoveryGuide: FamilyRecoveryGuidePage,
   onboarding: FamilyOnboardingPage,
 };
 

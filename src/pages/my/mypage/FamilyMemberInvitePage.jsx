@@ -14,8 +14,8 @@ const FamilyMemberInvitePage = ({ onBack }) => {
     groupsApi.getMyGroup()
       .then((group) => {
         if (!isActive) return;
-        setInviteCode(group?.invite_code ?? group?.group?.invite_code ?? '');
-        if (!group?.invite_code && !group?.group?.invite_code) setError('초대 코드를 확인하지 못했습니다.');
+        setInviteCode(group.invite_code);
+        if (!group.invite_code) setError('초대 코드를 확인하지 못했습니다.');
       })
       .catch((requestError) => {
         if (isActive) setError(requestError.message || '초대 링크를 불러오지 못했습니다.');

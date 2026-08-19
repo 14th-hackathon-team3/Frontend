@@ -35,6 +35,8 @@ const ActivityMemoRecordPage = ({ onBack, onSave }) => {
     if (isMemoFocused) memoRef.current?.focus();
   }, [isMemoFocused]);
 
+  const saveRecord = () => onSave({ activityTime, activityType, memo });
+
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[108px]">
       <header className="flex h-[74px] items-center justify-center border-b border-gray-200 bg-gray-50">
@@ -50,7 +52,7 @@ const ActivityMemoRecordPage = ({ onBack, onSave }) => {
             <h2 className="ml-[6px] text-[20px] font-medium leading-[30px] tracking-[-0.4px]">자유 메모</h2>
             <textarea ref={memoRef} value={memo} onChange={(event) => setMemo(event.target.value)} onBlur={() => setIsMemoFocused(false)} placeholder="통증, 감정, 증상 등을 자유롭게 작성해주세요." className="mt-[22px] h-[150px] w-full resize-none rounded-[18px] border border-[#cfcfcf] bg-transparent px-[21px] py-[25px] text-[12px] leading-5 outline-none placeholder:text-[#999]" />
           </section>
-          <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={onSave} className="absolute bottom-[54px] left-[32px] h-[50px] w-[341px] rounded-[10px] bg-[#31302e] text-[16px] font-semibold text-white">저장</button>
+          <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={saveRecord} className="absolute bottom-[54px] left-[32px] h-[50px] w-[341px] rounded-[10px] bg-[#31302e] text-[16px] font-semibold text-white">저장</button>
         </>
       ) : <>
 
@@ -74,7 +76,7 @@ const ActivityMemoRecordPage = ({ onBack, onSave }) => {
         <textarea value={memo} onChange={(event) => setMemo(event.target.value)} onFocus={() => setIsMemoFocused(true)} placeholder="통증, 감정, 증상 등을 자유롭게 작성해주세요." className="mt-[22px] h-[150px] w-full resize-none rounded-[18px] border border-[#cfcfcf] bg-transparent px-[21px] py-[25px] text-[12px] leading-5 outline-none placeholder:text-[#999]" />
       </section>
 
-      <button type="button" onClick={onSave} className="absolute bottom-[54px] left-[32px] h-[50px] w-[341px] rounded-[10px] bg-[#31302e] text-[16px] font-semibold text-white">저장</button>
+      <button type="button" onClick={saveRecord} className="absolute bottom-[54px] left-[32px] h-[50px] w-[341px] rounded-[10px] bg-[#31302e] text-[16px] font-semibold text-white">저장</button>
 
       {isPickerOpen && (
         <div className="absolute inset-0 z-20 flex items-end bg-black/10">

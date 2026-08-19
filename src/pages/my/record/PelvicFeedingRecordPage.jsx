@@ -79,7 +79,7 @@ const PelvicFeedingRecordPage = ({ onBack, onNext }) => {
 
         <div className="-mx-[13px] mt-4 flex gap-[19px]">
           <button type="button" onClick={onBack} className="h-[51px] flex-1 rounded-[10px] bg-gray-50 text-[16px] text-[#31302e]">이전</button>
-          <button type="button" onClick={onNext} className="h-[51px] flex-1 rounded-[10px] bg-[#31302e] text-[16px] text-white">다음</button>
+          <button type="button" onClick={() => onNext({ pelvicSymptom, severity, feedingMethod })} className="h-[51px] flex-1 rounded-[10px] bg-[#31302e] text-[16px] text-white">다음</button>
         </div>
       </div>
     </main>

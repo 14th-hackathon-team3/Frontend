@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { authApi } from '../../../api/auth';
+import { groupsApi } from '../../../api/groups';
 import BottomNavigation from '../../../components/BottomNavigation';
 import ToggleButton from '../../../components/ToggleButton';
 import ProfilePage from './ProfilePage';
@@ -14,9 +16,9 @@ const navigationItems = [
 ];
 
 const notificationItems = [
-  { key: 'todoCreated', label: 'todo 생성 알림' },
-  { key: 'familyTodoCompleted', label: '가족 todo 완료 알림' },
-  { key: 'familyTodoPending', label: '가족 todo 미실행 알림' },
+  { key: 'todoCreated', apiKey: 'notify_todo_created', label: 'todo 생성 알림' },
+  { key: 'familyTodoCompleted', apiKey: 'notify_family_todo_completed', label: '가족 todo 완료 알림' },
+  { key: 'familyTodoPending', apiKey: 'notify_family_todo_incomplete', label: '가족 todo 미실행 알림' },
 ];
 
 const Mypage = ({ onNavigate = () => {} }) => {
@@ -28,12 +30,52 @@ const Mypage = ({ onNavigate = () => {} }) => {
   const [view, setView] = useState('main');
   const [profile, setProfile] = useState({ name: '홍길동', id: 'Hong_gildong', password: 'Becomingmom!123', birthDate: '2026-07-13', photo: null });
 
-  const toggleNotification = (key) => {
-    setNotifications((items) => ({ ...items, [key]: !items[key] }));
+  useEffect(() => {
+    let isActive = true;
+    Promise.allSettled([authApi.me(), groupsApi.getNotificationSettings()]).then(([userResult, settingsResult]) => {
+      if (!isActive) return;
+      if (userResult.status === 'fulfilled') {
+        const user = userResult.value;
+        setProfile((current) => ({
+          ...current,
+          name: user.name,
+          id: user.email,
+          password: '',
+          photo: user.profile_image,
+        }));
+      }
+      if (settingsResult.status === 'fulfilled') {
+        const settings = settingsResult.value;
+        setNotifications((current) => Object.fromEntries(notificationItems.map((item) => [item.key, settings[item.apiKey] ?? current[item.key]])));
+      }
+    });
+    return () => { isActive = false; };
+  }, []);
+
+  const toggleNotification = async (key) => {
+    const item = notificationItems.find((notification) => notification.key === key);
+    const nextValue = !notifications[key];
+    setNotifications((items) => ({ ...items, [key]: nextValue }));
+    try {
+      await groupsApi.updateNotificationSettings({ [item.apiKey]: nextValue });
+    } catch (requestError) {
+      console.error(requestError);
+      setNotifications((items) => ({ ...items, [key]: !nextValue }));
+    }
   };
 
-  if (view === 'profile') return <ProfilePage profile={profile} onBack={() => setView('main')} onEdit={() => setView('edit')} onLogout={() => setView('main')} />;
-  if (view === 'edit') return <ProfileEditPage initialProfile={profile} onBack={() => setView('profile')} onSave={(updatedProfile) => { setProfile(updatedProfile); setView('profile'); }} />;
+  const saveProfile = async (updatedProfile) => {
+    await authApi.updateMe({ name: updatedProfile.name });
+    if (updatedProfile.photoFile) {
+      const photoResult = await authApi.uploadPhoto(updatedProfile.photoFile);
+      updatedProfile.photo = photoResult.profile_image;
+    }
+    setProfile({ ...updatedProfile, password: '', photoFile: undefined });
+    setView('profile');
+  };
+
+  if (view === 'profile') return <ProfilePage profile={profile} onBack={() => setView('main')} onEdit={() => setView('edit')} onLogout={async () => { await authApi.logout(); onNavigate('login'); }} />;
+  if (view === 'edit') return <ProfileEditPage initialProfile={profile} onBack={() => setView('profile')} onSave={saveProfile} />;
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[132px]">
@@ -45,7 +87,7 @@ const Mypage = ({ onNavigate = () => {} }) => {
 
       <section className="mx-auto mt-[23px] w-[360px] space-y-[15px]">
         <button type="button" onClick={() => setView('profile')} className="flex h-[77px] w-full items-center justify-between rounded-[13px] bg-[#31302e] px-[17px] text-left">
-          <span className="flex flex-col gap-[3px]"><strong className="text-[16px] text-white">홍길동</strong><span className="text-[14px] text-[#fbfbff]">ID: Hong_gildong</span></span>
+          <span className="flex flex-col gap-[3px]"><strong className="text-[16px] text-white">{profile.name}</strong><span className="text-[14px] text-[#fbfbff]">ID: {profile.id}</span></span>
           <span aria-hidden="true" className="text-[28px] leading-none text-white">›</span>
         </button>
 
@@ -68,7 +110,7 @@ const Mypage = ({ onNavigate = () => {} }) => {
           </div>
         </section>
 
-        <button type="button" className="flex h-[56px] w-full items-center rounded-[13px] bg-[#31302e] px-[17px] text-[14px] font-bold text-[#ff9999]">회원 탈퇴</button>
+        <button type="button" onClick={async () => { await authApi.withdraw(); onNavigate('login'); }} className="flex h-[56px] w-full items-center rounded-[13px] bg-[#31302e] px-[17px] text-[14px] font-bold text-[#ff9999]">회원 탈퇴</button>
       </section>
 
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2"><BottomNavigation activeKey="mypage" items={navigationItems} onChange={onNavigate} /></div>

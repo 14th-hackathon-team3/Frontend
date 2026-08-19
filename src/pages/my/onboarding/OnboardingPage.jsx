@@ -10,6 +10,12 @@ import FeedingStep from '../../../components/onboarding/FeedingStep';
 import PainStep from '../../../components/onboarding/PainStep';
 import ProcessingStep from '../../../components/onboarding/ProcessingStep';
 
+const feedingTypeValues = {
+  breastfeeding: 'breast',
+  formula: 'formula',
+  mixed: 'mixed',
+};
+
 function OnboardingPage({ onNavigate = () => {} }) {
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
@@ -40,10 +46,9 @@ function OnboardingPage({ onNavigate = () => {} }) {
       setIsSubmitting(true);
       try {
         await careApi.createOnboarding({
-          birth_type: formData.birthType,
-          birth_date: formData.birthDate,
-          feeding_type: formData.feedingType,
-          pain_area: formData.painArea,
+          delivery_type: formData.birthType,
+          delivery_date: formData.birthDate,
+          initial_feeding_type: feedingTypeValues[formData.feedingType],
         });
         setStep(5);
       } catch (requestError) {

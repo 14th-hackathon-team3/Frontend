@@ -5,8 +5,8 @@ import deleteIcon from '../../../assets/delete.svg';
 import deleteModalIcon from '../../../assets/Mypage_delete_modal.svg';
 import tickIcon from '../../../assets/tick-circle.svg';
 
-const getMemberId = (member) => member.membership_id ?? member.id;
-const getMemberLabel = (member) => member.relationship ?? member.relation ?? member.nickname ?? member.user?.name ?? member.name ?? member.user?.email ?? '가족 구성원';
+const getMemberId = (member) => member.membership_id;
+const getMemberLabel = (member) => member.relation || member.name || member.email;
 
 const DeleteConfirmationModal = ({ onCancel, onConfirm, isDeleting }) => (
   <div className="fixed inset-0 z-30 mx-auto flex w-full max-w-[402px] items-center justify-center bg-[#3b3b3b]/20 px-[37px]">
@@ -37,9 +37,8 @@ const FamilyMemberDeletePage = ({ onBack }) => {
     groupsApi.getMembers()
       .then((data) => {
         if (!isActive) return;
-        const nextMembers = Array.isArray(data) ? data : data?.results ?? data?.members ?? [];
-        setMembers(nextMembers);
-        if (nextMembers.length > 0) setSelectedMembers(new Set([getMemberId(nextMembers[0])]));
+        setMembers(data);
+        if (data.length > 0) setSelectedMembers(new Set([getMemberId(data[0])]));
       })
       .catch((requestError) => {
         if (isActive) setError(requestError.message || '가족 목록을 불러오지 못했습니다.');

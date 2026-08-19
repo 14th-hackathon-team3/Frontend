@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { careApi } from '../../../api/care';
 import BottomNavigation from '../../../components/BottomNavigation';
 import infoIcon from '../../../assets/Record_info.png';
 import micIcon from '../../../assets/Record_mic.svg';
@@ -13,8 +14,50 @@ import ActivityMemoRecordPage from './ActivityMemoRecordPage';
 const navigationItems = [{ key: 'journey', label: '회복 여정' }, { key: 'record', label: '기록' }, { key: 'home', label: '홈' }, { key: 'todo', label: '할 일' }, { key: 'mypage', label: '마이페이지' }];
 const recordCards = [{ id: 'activity-memo', title: '활동량/메모', top: 'top-0', titleTop: 'top-6', background: 'bg-primary/10', flap: activityFolderFlap, tabOpacity: 'opacity-100' }, { id: 'skin-hair', title: '피부/모발', top: 'top-[50px]', titleTop: 'top-[74px]', background: 'bg-primary/40', tabOpacity: 'opacity-40' }, { id: 'pain-feeding', title: '통증/수유', top: 'top-[100px]', titleTop: 'top-[124px]', background: 'bg-primary/60', tabOpacity: 'opacity-60' }, { id: 'mood-sleep', title: '감정/수면', top: 'top-[153px]', titleTop: 'top-[177px]', background: 'bg-primary', tabOpacity: 'opacity-100' }];
 
+const emotionValues = { 행복한: 'happy', 화남: 'angry', 에너지부족: 'low_energy', 슬픈: 'sad', 우울한: 'depressed', 혼란스러운: 'confused', 차분한: 'calm', 변덕스러운: 'moody', 짜증나는: 'irritated', 걱정스러운: 'worried', 활동적인: 'active' };
+const feedingValues = { 모유: 'breast', 분유: 'formula', 혼합: 'mixed' };
+const hairValues = { '평소와 같음': 'same', '약간 빠짐': 'slight', '많이 빠짐': 'heavy' };
+const toDateInput = (date) => date.toLocaleDateString('en-CA');
+
 const RecordPage = ({ onNavigate = () => {} }) => {
   const [screen, setScreen] = useState('main');
+  const [dailyLogId, setDailyLogId] = useState(null);
+  const [draft, setDraft] = useState({});
+
+  useEffect(() => {
+    let isActive = true;
+    careApi.getTodayDailyLog().then((log) => {
+      if (isActive) setDailyLogId(log.id);
+    }).catch(() => {});
+    return () => { isActive = false; };
+  }, []);
+
+  const updateDraft = (values, nextScreen) => {
+    setDraft((current) => ({ ...current, ...values }));
+    setScreen(nextScreen);
+  };
+
+  const saveDailyLog = async (activityValues) => {
+    const values = { ...draft, ...activityValues };
+    const payload = { log_date: toDateInput(new Date()) };
+    if (values.emotion && emotionValues[values.emotion]) payload.emotion = emotionValues[values.emotion];
+    if (values.sleepTime) payload.sleep_hours = (values.sleepTime.hour + (values.sleepTime.minute / 60)).toFixed(1);
+    if (values.pelvicSymptom) payload.pain_area = values.pelvicSymptom;
+    if (values.severity) payload.pain_score = values.severity;
+    if (values.feedingMethod && feedingValues[values.feedingMethod]) payload.breastfeeding = feedingValues[values.feedingMethod];
+    if (values.skinLevel) payload.skin_self_score = values.skinLevel;
+    if (values.hairState && hairValues[values.hairState]) payload.hair_loss_status = hairValues[values.hairState];
+    if (values.activityType) payload.exercise = values.activityType;
+    if (values.memo) payload.memo = values.memo;
+
+    try {
+      const savedLog = dailyLogId ? await careApi.updateDailyLog(dailyLogId, payload) : await careApi.createDailyLog(payload);
+      setDailyLogId(savedLog?.id ?? dailyLogId);
+      setScreen('main');
+    } catch (requestError) {
+      console.error(requestError);
+    }
+  };
   const openCard = (cardId) => {
     if (cardId === 'mood-sleep') setScreen('mood-sleep');
     if (cardId === 'pain-feeding') setScreen('pelvic-feeding');
@@ -22,10 +65,10 @@ const RecordPage = ({ onNavigate = () => {} }) => {
     if (cardId === 'activity-memo') setScreen('activity-memo');
   };
   if (screen === 'recording') return <RecordingPage onBack={() => setScreen('main')} onComplete={() => setScreen('main')} />;
-  if (screen === 'mood-sleep') return <MoodSleepRecordPage onBack={() => setScreen('main')} onNext={() => setScreen('pelvic-feeding')} />;
-  if (screen === 'pelvic-feeding') return <PelvicFeedingRecordPage onBack={() => setScreen('main')} onNext={() => setScreen('skin-hair')} />;
-  if (screen === 'skin-hair') return <SkinHairRecordPage onBack={() => setScreen('main')} onNext={() => setScreen('activity-memo')} />;
-  if (screen === 'activity-memo') return <ActivityMemoRecordPage onBack={() => setScreen('main')} onSave={() => setScreen('main')} />;
+  if (screen === 'mood-sleep') return <MoodSleepRecordPage onBack={() => setScreen('main')} onNext={(values) => updateDraft(values, 'pelvic-feeding')} />;
+  if (screen === 'pelvic-feeding') return <PelvicFeedingRecordPage onBack={() => setScreen('main')} onNext={(values) => updateDraft(values, 'skin-hair')} />;
+  if (screen === 'skin-hair') return <SkinHairRecordPage onBack={() => setScreen('main')} onNext={(values) => updateDraft(values, 'activity-memo')} />;
+  if (screen === 'activity-memo') return <ActivityMemoRecordPage onBack={() => setScreen('main')} onSave={saveDailyLog} />;
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[120px]">

@@ -71,7 +71,7 @@ const TrackingCard = ({ title, badge, value, color, points, area }) => (
 
 const FamilyWeeklyJourneyPage = ({ onDay, onNavigate, privateCards }) => (
   <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light pb-[122px] pt-[37px]">
-    <header className="flex items-end justify-between px-[21px]"><h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1><button type="button" aria-label="회복 여정 안내"><img src={menuBookIcon} alt="" className="size-[30px]" /></button></header>
+    <header className="flex items-end justify-between px-[21px]"><h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1><button type="button" onClick={() => onNavigate('recoveryGuide')} aria-label="리커버리 가이드 보기"><img src={menuBookIcon} alt="" className="size-[30px]" /></button></header>
     <div className="mx-auto mt-[29px] flex h-[30px] w-[360px] rounded-[20px] bg-primary-background"><button type="button" onClick={onDay} className="w-1/2 rounded-[20px] text-[16px] font-medium tracking-[-0.8px] text-primary">Day</button><button type="button" className="w-1/2 rounded-[20px] bg-primary text-[16px] font-medium tracking-[-0.8px] text-white">Week</button></div>
     <section className="mx-auto mt-[27px] flex h-20 w-[360px] items-center gap-2 rounded-[20px] bg-primary-background px-[15px]"><img src={analysisIcon} alt="" className="size-[35px]" /><p className="px-[15px] text-[12px] font-medium tracking-[-0.6px] text-primary">최근 7일 종합 분석</p></section>
     <section className="mx-auto mt-[29px] w-[360px] space-y-[13px]">
@@ -106,7 +106,7 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[120px]">
-      <header className="flex items-end justify-between px-[21px] pt-[37px]"><h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1><button type="button" aria-label="회복 여정 안내"><img src={menuBookIcon} alt="" className="size-[30px]" /></button></header>
+      <header className="flex items-end justify-between px-[21px] pt-[37px]"><h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1><button type="button" onClick={() => onNavigate('recoveryGuide')} aria-label="리커버리 가이드 보기"><img src={menuBookIcon} alt="" className="size-[30px]" /></button></header>
       <div className="mx-auto mt-[29px] flex h-[30px] w-[360px] rounded-[20px] bg-primary-background"><button type="button" className="w-1/2 rounded-[20px] bg-primary text-[16px] font-medium tracking-[-0.8px] text-white">Day</button><button type="button" onClick={() => setIsWeekView(true)} className="w-1/2 text-[16px] font-medium tracking-[-0.8px] text-primary">Week</button></div>
       <section className="relative mx-auto mt-[22px] h-[120px] w-[360px] rounded-[20px] bg-gray-50 px-[28px] pt-[17px]">
         <p className="text-[12px] font-medium tracking-[-0.6px]">{weekDates[0].getMonth() + 1}월</p>

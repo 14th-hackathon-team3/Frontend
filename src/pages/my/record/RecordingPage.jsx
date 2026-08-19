@@ -102,6 +102,7 @@ const RecordingPage = ({ onBack, onComplete }) => {
     const extension = audioBlob.type.includes('ogg') ? 'ogg' : audioBlob.type.includes('mp4') ? 'm4a' : 'webm';
     const formData = new FormData();
     formData.append('audio_file', audioBlob, `voice-memo.${extension}`);
+    formData.append('duration_seconds', String(elapsedSeconds));
 
     try {
       await careApi.createVoiceMemo(formData);

@@ -21,10 +21,10 @@ const navigationItems = [
 ];
 
 const notificationItems = [
-  { key: 'todoCreated', apiKey: 'todo_created', label: 'todo 생성 알림' },
-  { key: 'familyTodoCompleted', apiKey: 'family_todo_completed', label: '가족 todo 완료 알림' },
-  { key: 'familyTodoPending', apiKey: 'family_todo_pending', label: '가족 todo 미실행 알림' },
-  { key: 'myTodoPending', apiKey: 'my_todo_pending', label: '나의 todo 미실행 알림' },
+  { key: 'todoCreated', apiKey: 'notify_todo_created', label: 'todo 생성 알림' },
+  { key: 'familyTodoCompleted', apiKey: 'notify_family_todo_completed', label: '가족 todo 완료 알림' },
+  { key: 'familyTodoPending', apiKey: 'notify_family_todo_incomplete', label: '가족 todo 미실행 알림' },
+  { key: 'myTodoPending', apiKey: 'notify_own_todo_incomplete', label: '나의 todo 미실행 알림' },
 ];
 
 const WithdrawalModal = ({ onCancel, onConfirm }) => (
@@ -61,14 +61,14 @@ const Mypage = ({ onNavigate = () => {} }) => {
         setProfile((current) => ({
           ...current,
           name: user?.name ?? current.name,
-          id: user?.email ?? user?.username ?? current.id,
+          id: user?.email ?? current.id,
           password: '',
-          birthDate: care?.birth_date ?? care?.care?.birth_date ?? current.birthDate,
-          photo: user?.profile_photo ?? user?.photo ?? user?.photo_url ?? current.photo,
+          birthDate: care?.delivery_date ?? current.birthDate,
+          photo: user?.profile_image ?? current.photo,
         }));
       }
       if (settingsResult.status === 'fulfilled') {
-        const settings = settingsResult.value?.settings ?? settingsResult.value;
+        const settings = settingsResult.value;
         setNotifications((current) => Object.fromEntries(notificationItems.map((item) => [item.key, settings?.[item.apiKey] ?? current[item.key]])));
       }
     });
@@ -90,13 +90,11 @@ const Mypage = ({ onNavigate = () => {} }) => {
 
   const saveProfile = async (updatedProfile) => {
     setError('');
-    const accountPayload = { name: updatedProfile.name, email: updatedProfile.id };
-    if (updatedProfile.password) accountPayload.password = updatedProfile.password;
-    await authApi.updateMe(accountPayload);
-    if (updatedProfile.birthDate) await careApi.updateMyCare({ birth_date: updatedProfile.birthDate });
+    await authApi.updateMe({ name: updatedProfile.name });
+    if (updatedProfile.birthDate) await careApi.updateMyCare({ delivery_date: updatedProfile.birthDate });
     if (updatedProfile.photoFile) {
       const photoResult = await authApi.uploadPhoto(updatedProfile.photoFile);
-      updatedProfile.photo = photoResult?.profile_photo ?? photoResult?.photo ?? updatedProfile.photo;
+      updatedProfile.photo = photoResult?.profile_image ?? updatedProfile.photo;
     }
     setProfile({ ...updatedProfile, password: '', photoFile: undefined });
     setView('profile');

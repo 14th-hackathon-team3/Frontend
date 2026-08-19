@@ -1,38 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import BottomNavigation from '../../../components/BottomNavigation';
-import { careApi } from '../../../api/care';
 import backButton from '../../../assets/back_button.svg';
 import menuBookIcon from '../../../assets/recoveryjourney_menu_book.svg';
 import analysisIcon from '../../../assets/Todo_star.svg';
 import folderFlap from '../../../assets/Record_folder_flap.svg';
 import activityFolderFlap from '../../../assets/Record_folder_activity_flap.svg';
+import memoImage from '../../../assets/Record_memo.png';
 import hiddenInfoIcon from '../../../assets/hidden_info.png';
-import VoiceMemoPlayer from './VoiceMemoPlayer';
-
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://bailey44.pythonanywhere.com').replace(/\/$/, '');
-
-const resolveAudioUrl = (value) => {
-  if (typeof value !== 'string' || !value.trim()) return null;
-  if (/^(https?:|blob:|data:)/.test(value)) return value;
-  return `${API_BASE_URL}/${value.replace(/^\//, '')}`;
-};
-
-const getVoiceMemoUrl = (response) => {
-  const dailyLog = response?.data ?? response;
-  const voiceMemos = Array.isArray(dailyLog?.voice_memos) ? dailyLog.voice_memos : [];
-  const latestVoiceMemo = voiceMemos.at(-1);
-  const voiceMemo = dailyLog?.voice_memo ?? latestVoiceMemo;
-  const candidates = [
-    typeof voiceMemo === 'string' ? voiceMemo : null,
-    voiceMemo?.audio_file,
-    voiceMemo?.audio_url,
-    voiceMemo?.file,
-    dailyLog?.voice_memo_url,
-    dailyLog?.audio_file,
-  ];
-
-  return resolveAudioUrl(candidates.find((value) => typeof value === 'string' && value.trim()));
-};
 
 const navigationItems = [
   { key: 'journey', label: '회복 여정' },
@@ -70,23 +44,7 @@ const RecordHistoryPage = ({ record, onBack }) => (
 );
 
 const ActivityMemoHistoryPage = ({ onBack }) => {
-  const [voiceMemoUrl, setVoiceMemoUrl] = useState(null);
-
-  useEffect(() => {
-    let isActive = true;
-
-    careApi.getTodayDailyLog()
-      .then((dailyLog) => {
-        if (isActive) setVoiceMemoUrl(getVoiceMemoUrl(dailyLog));
-      })
-      .catch(() => {
-        if (isActive) setVoiceMemoUrl(null);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   return (
   <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light px-[27px] pb-10 pt-[102px]">
@@ -117,8 +75,15 @@ const ActivityMemoHistoryPage = ({ onBack }) => {
       <div className="border-t border-gray-200" />
       <div className="space-y-[15px]">
         <h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">음성 메모</h2>
-        <div className="px-[11px]">
-          <VoiceMemoPlayer src={voiceMemoUrl} />
+        <div className="relative h-[67px] w-[300px] overflow-hidden">
+          <img src={memoImage} alt="" className="absolute -top-[64px] left-0 w-full" />
+          <button
+            type="button"
+            aria-label={isPlaying ? '음성 메모 일시 정지' : '음성 메모 재생'}
+            aria-pressed={isPlaying}
+            onClick={() => setIsPlaying((playing) => !playing)}
+            className={`absolute left-[74px] top-[17px] size-[38px] rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${isPlaying ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+          />
         </div>
       </div>
     </section>
@@ -182,7 +147,7 @@ const TrackingPrivacySheet = ({ title, isPrivate, onClose, onConfirm }) => (
 
 const WeeklyJourneyPage = ({ onDay, onNavigate, privateCard, privateCards, onPrivateCard, onClosePrivate, onConfirmPrivate }) => (
   <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light pb-[122px] pt-[37px]">
-    <header className="flex items-end justify-between px-[21px]"><h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1><button type="button" aria-label="회복 여정 안내"><img src={menuBookIcon} alt="" className="h-[30px] w-[30px]" /></button></header>
+    <header className="flex items-end justify-between px-[21px]"><h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1><button type="button" onClick={() => onNavigate('recoveryGuide')} aria-label="리커버리 가이드 보기"><img src={menuBookIcon} alt="" className="h-[30px] w-[30px]" /></button></header>
     <div className="mx-auto mt-[29px] flex h-[30px] w-[360px] rounded-[20px] bg-primary-background"><button type="button" onClick={onDay} className="w-1/2 rounded-[20px] text-[16px] font-medium tracking-[-0.8px] text-primary">Day</button><button type="button" className="w-1/2 rounded-[20px] bg-primary text-[16px] font-medium tracking-[-0.8px] text-white">Week</button></div>
     <section className="mx-auto mt-[27px] flex h-20 w-[360px] items-center gap-2 rounded-[20px] bg-primary-background px-[15px]"><img src={analysisIcon} alt="" className="h-[35px] w-[35px]" /><p className="px-[15px] text-[12px] font-medium text-primary">최근 7일 종합 분석 AI 코멘트...</p></section>
     <section className="mx-auto mt-[29px] w-[360px] space-y-[13px]">
@@ -226,7 +191,7 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[120px]">
-      <header className="flex items-end justify-between px-[21px] pt-[37px]"><h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1><button type="button" aria-label="회복 여정 안내"><img src={menuBookIcon} alt="" className="h-[30px] w-[30px]" /></button></header>
+      <header className="flex items-end justify-between px-[21px] pt-[37px]"><h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1><button type="button" onClick={() => onNavigate('recoveryGuide')} aria-label="리커버리 가이드 보기"><img src={menuBookIcon} alt="" className="h-[30px] w-[30px]" /></button></header>
       <div className="mx-auto mt-[29px] flex h-[30px] w-[360px] rounded-[20px] bg-primary-background p-0">
         <button type="button" className="w-1/2 rounded-[20px] bg-primary text-[16px] font-medium tracking-[-0.8px] text-white">Day</button>
         <button type="button" onClick={() => setIsWeekView(true)} className="w-1/2 text-[16px] font-medium tracking-[-0.8px] text-primary">Week</button>
