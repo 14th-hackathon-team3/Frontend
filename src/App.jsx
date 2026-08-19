@@ -53,8 +53,13 @@ function App() {
     setActivePage('home');
   };
 
+  const handleSignup = (user) => {
+    setUserType(user.user_type);
+    setActivePage('onboarding');
+  };
+
   if (activePage === 'login') {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} onSignup={handleSignup} />;
   }
 
   const pages = userType === 'guardian' ? familyPages : myPages;

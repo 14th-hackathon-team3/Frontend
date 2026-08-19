@@ -32,6 +32,7 @@ const Signup = ({ inviteCode = '', onBack = () => {}, onComplete = () => {} }) =
         user_type: inviteCode ? 'guardian' : 'mother',
         ...(inviteCode ? { invite_code: inviteCode } : {}),
       });
+      await authApi.login({ email: form.id, password: form.password });
       onComplete(data);
     } catch (requestError) {
       setError(requestError.message || '회원가입에 실패했습니다.');
