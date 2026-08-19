@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { authApi } from '../../../api/auth';
+import { careApi } from '../../../api/care';
+import { groupsApi } from '../../../api/groups';
 import BottomNavigation from '../../../components/BottomNavigation';
 import ToggleButton from '../../../components/ToggleButton';
-import logoutIcon from '../../../assets/Mypage_logout.svg';
+import logoutModalIcon from '../../../assets/Mypage_logout_modal.svg';
 import ProfilePage from './ProfilePage';
 import ProfileEditPage from './ProfileEditPage';
+import FamilyMemberInvitePage from './FamilyMemberInvitePage';
 import FamilyMemberDeletePage from './FamilyMemberDeletePage';
 
 const figmaSearchIcon = 'https://www.figma.com/api/mcp/asset/9c994265-572b-4fb9-bfac-3760d1c38c48.svg';
@@ -17,17 +21,17 @@ const navigationItems = [
 ];
 
 const notificationItems = [
-  { key: 'todoCreated', label: 'todo 생성 알림' },
-  { key: 'familyTodoCompleted', label: '가족 todo 완료 알림' },
-  { key: 'familyTodoPending', label: '가족 todo 미실행 알림' },
-  { key: 'myTodoPending', label: '나의 todo 미실행 알림' },
+  { key: 'todoCreated', apiKey: 'todo_created', label: 'todo 생성 알림' },
+  { key: 'familyTodoCompleted', apiKey: 'family_todo_completed', label: '가족 todo 완료 알림' },
+  { key: 'familyTodoPending', apiKey: 'family_todo_pending', label: '가족 todo 미실행 알림' },
+  { key: 'myTodoPending', apiKey: 'my_todo_pending', label: '나의 todo 미실행 알림' },
 ];
 
 const WithdrawalModal = ({ onCancel, onConfirm }) => (
   <div className="fixed inset-0 z-30 mx-auto flex w-full max-w-[402px] items-center justify-center bg-[#d5d5d5]/70 px-[37px]">
     <section role="dialog" aria-modal="true" aria-labelledby="withdrawal-title" className="w-full overflow-hidden rounded-lg bg-[#262626] pt-3 text-center shadow-xl">
       <div className="px-4 pb-4">
-        <img src={logoutIcon} alt="" className="mx-auto size-12" />
+        <img src={logoutModalIcon} alt="" className="mx-auto size-12" />
         <h2 id="withdrawal-title" className="mt-3 text-[17px] font-medium text-white">탈퇴하시겠습니까?</h2>
         <p className="mt-1 text-[13px] leading-[18px] text-[#b0b0b0]">탈퇴하실 경우 현재까지의 모든 데이터가 삭제되고,<br />재가입하셔야 합니다.</p>
       </div>
@@ -45,11 +49,73 @@ const Mypage = ({ onNavigate = () => {} }) => {
   const [view, setView] = useState('main');
   const [isWithdrawalOpen, setIsWithdrawalOpen] = useState(false);
   const [profile, setProfile] = useState({ name: '홍길동', id: 'Hong_gildong', password: 'Becomingmom!123', birthDate: '2026-07-13', photo: null });
+  const [error, setError] = useState('');
 
-  const toggleNotification = (key) => setNotifications((items) => ({ ...items, [key]: !items[key] }));
+  useEffect(() => {
+    let isActive = true;
+    Promise.allSettled([authApi.me(), careApi.getMyCare(), groupsApi.getNotificationSettings()]).then(([userResult, careResult, settingsResult]) => {
+      if (!isActive) return;
+      const user = userResult.status === 'fulfilled' ? userResult.value : null;
+      const care = careResult.status === 'fulfilled' ? careResult.value : null;
+      if (user || care) {
+        setProfile((current) => ({
+          ...current,
+          name: user?.name ?? current.name,
+          id: user?.email ?? user?.username ?? current.id,
+          password: '',
+          birthDate: care?.birth_date ?? care?.care?.birth_date ?? current.birthDate,
+          photo: user?.profile_photo ?? user?.photo ?? user?.photo_url ?? current.photo,
+        }));
+      }
+      if (settingsResult.status === 'fulfilled') {
+        const settings = settingsResult.value?.settings ?? settingsResult.value;
+        setNotifications((current) => Object.fromEntries(notificationItems.map((item) => [item.key, settings?.[item.apiKey] ?? current[item.key]])));
+      }
+    });
+    return () => { isActive = false; };
+  }, []);
 
-  if (view === 'profile') return <ProfilePage profile={profile} onBack={() => setView('main')} onEdit={() => setView('edit')} />;
-  if (view === 'edit') return <ProfileEditPage initialProfile={profile} onBack={() => setView('profile')} onSave={(updatedProfile) => { setProfile(updatedProfile); setView('profile'); }} />;
+  const toggleNotification = async (key) => {
+    const item = notificationItems.find((notification) => notification.key === key);
+    const nextValue = !notifications[key];
+    setNotifications((items) => ({ ...items, [key]: nextValue }));
+    setError('');
+    try {
+      await groupsApi.updateNotificationSettings({ [item.apiKey]: nextValue });
+    } catch (requestError) {
+      setNotifications((items) => ({ ...items, [key]: !nextValue }));
+      setError(requestError.message || '알림 설정을 변경하지 못했습니다.');
+    }
+  };
+
+  const saveProfile = async (updatedProfile) => {
+    setError('');
+    const accountPayload = { name: updatedProfile.name, email: updatedProfile.id };
+    if (updatedProfile.password) accountPayload.password = updatedProfile.password;
+    await authApi.updateMe(accountPayload);
+    if (updatedProfile.birthDate) await careApi.updateMyCare({ birth_date: updatedProfile.birthDate });
+    if (updatedProfile.photoFile) {
+      const photoResult = await authApi.uploadPhoto(updatedProfile.photoFile);
+      updatedProfile.photo = photoResult?.profile_photo ?? photoResult?.photo ?? updatedProfile.photo;
+    }
+    setProfile({ ...updatedProfile, password: '', photoFile: undefined });
+    setView('profile');
+  };
+
+  const withdraw = async () => {
+    setError('');
+    try {
+      await authApi.withdraw();
+      onNavigate('login');
+    } catch (requestError) {
+      setError(requestError.message || '회원 탈퇴에 실패했습니다.');
+      setIsWithdrawalOpen(false);
+    }
+  };
+
+  if (view === 'profile') return <ProfilePage profile={profile} onBack={() => setView('main')} onEdit={() => setView('edit')} onLogout={async () => { await authApi.logout(); onNavigate('login'); }} />;
+  if (view === 'edit') return <ProfileEditPage initialProfile={profile} onBack={() => setView('profile')} onSave={saveProfile} />;
+  if (view === 'family-invite') return <FamilyMemberInvitePage onBack={() => setView('main')} />;
   if (view === 'family-delete') return <FamilyMemberDeletePage onBack={() => setView('main')} />;
 
   return (
@@ -58,11 +124,12 @@ const Mypage = ({ onNavigate = () => {} }) => {
       <section className="mx-auto mt-[23px] w-[360px] space-y-[15px]">
         <button type="button" onClick={() => setView('profile')} className="flex h-[77px] w-full items-center justify-between rounded-[13px] bg-[#31302e] px-[17px] text-left"><span className="flex flex-col gap-[3px]"><strong className="text-[16px] text-white">{profile.name}</strong><span className="text-[14px] text-[#fbfbff]">ID: {profile.id}</span></span><span aria-hidden="true" className="text-[28px] leading-none text-white">›</span></button>
         <section className="rounded-[13px] bg-[#31302e] p-[17px]" aria-labelledby="notification-heading"><h2 id="notification-heading" className="text-[16px] font-bold text-white">알림 설정</h2><div className="mt-[17px] space-y-[17px]">{notificationItems.map((item) => <div key={item.key} className="flex h-[24px] items-center justify-between gap-4"><span className="text-[14px] text-white">{item.label}</span><ToggleButton selected={notifications[item.key]} onClick={() => toggleNotification(item.key)} className="!h-[24px] !w-[37px] shrink-0 rounded-full !p-[2px]" aria-label={`${item.label} ${notifications[item.key] ? '켜기' : '끄기'}`}><span className={`block !size-[19px] rounded-full bg-gray-50 transition-transform ${notifications[item.key] ? 'translate-x-[6px]' : '-translate-x-[6px]'}`} /></ToggleButton></div>)}</div></section>
-        <section className="rounded-[13px] bg-[#31302e] p-[17px]"><h2 className="text-[16px] font-bold text-white">가족 구성원 변경</h2><div className="mt-[17px] space-y-[17px]"><button type="button" className="flex w-full items-center justify-between text-[14px] text-white">가족 구성원 추가 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button><button type="button" onClick={() => setView('family-delete')} className="flex w-full items-center justify-between text-[14px] text-white">가족 구성원 삭제 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button></div></section>
+        <section className="rounded-[13px] bg-[#31302e] p-[17px]"><h2 className="text-[16px] font-bold text-white">가족 구성원 변경</h2><div className="mt-[17px] space-y-[17px]"><button type="button" onClick={() => setView('family-invite')} className="flex w-full items-center justify-between text-[14px] text-white">가족 구성원 추가 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button><button type="button" onClick={() => setView('family-delete')} className="flex w-full items-center justify-between text-[14px] text-white">가족 구성원 삭제 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button></div></section>
         <button type="button" onClick={() => setIsWithdrawalOpen(true)} className="flex h-[56px] w-full items-center rounded-[13px] bg-[#31302e] px-[17px] text-[14px] font-bold text-[#ff9999]">회원 탈퇴</button>
       </section>
+      {error && <p className="mx-auto mt-3 w-[360px] text-center text-[12px] text-error">{error}</p>}
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2"><BottomNavigation activeKey="mypage" items={navigationItems} onChange={onNavigate} /></div>
-      {isWithdrawalOpen && <WithdrawalModal onCancel={() => setIsWithdrawalOpen(false)} onConfirm={() => setIsWithdrawalOpen(false)} />}
+      {isWithdrawalOpen && <WithdrawalModal onCancel={() => setIsWithdrawalOpen(false)} onConfirm={withdraw} />}
     </main>
   );
 };

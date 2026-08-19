@@ -6,6 +6,7 @@ import idIcon from '../../../assets/mypage_ID.svg';
 import passwordIcon from '../../../assets/Mypage_password.svg';
 import profileEditIcon from '../../../assets/Mypage_profileedit.svg';
 import logoutIcon from '../../../assets/Mypage_logout.svg';
+import logoutModalIcon from '../../../assets/Mypage_logout_modal.svg';
 
 const profileRows = [
   { icon: nameIcon, text: '이름 | ***' },
@@ -18,7 +19,7 @@ const LogoutModal = ({ onCancel, onConfirm }) => (
   <div className="fixed inset-0 z-30 mx-auto flex w-full max-w-[402px] items-center justify-center bg-[#3b3b3b]/20 px-[37px]">
     <section role="dialog" aria-modal="true" aria-labelledby="logout-title" className="w-full overflow-hidden rounded-lg bg-[#262626] pt-3 text-center shadow-xl">
       <div className="px-4 pb-4">
-        <img src={logoutIcon} alt="" className="mx-auto size-12" />
+        <img src={logoutModalIcon} alt="" className="mx-auto size-12" />
         <h2 id="logout-title" className="mt-3 text-[17px] font-medium text-white">로그아웃 하시겠습니까?</h2>
         <p className="mt-1 text-[13px] leading-[18px] text-[#b0b0b0]">로그아웃하실 경우 기존의 아이디와 비밀번호로<br />재로그인하셔야 합니다.</p>
       </div>
