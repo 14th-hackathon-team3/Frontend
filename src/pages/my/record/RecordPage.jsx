@@ -42,21 +42,29 @@ const RecordPage = ({ onNavigate = () => {} }) => {
     const payload = { log_date: toDateInput(new Date()) };
     if (values.emotion && emotionValues[values.emotion]) payload.emotion = emotionValues[values.emotion];
     if (values.sleepTime) payload.sleep_hours = (values.sleepTime.hour + (values.sleepTime.minute / 60)).toFixed(1);
-    if (values.pelvicSymptom) payload.pain_area = values.pelvicSymptom;
+    if (values.pelvicSymptom && values.pelvicSymptom !== '없음') {
+      payload.pain_area = values.pelvicSymptom;
+      payload.pelvic_floor_symptoms = [values.pelvicSymptom];
+    } else if (values.pelvicSymptom === '없음') {
+      payload.pelvic_floor_symptoms = [];
+    }
     if (values.severity) payload.pain_score = values.severity;
     if (values.feedingMethod && feedingValues[values.feedingMethod]) payload.breastfeeding = feedingValues[values.feedingMethod];
     if (values.skinLevel) payload.skin_self_score = values.skinLevel;
+    if (values.selectedSymptoms) {
+      payload.skin_symptom_tags = values.selectedSymptoms.includes('해당 없음') ? [] : values.selectedSymptoms;
+    }
     if (values.hairState && hairValues[values.hairState]) payload.hair_loss_status = hairValues[values.hairState];
-    if (values.activityType) payload.exercise = values.activityType;
+    if (values.activityType || values.activityTime) {
+      const duration = values.activityTime ? `${values.activityTime.hour}시간 ${values.activityTime.minute}분` : '';
+      payload.exercise = [values.activityType, duration].filter(Boolean).join(' / ');
+    }
     if (values.memo) payload.memo = values.memo;
 
-    try {
-      const savedLog = dailyLogId ? await careApi.updateDailyLog(dailyLogId, payload) : await careApi.createDailyLog(payload);
-      setDailyLogId(savedLog?.id ?? dailyLogId);
-      setScreen('main');
-    } catch (requestError) {
-      console.error(requestError);
-    }
+    const savedLog = dailyLogId ? await careApi.updateDailyLog(dailyLogId, payload) : await careApi.createDailyLog(payload);
+    setDailyLogId(savedLog?.id ?? dailyLogId);
+    setDraft({});
+    setScreen('main');
   };
   const openCard = (cardId) => {
     if (cardId === 'mood-sleep') setScreen('mood-sleep');

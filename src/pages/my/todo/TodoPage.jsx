@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { careApi } from '../../../api/care';
 
 import BottomNavigation from '../../../components/BottomNavigation';
 
@@ -117,84 +118,46 @@ const TodoPage = ({ onNavigate = () => {} }) => {
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editText, setEditText] = useState('');
 
-  const [todos, setTodos] = useState([
-    // Mom 할 일
-    {
-      id: 1,
-      text: '물 한 잔 마시기',
-      role: 'mom',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 2,
-      text: '10분 동안 편하게 쉬기',
-      role: 'mom',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 3,
-      text: '가벼운 스트레칭 하기',
-      role: 'mom',
-      completed: false,
-      isPrivate: false,
-    },
+  const [todos, setTodos] = useState([]);
 
-    // Partner 할 일
-    {
-      id: 4,
-      text: '산모에게 물 가져다주기',
-      role: 'partner',
-      assignee: '담당자',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 5,
-      text: '오늘 식사 준비하기',
-      role: 'partner',
-      assignee: '담당자',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 6,
-      text: '아기 돌봄 30분 맡기',
-      role: 'partner',
-      assignee: '담당자',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 7,
-      text: '산모 휴식 시간 확보하기',
-      role: 'partner',
-      assignee: '담당자',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 8,
-      text: '집안일 한 가지 대신하기',
-      role: 'partner',
-      assignee: '담당자',
-      completed: false,
-      isPrivate: false,
-    },
-  ]);
+  useEffect(() => {
+    let isActive = true;
+    careApi.getTodayTodos().then((data) => {
+      if (!isActive) return;
+      const mapTodo = (todo, role) => ({ id: todo.id, text: todo.content, role, assignee: todo.assignee_name || '담당자', completed: Boolean(todo.completed_at), isPrivate: todo.visibility === 'private' });
+      setTodos([...(data.mother_todos ?? []).map((todo) => mapTodo(todo, 'mom')), ...(data.family_todos ?? []).map((todo) => mapTodo(todo, 'partner'))]);
+    }).catch(() => { if (isActive) setTodos([]); });
+    return () => { isActive = false; };
+  }, []);
 
-  const toggleTodo = (id) => {
-    setTodos((prev) =>
-      prev.map((todo) =>
-        todo.id === id
-          ? {
-              ...todo,
-              completed: !todo.completed,
-            }
-          : todo,
-      ),
-    );
+  const toggleTodo = async (id) => {
+    const previous = todos;
+    setTodos((items) => items.map((todo) => todo.id === id ? { ...todo, completed: !todo.completed } : todo));
+    try {
+      const updated = await careApi.checkTodo(id);
+      setTodos((items) => items.map((todo) => todo.id === id ? { ...todo, completed: Boolean(updated.completed_at) } : todo));
+    } catch {
+      setTodos(previous);
+    }
+  };
+
+  const saveTodoText = async (id, text) => {
+    const nextText = text.trim();
+    if (!nextText) return;
+    const updated = await careApi.updateTodo(id, { content: nextText });
+    setTodos((items) => items.map((todo) => todo.id === id ? { ...todo, text: updated.content ?? nextText } : todo));
+  };
+
+  const deleteTodo = async (id) => {
+    await careApi.deleteTodo(id);
+    setTodos((items) => items.filter((todo) => todo.id !== id));
+  };
+
+  const toggleVisibility = async (todo) => {
+    const visibility = todo.isPrivate ? 'public' : 'private';
+    await careApi.updateTodoVisibility(todo.id, { visibility });
+    setTodos((items) => items.map((item) => item.id === todo.id ? { ...item, isPrivate: visibility === 'private' } : item));
+    setSelectedTodo((current) => current ? { ...current, isPrivate: visibility === 'private' } : current);
   };
 
   const visibleTodos = todos.filter((todo) =>
@@ -415,14 +378,12 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     value={editText}
                     autoFocus
                     onChange={(e) => setEditText(e.target.value)}
-                    onBlur={() => {
-                      setTodos((prev) =>
-                        prev.map((item) =>
-                          item.id === todo.id
-                            ? { ...item, text: editText.trim() || item.text }
-                            : item,
-                        ),
-                      );
+                    onBlur={async () => {
+                      try {
+                        await saveTodoText(todo.id, editText);
+                      } catch {
+                        // 기존 문구를 유지하고 다음 편집을 허용한다.
+                      }
                       setEditingTodoId(null);
                       setEditText('');
                     }}
@@ -537,9 +498,13 @@ const TodoPage = ({ onNavigate = () => {} }) => {
 
               <button
                 type="button"
-                onClick={() => {
-                  setTodos((prev) => prev.filter((todo) => todo.id !== selectedTodo.id));
-                  setSelectedTodo(null);
+                onClick={async () => {
+                  try {
+                    await deleteTodo(selectedTodo.id);
+                    setSelectedTodo(null);
+                  } catch {
+                    // 삭제 실패 시 상세 화면과 기존 항목을 유지한다.
+                  }
                 }}
                 className="
                     flex h-[80px] flex-1
@@ -561,17 +526,12 @@ const TodoPage = ({ onNavigate = () => {} }) => {
             {/* 보호자 공개 설정 */}
             <button
               type="button"
-              onClick={() => {
-                setTodos((prev) =>
-                  prev.map((todo) =>
-                    todo.id === selectedTodo.id ? { ...todo, isPrivate: !todo.isPrivate } : todo,
-                  ),
-                );
-
-                setSelectedTodo((prev) => ({
-                  ...prev,
-                  isPrivate: !prev.isPrivate,
-                }));
+              onClick={async () => {
+                try {
+                  await toggleVisibility(selectedTodo);
+                } catch {
+                  // 변경 실패 시 현재 공개 상태를 유지한다.
+                }
               }}
               className="
                     mt-[24px] flex items-center gap-[12px]

@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { careApi } from '../../../api/care';
 
 import BottomNavigation from '../../../components/BottomNavigation';
 
@@ -106,100 +107,27 @@ const TodoPage = ({ onNavigate = () => {} }) => {
     setScrollThumbTop(nextTop);
   };
 
-  const [todos, setTodos] = useState([
-    // Mom 할 일
-    {
-      id: 1,
-      text: '물 한 잔 마시기',
-      role: 'mom',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 2,
-      text: '10분 동안 편하게 쉬기',
-      role: 'mom',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 3,
-      text: '가벼운 스트레칭 하기',
-      role: 'mom',
-      completed: false,
-      isPrivate: false,
-    },
+  const [todos, setTodos] = useState([]);
 
-    // Partner 할 일
-    {
-      id: 4,
-      text: '산모에게 물 가져다주기',
-      role: 'partner',
-      todoType: 'assigned',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 5,
-      text: '오늘 식사 준비하기',
-      role: 'partner',
-      todoType: 'assigned',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 6,
-      text: '아기 돌봄 30분 맡기',
-      role: 'partner',
-      todoType: 'common',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 7,
-      text: '산모 휴식 시간 확보하기',
-      role: 'partner',
-      todoType: 'assigned',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 8,
-      text: '집안일 한 가지 대신하기',
-      role: 'partner',
-      todoType: 'assigned',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 9,
-      text: '세탁기 돌리기',
-      role: 'partner',
-      todoType: 'common',
-      completed: false,
-      isPrivate: false,
-    },
-    {
-      id: 10,
-      text: '간식 챙겨주기',
-      role: 'partner',
-      todoType: 'common',
-      completed: false,
-      isPrivate: false,
-    },
-  ]);
+  useEffect(() => {
+    let isActive = true;
+    careApi.getTodayTodos().then((data) => {
+      if (!isActive) return;
+      const mapTodo = (todo, role) => ({ id: todo.id, text: todo.content, role, todoType: todo.assignee_membership ? 'assigned' : 'common', assignee: todo.assignee_name || '담당자', completed: Boolean(todo.completed_at), isPrivate: todo.visibility === 'private' });
+      setTodos([...(data.mother_todos ?? []).map((todo) => mapTodo(todo, 'mom')), ...(data.family_todos ?? []).map((todo) => mapTodo(todo, 'partner'))]);
+    }).catch(() => { if (isActive) setTodos([]); });
+    return () => { isActive = false; };
+  }, []);
 
-  const toggleTodo = (id) => {
-    setTodos((prev) =>
-      prev.map((todo) =>
-        todo.id === id
-          ? {
-              ...todo,
-              completed: !todo.completed,
-            }
-          : todo,
-      ),
-    );
+  const toggleTodo = async (id) => {
+    const previous = todos;
+    setTodos((items) => items.map((todo) => todo.id === id ? { ...todo, completed: !todo.completed } : todo));
+    try {
+      const updated = await careApi.checkTodo(id);
+      setTodos((items) => items.map((todo) => todo.id === id ? { ...todo, completed: Boolean(updated.completed_at) } : todo));
+    } catch {
+      setTodos(previous);
+    }
   };
 
   const visibleTodos = todos.filter((todo) =>

@@ -9,7 +9,7 @@ import LivingTogetherStep from './LivingTogetherStep';
 import CareTimeStep from './CareTimeStep';
 import FamilyProcessingStep from './FamilyProcessingStep';
 
-function FamilyOnboardingPage() {
+function FamilyOnboardingPage({ onNavigate = () => {} }) {
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -32,15 +32,17 @@ function FamilyOnboardingPage() {
     }
 
     if (step === 3) {
+      setStep(4);
       try {
         await groupsApi.completeMembershipOnboarding({
           relation: formData.relationship,
           is_cohabiting: formData.livingTogether === 'together',
           available_time: formData.careTimes,
         });
-        setStep(4);
+        onNavigate('home');
       } catch (requestError) {
         console.error(requestError);
+        setStep(3);
       }
     }
   };

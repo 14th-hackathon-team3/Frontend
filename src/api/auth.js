@@ -7,7 +7,11 @@ export const authApi = {
     return data;
   },
   signup: (payload) => apiRequest('/api/accounts/signup/', { method: 'POST', body: payload }),
-  socialLogin: (payload) => apiRequest('/api/accounts/social-login/', { method: 'POST', body: payload }),
+  socialLogin: async (payload) => {
+    const data = await apiRequest('/api/accounts/social-login/', { method: 'POST', body: payload });
+    tokenStorage.setTokens(data);
+    return data;
+  },
   refresh: async () => {
     const data = await apiRequest('/api/accounts/token/refresh/', { method: 'POST', body: { refresh: tokenStorage.getRefreshToken() } });
     tokenStorage.setTokens(data);

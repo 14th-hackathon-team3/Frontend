@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { careApi } from '../../../api/care';
 import BottomNavigation from '../../../components/BottomNavigation';
 import backButton from '../../../assets/back_button.svg';
 import menuBookIcon from '../../../assets/recoveryjourney_menu_book.svg';
 import analysisIcon from '../../../assets/Todo_star.svg';
 import folderFlap from '../../../assets/Record_folder_flap.svg';
 import activityFolderFlap from '../../../assets/Record_folder_activity_flap.svg';
-import memoImage from '../../../assets/Record_memo.png';
 import hiddenInfoIcon from '../../../assets/hidden_info.png';
 
 const navigationItems = [
@@ -23,11 +23,35 @@ const recordCards = [
   { id: 'mood-sleep', title: '감정/수면', top: 'top-[153px]', titleTop: 'top-[177px]', background: 'bg-primary', tabOpacity: 'opacity-100' },
 ];
 
-const mockRecords = {
-  'mood-sleep': { title: '감정/수면', date: '2026년 6월 1일', sections: [{ label: '감정 상태', values: ['행복한', '활동적인'] }, { label: '수면 시간', text: '7시간 30분' }] },
-  pain: { title: '통증/수유', date: '2026년 6월 1일', sections: [{ label: '골반저 증상', values: ['복부 처짐'] }, { label: '증상 심화 정도', text: '2/5' }, { label: '수유 방식', values: ['분유'] }] },
-  skin: { title: '피부/모발', date: '2026년 6월 1일', sections: [{ label: '피부 상태', text: '좋음' }, { label: '피부 증상', values: ['건조'] }, { label: '모발 상태', text: '평소와 같음' }] },
-  activity: { title: '활동량/메모', date: '2026년 6월 1일', sections: [{ label: '활동량', text: '30분' }, { label: '활동 종류', text: '산책' }, { label: '자유 메모', text: '컨디션이 좋아 가볍게 산책했어요.' }] },
+const emotionLabels = { happy: '행복한', angry: '화남', low_energy: '에너지부족', sad: '슬픈', depressed: '우울한', confused: '혼란스러운', calm: '차분한', moody: '변덕스러운', irritated: '짜증나는', worried: '걱정스러운', active: '활동적인' };
+const feedingLabels = { breast: '모유', formula: '분유', mixed: '혼합' };
+const hairLabels = { same: '평소와 같음', slight: '약간 빠짐', heavy: '많이 빠짐' };
+const skinLabels = { 1: '매우 좋음', 2: '좋음', 3: '약간의 트러블', 4: '트러블 심함' };
+
+const toDateKey = (date) => date.toLocaleDateString('en-CA');
+const formatRecordDate = (dateKey) => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return `${year}년 ${month}월 ${day}일`;
+};
+const formatHours = (hours) => {
+  if (hours == null) return '기록 없음';
+  const totalMinutes = Math.round(Number(hours) * 60);
+  return `${Math.floor(totalMinutes / 60)}시간 ${totalMinutes % 60}분`;
+};
+const splitExercise = (exercise = '') => {
+  const [type = '', duration = ''] = exercise.split(' / ');
+  return { type, duration };
+};
+const createRecords = (log, dateKey) => {
+  const date = formatRecordDate(dateKey);
+  if (!log) return null;
+  const exercise = splitExercise(log.exercise);
+  return {
+    'mood-sleep': { title: '감정/수면', date, sections: [{ label: '감정 상태', values: log.emotion ? [emotionLabels[log.emotion] ?? log.emotion] : [] }, { label: '수면 시간', text: formatHours(log.sleep_hours) }] },
+    pain: { title: '통증/수유', date, sections: [{ label: '골반저 증상', values: log.pelvic_floor_symptoms ?? (log.pain_area ? [log.pain_area] : []) }, { label: '증상 심화 정도', text: log.pain_score == null ? '기록 없음' : `${log.pain_score}/5` }, { label: '수유 방식', values: log.breastfeeding ? [feedingLabels[log.breastfeeding] ?? log.breastfeeding] : [] }] },
+    skin: { title: '피부/모발', date, sections: [{ label: '피부 상태', text: skinLabels[log.skin_self_score] ?? '기록 없음' }, { label: '피부 증상', values: log.skin_symptom_tags ?? [] }, { label: '모발 상태', text: hairLabels[log.hair_loss_status] ?? '기록 없음' }] },
+    activity: { title: '활동량/메모', date, sections: [{ label: '활동량', text: exercise.duration || '기록 없음' }, { label: '활동 종류', text: exercise.type || log.exercise || '기록 없음' }, { label: '자유 메모', text: log.memo || '기록 없음' }] },
+  };
 };
 
 const RecordHistoryPage = ({ record, onBack }) => (
@@ -38,15 +62,12 @@ const RecordHistoryPage = ({ record, onBack }) => (
     </header>
     <p className="pt-6 text-[16px] font-medium text-black/70">{record.date}</p>
     <section className="mt-6 rounded-[20px] bg-gray-50 p-6">
-      {record.sections.map((section, index) => <div key={section.label}>{index > 0 && <div className="my-7 border-t border-gray-200" />}<h2 className="text-[20px] font-medium">{section.label}</h2>{section.values ? <div className="mt-5 flex flex-wrap gap-[10px]">{section.values.map((value) => <span key={value} className="rounded-[10px] bg-primary px-5 py-[10px] text-[16px] font-medium text-white">{value}</span>)}</div> : <p className="mt-4 text-[18px] font-medium leading-7 text-primary">{section.text}</p>}</div>)}
+      {record.sections.map((section, index) => <div key={section.label}>{index > 0 && <div className="my-7 border-t border-gray-200" />}<h2 className="text-[20px] font-medium">{section.label}</h2>{section.values ? (section.values.length > 0 ? <div className="mt-5 flex flex-wrap gap-[10px]">{section.values.map((value) => <span key={value} className="rounded-[10px] bg-primary px-5 py-[10px] text-[16px] font-medium text-white">{value}</span>)}</div> : <p className="mt-4 text-[18px] font-medium leading-7 text-primary">기록 없음</p>) : <p className="mt-4 text-[18px] font-medium leading-7 text-primary">{section.text}</p>}</div>)}
     </section>
   </main>
 );
 
-const ActivityMemoHistoryPage = ({ onBack }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  return (
+const ActivityMemoHistoryPage = ({ record, onBack }) => (
   <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light px-[27px] pb-10 pt-[102px]">
     <header className="absolute inset-x-0 top-0 flex h-[74px] items-center justify-center border-b border-[#dcdcdc] bg-gray-50">
       <button type="button" onClick={onBack} aria-label="뒤로 가기" className="absolute left-5 flex h-8 w-8 items-center justify-center">
@@ -55,41 +76,10 @@ const ActivityMemoHistoryPage = ({ onBack }) => {
       <h1 className="text-[20px] font-medium text-text-black">활동량/메모</h1>
     </header>
 
-    <section className="space-y-[30px]">
-      <div className="space-y-[15px]">
-        <h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">활동량</h2>
-        <div className="flex h-[51px] items-center rounded-[10px] border border-[#cbcbcb] bg-[#f6f6f6] px-4 text-[16px] text-[#121212]">1시간</div>
-      </div>
-      <div className="border-t border-gray-200" />
-      <div className="space-y-[15px]">
-        <h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">활동 종류</h2>
-        <div className="flex h-[51px] items-center rounded-[10px] border border-[#cbcbcb] bg-[#f6f6f6] px-4 text-[16px] text-[#121212]">산책</div>
-      </div>
-      <div className="border-t border-gray-200" />
-      <div className="space-y-[15px]">
-        <h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">자유 메모</h2>
-        <div className="min-h-[150px] rounded-[18px] border border-gray-300 px-[21px] py-[25px] text-[16px] leading-6 text-text-black">
-          손목 부분이 뻐근했고, 잠을 잘 못 자서 하루 종일 기분이 다운되어 있었음.
-        </div>
-      </div>
-      <div className="border-t border-gray-200" />
-      <div className="space-y-[15px]">
-        <h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">음성 메모</h2>
-        <div className="relative h-[67px] w-[300px] overflow-hidden">
-          <img src={memoImage} alt="" className="absolute -top-[64px] left-0 w-full" />
-          <button
-            type="button"
-            aria-label={isPlaying ? '음성 메모 일시 정지' : '음성 메모 재생'}
-            aria-pressed={isPlaying}
-            onClick={() => setIsPlaying((playing) => !playing)}
-            className={`absolute left-[74px] top-[17px] size-[38px] rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${isPlaying ? 'ring-2 ring-primary ring-offset-2' : ''}`}
-          />
-        </div>
-      </div>
-    </section>
+    <p className="mb-6 text-[16px] font-medium text-black/70">{record.date}</p>
+    <section className="space-y-[30px]">{record.sections.map((section, index) => <div key={section.label}>{index > 0 && <div className="mb-[30px] border-t border-gray-200" />}<div className="space-y-[15px]"><h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">{section.label}</h2><div className={`${section.label === '자유 메모' ? 'min-h-[150px] py-[25px]' : 'flex h-[51px] items-center'} rounded-[10px] border border-[#cbcbcb] bg-[#f6f6f6] px-4 text-[16px] text-[#121212]`}>{section.text}</div></div></div>)}</section>
   </main>
-  );
-};
+);
 
 const PrivacySelectionSheet = ({ onClose }) => {
   const [selectedItems, setSelectedItems] = useState([]);
@@ -171,6 +161,9 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
   const [isWeekView, setIsWeekView] = useState(false);
   const [privateCard, setPrivateCard] = useState(null);
   const [privateCards, setPrivateCards] = useState([]);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [isLogLoading, setIsLogLoading] = useState(true);
+  const [logError, setLogError] = useState('');
   const days = ['월', '화', '수', '목', '금', '토', '일'];
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - todayWeekday + (weekOffset * 7));
@@ -180,13 +173,31 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
     return date;
   });
   const selectedDate = weekDates[selectedDayIndex];
+  const selectedDateKey = toDateKey(selectedDate);
   const isSelectedToday = selectedDate.getTime() === today.getTime();
   const selectedDateLabel = isSelectedToday ? '오늘' : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`;
   const selectedDay = selectedDayIndex + 1;
   const setSelectedDay = (day) => setSelectedDayIndex(day - 1);
+  const records = createRecords(selectedLog ?? {}, selectedDateKey);
 
-  if (view === 'activity') return <ActivityMemoHistoryPage onBack={() => setView('journey')} />;
-  if (view !== 'journey' && view !== 'privacy') return <RecordHistoryPage record={mockRecords[view]} onBack={() => setView('journey')} />;
+  useEffect(() => {
+    let isActive = true;
+    careApi.getDailyLogs().then((logs) => {
+      if (!isActive) return;
+      setLogError('');
+      setSelectedLog((Array.isArray(logs) ? logs : []).find((log) => log.log_date === selectedDateKey) ?? null);
+    }).catch((error) => {
+      if (!isActive) return;
+      setSelectedLog(null);
+      setLogError(error?.message || '기록을 불러오지 못했습니다.');
+    }).finally(() => {
+      if (isActive) setIsLogLoading(false);
+    });
+    return () => { isActive = false; };
+  }, [selectedDateKey]);
+
+  if (view === 'activity') return <ActivityMemoHistoryPage record={records.activity} onBack={() => setView('journey')} />;
+  if (view !== 'journey' && view !== 'privacy') return <RecordHistoryPage record={records[view]} onBack={() => setView('journey')} />;
   if (isWeekView) return <WeeklyJourneyPage onDay={() => setIsWeekView(false)} onNavigate={onNavigate} privateCard={privateCard} privateCards={privateCards} onPrivateCard={setPrivateCard} onClosePrivate={() => setPrivateCard(null)} onConfirmPrivate={(card) => { setPrivateCards((cards) => cards.includes(card) ? cards.filter((privateItem) => privateItem !== card) : [...cards, card]); setPrivateCard(null); }} />;
 
   return (
@@ -207,7 +218,7 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
         <button type="button" aria-label="다음 주" onClick={() => setWeekOffset((offset) => offset + 1)} className="absolute right-2 top-[54px] text-[22px] text-[#121212]">›</button>
         <div className="mt-[10px] flex justify-between">{weekDates.map((date, index) => { const selected = index === selectedDayIndex; const isToday = date.getTime() === today.getTime(); return <button key={date.toISOString()} type="button" onClick={() => setSelectedDayIndex(index)} className="flex w-[35px] flex-col items-center gap-3"><span className={`flex size-[35px] items-center justify-center rounded-full text-[20px] font-medium tracking-[-1px] ${selected ? 'bg-primary text-white' : 'text-[#121212]'}`}>{date.getDate()}</span><span className={`text-[12px] font-medium tracking-[-0.6px] ${selected ? 'text-primary' : 'text-[#121212]'}`}>{isToday ? '오늘' : days[index]}</span></button>; })}</div>
       </section>
-      <section className="mx-auto mt-[69px] flex h-20 w-[360px] items-center gap-2 rounded-[20px] bg-primary-background px-[15px]"><img src={analysisIcon} alt="" className="h-[35px] w-[35px]" /><p className="px-[15px] text-[12px] font-medium leading-4 tracking-[-0.6px] text-primary">{selectedDateLabel}의 분석 리포트...</p></section>
+      <section className="mx-auto mt-[69px] flex h-20 w-[360px] items-center gap-2 rounded-[20px] bg-primary-background px-[15px]"><img src={analysisIcon} alt="" className="h-[35px] w-[35px]" /><p className="px-[15px] text-[12px] font-medium leading-4 tracking-[-0.6px] text-primary">{isLogLoading ? '기록을 불러오는 중이에요.' : logError || (selectedLog ? `${selectedDateLabel}의 기록을 확인해보세요.` : `${selectedDateLabel}에는 아직 기록이 없어요.`)}</p></section>
       <div className="mx-[21px] mt-[19px] flex items-center justify-between"><h2 className="text-[20px] font-medium tracking-[-0.4px]">기록 다시 보기</h2><button type="button" aria-label="비공개 항목 선택" onClick={() => setView('privacy')} className="flex size-[30px] items-center justify-center"><img src={hiddenInfoIcon} alt="" className="size-[30px]" /></button></div>
       <section className="relative mx-[40px] mt-[47px] h-[481px]" aria-label="기록 다시 보기">
         {recordCards.map((card) => <div key={card.id} className={`pointer-events-none absolute left-0 h-[328px] w-full rounded-[20px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] ${card.top} ${card.background}`}><img src={card.flap ?? folderFlap} alt="" className={`absolute -top-[18px] right-[22px] h-[18px] w-[70px] ${card.tabOpacity}`} /></div>)}

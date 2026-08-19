@@ -47,6 +47,7 @@ function OnboardingPage({ onNavigate = () => {} }) {
     if (step === 4) {
       setError('');
       setIsSubmitting(true);
+      setStep(5);
       try {
         await careApi.createOnboarding({
           delivery_type: formData.birthType,
@@ -54,9 +55,10 @@ function OnboardingPage({ onNavigate = () => {} }) {
           initial_feeding_type: formData.feedingType,
           pain_area: PAIN_AREA_MAP[formData.painArea] ?? 'custom',
         });
-        setStep(5);
+        onNavigate('home');
       } catch (requestError) {
         setError(requestError.message || '온보딩 정보를 저장하지 못했습니다.');
+        setStep(4);
       } finally {
         setIsSubmitting(false);
       }

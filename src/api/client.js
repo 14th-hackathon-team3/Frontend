@@ -71,7 +71,7 @@ export const apiRequest = async (path, { method = 'GET', body, auth = false, ret
     const fieldMessage = data && typeof data === 'object'
       ? Object.values(data).flat().find((value) => typeof value === 'string')
       : null;
-    const message = data?.detail || data?.message || fieldMessage || '요청을 처리하지 못했습니다.';
+    const message = data?.detail || data?.message || data?.error || fieldMessage || '요청을 처리하지 못했습니다.';
     throw new ApiError(message, response.status, data);
   }
   return data;
