@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { groupsApi } from '../../../api/groups';
 
 import Header from '../../../components/Header';
 import ProgressBar from '../../../components/ProgressBar';
@@ -24,19 +25,23 @@ function FamilyOnboardingPage() {
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 3) {
       setStep((prev) => prev + 1);
       return;
     }
 
     if (step === 3) {
-      console.log('가족 온보딩 최종 데이터:', formData);
-
-      // 추후 API 연동
-      // await postFamilyOnboarding(formData);
-
-      setStep(4);
+      try {
+        await groupsApi.completeMembershipOnboarding({
+          relation: formData.relationship,
+          is_cohabiting: formData.livingTogether === 'together',
+          available_time: formData.careTimes,
+        });
+        setStep(4);
+      } catch (requestError) {
+        console.error(requestError);
+      }
     }
   };
 

@@ -28,8 +28,14 @@ export const authApi = {
   updateMe: (payload) => apiRequest('/api/accounts/me/', { method: 'PATCH', body: payload, auth: true }),
   uploadPhoto: (file) => {
     const formData = new FormData();
-    formData.append('photo', file);
+    formData.append('profile_image', file);
     return apiRequest('/api/accounts/me/photo/', { method: 'PATCH', body: formData, auth: true });
   },
-  withdraw: () => apiRequest('/api/accounts/withdraw/', { method: 'DELETE', auth: true }),
+  withdraw: async () => {
+    try {
+      return await apiRequest('/api/accounts/withdraw/', { method: 'DELETE', auth: true });
+    } finally {
+      tokenStorage.clear();
+    }
+  },
 };

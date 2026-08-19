@@ -68,7 +68,7 @@ const MoodSleepRecordPage = ({ onBack, onNext }) => {
           {moodRows.map((row) => (
             <div key={row[0]} className="flex gap-[15px]">
               {row.map((mood) => (
-                <button key={mood} type="button" onClick={() => setSelectedMoods((current) => current.includes(mood) ? current.filter((item) => item !== mood) : [...current, mood])} className={`shrink-0 whitespace-nowrap rounded-[10px] py-[clamp(6px,2.24vw,9px)] px-[clamp(14px,6.22vw,25px)] text-[clamp(12px,4.48vw,18px)] font-medium leading-[1.5] tracking-[-0.02em] ${selectedMoods.includes(mood) ? 'bg-primary text-white' : 'bg-gray-50 text-black'}`}>{mood}</button>
+                <button key={mood} type="button" onClick={() => setSelectedMoods((current) => current[0] === mood ? [] : [mood])} className={`shrink-0 whitespace-nowrap rounded-[10px] py-[clamp(6px,2.24vw,9px)] px-[clamp(14px,6.22vw,25px)] text-[clamp(12px,4.48vw,18px)] font-medium leading-[1.5] tracking-[-0.02em] ${selectedMoods.includes(mood) ? 'bg-primary text-white' : 'bg-gray-50 text-black'}`}>{mood}</button>
               ))}
             </div>
           ))}
@@ -91,7 +91,7 @@ const MoodSleepRecordPage = ({ onBack, onNext }) => {
 
       <div className="absolute bottom-[47px] left-[23px] flex gap-[19px]">
         <button type="button" onClick={onBack} className="h-[51px] w-[165px] rounded-[10px] bg-gray-50 text-[16px] text-[#31302e]">이전</button>
-        <button type="button" onClick={onNext} className="h-[51px] w-[165px] rounded-[10px] bg-[#31302e] text-[16px] text-white">다음</button>
+        <button type="button" onClick={() => onNext({ emotion: selectedMoods[0] ?? null, sleepTime })} className="h-[51px] w-[165px] rounded-[10px] bg-[#31302e] text-[16px] text-white">다음</button>
       </div>
 
       {isPickerOpen && (

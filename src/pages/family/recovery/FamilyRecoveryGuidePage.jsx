@@ -35,7 +35,7 @@ const FamilyRecoveryGuidePage = ({ onNavigate = () => {} }) => {
         <button
           type="button"
           aria-label="홈으로 돌아가기"
-          onClick={() => onNavigate('familyHome')}
+          onClick={() => onNavigate('home')}
           className="flex size-8 items-center justify-center"
         >
           <img src={backButton} alt="" className="h-[21px] w-[13px]" />

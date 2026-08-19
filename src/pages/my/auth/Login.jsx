@@ -5,9 +5,10 @@ import logo from '../../../assets/logo2.svg';
 import kakaoIcon from '../../../assets/kakao.svg';
 
 const Login = ({ onLogin = () => {}, onSignup = () => {} }) => {
+  const inviteCode = typeof window === 'undefined' ? '' : window.location.pathname.match(/^\/invite\/([^/]+)\/?$/)?.[1] ?? '';
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [isSignupOpen, setIsSignupOpen] = useState(Boolean(inviteCode));
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,7 +26,7 @@ const Login = ({ onLogin = () => {}, onSignup = () => {} }) => {
     }
   };
 
-  if (isSignupOpen) return <Signup onBack={() => setIsSignupOpen(false)} onComplete={(signupData) => { onSignup(signupData); setIsSignupOpen(false); }} />;
+  if (isSignupOpen) return <Signup inviteCode={inviteCode} onBack={() => setIsSignupOpen(false)} onComplete={(signupData) => { onSignup(signupData); setIsSignupOpen(false); }} />;
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light">

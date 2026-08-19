@@ -11,7 +11,13 @@ const ProfileEditPage = ({ initialProfile, onBack, onSave }) => {
   const handlePhotoChange = (event) => {
     const [file] = event.target.files;
 
-    if (file) updateField('photo', URL.createObjectURL(file));
+    if (file) {
+      setProfile((current) => ({
+        ...current,
+        photo: URL.createObjectURL(file),
+        photoFile: file,
+      }));
+    }
   };
 
   return (

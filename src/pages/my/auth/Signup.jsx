@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { authApi } from '../../../api/auth';
+import { groupsApi } from '../../../api/groups';
 
-const Signup = ({ onBack = () => {}, onComplete = () => {} }) => {
+const Signup = ({ inviteCode = '', onBack = () => {}, onComplete = () => {} }) => {
   const [form, setForm] = useState({ id: '', password: '', passwordConfirm: '', name: '' });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,12 +21,18 @@ const Signup = ({ onBack = () => {}, onComplete = () => {} }) => {
     setError('');
     setIsSubmitting(true);
     try {
+      if (inviteCode) {
+        const invitation = await groupsApi.verifyInvite(inviteCode);
+        if (invitation?.is_valid === false) throw new Error('유효하지 않거나 만료된 초대 링크입니다.');
+      }
       const data = await authApi.signup({
         email: form.id,
         password: form.password,
-        password_confirm: form.passwordConfirm,
         name: form.name,
+        user_type: inviteCode ? 'guardian' : 'mother',
+        ...(inviteCode ? { invite_code: inviteCode } : {}),
       });
+      await authApi.login({ email: form.id, password: form.password });
       onComplete(data);
     } catch (requestError) {
       setError(requestError.message || '회원가입에 실패했습니다.');
