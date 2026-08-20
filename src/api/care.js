@@ -2,15 +2,9 @@ import { apiRequest } from './client';
 
 export const careApi = {
   getDailyLogs: (days) => {
-    const query =
-      days == null
-        ? ''
-        : `?days=${encodeURIComponent(days)}`;
+    const query = days == null ? '' : `?days=${encodeURIComponent(days)}`;
 
-    return apiRequest(
-      `/api/care/daily-logs/${query}`,
-      { auth: true },
-    );
+    return apiRequest(`/api/care/daily-logs/${query}`, { auth: true });
   },
 
   createDailyLog: (payload) =>
@@ -66,6 +60,17 @@ export const careApi = {
     apiRequest('/api/care/voice-memos/', {
       method: 'POST',
       body: payload,
+      auth: true,
+    }),
+
+  getVoiceMemos: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+
+    return apiRequest(`/api/care/voice-memos/${query ? `?${query}` : ''}`, { auth: true });
+  },
+
+  getVoiceMemo: (id) =>
+    apiRequest(`/api/care/voice-memos/${id}/`, {
       auth: true,
     }),
 
