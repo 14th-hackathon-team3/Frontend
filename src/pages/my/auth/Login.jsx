@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Signup from './Signup';
 import { authApi } from '../../../api/auth';
 import logo from '../../../assets/logo1.svg';
-import kakaoIcon from '../../../assets/kakao.svg';
 
 const Login = ({ onLogin = () => {}, onSignup = () => {} }) => {
   const inviteCode = typeof window === 'undefined' ? '' : window.location.pathname.match(/^\/invite\/([^/]+)\/?$/)?.[1] ?? '';
@@ -37,14 +36,14 @@ const Login = ({ onLogin = () => {}, onSignup = () => {} }) => {
 
       <form onSubmit={handleSubmit} className="absolute left-[31px] right-[30px] top-[307px]">
         <label className="block text-[16px] text-[#545454]">
-          아이디
+          이메일
           <input
             value={id}
             onChange={(event) => setId(event.target.value)}
             type="text"
             inputMode="email"
             autoComplete="username"
-            placeholder="아이디를 입력하세요"
+            placeholder="이메일을 입력하세요"
             className="mt-[15px] block h-[51px] w-full rounded-[10px] border border-[#cbcbcb] bg-[#f6f6f6] px-4 text-[16px] text-text-black outline-none placeholder:text-[#999] focus:border-primary"
           />
         </label>
@@ -64,24 +63,15 @@ const Login = ({ onLogin = () => {}, onSignup = () => {} }) => {
         {error && <p className="absolute top-[194px] w-full text-center text-[12px] text-error">{error}</p>}
 
         <button
-          type="button"
-          aria-label="카카오톡으로 로그인 또는 회원가입"
-          className="absolute top-[221px] flex h-[50px] w-full items-center justify-center gap-4 rounded-[10px] bg-[#ffcc00] text-[14px] font-semibold text-black"
-        >
-          <img src={kakaoIcon} alt="" className="h-[19px] w-[21px]" />
-          카카오톡으로 로그인/회원가입 →
-        </button>
-
-        <button
           type="submit"
           disabled={isSubmitting}
-          className="absolute top-[285px] h-[50px] w-full rounded-[10px] bg-primary text-[16px] font-semibold text-white disabled:opacity-60"
+          className="absolute top-[221px] h-[50px] w-full rounded-[10px] bg-primary text-[16px] font-semibold text-white disabled:opacity-60"
         >
           {isSubmitting ? '로그인 중...' : '로그인 →'}
         </button>
       </form>
 
-      <button type="button" onClick={() => setIsSignupOpen(true)} className="absolute left-1/2 top-[662px] -translate-x-1/2 whitespace-nowrap text-[16px] text-[#545454]">
+      <button type="button" onClick={() => setIsSignupOpen(true)} className="absolute left-1/2 top-[598px] -translate-x-1/2 whitespace-nowrap text-[16px] text-[#545454]">
         회원가입
       </button>
     </main>

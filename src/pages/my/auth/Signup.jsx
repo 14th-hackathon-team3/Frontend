@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { authApi } from '../../../api/auth';
 import { groupsApi } from '../../../api/groups';
+import backButton from '../../../assets/back_button.svg';
 
 const Signup = ({ inviteCode = '', onBack = () => {}, onComplete = () => {}, accentColor = '#c485f8' }) => {
   const [form, setForm] = useState({ id: '', password: '', passwordConfirm: '', name: '' });
@@ -42,7 +43,7 @@ const Signup = ({ inviteCode = '', onBack = () => {}, onComplete = () => {}, acc
   };
 
   const fields = [
-    { key: 'id', label: '아이디', placeholder: '아이디를 입력하세요', type: 'text', autoComplete: 'username' },
+    { key: 'id', label: '이메일', placeholder: '이메일을 입력하세요', type: 'text', autoComplete: 'username' },
     { key: 'password', label: '비밀번호', placeholder: '비밀번호를 입력하세요', type: 'password', autoComplete: 'new-password' },
     { key: 'passwordConfirm', label: '비밀번호 확인', placeholder: '비밀번호를 한번 더 입력하세요', type: 'password', autoComplete: 'new-password' },
     { key: 'name', label: '이름', placeholder: '이름을 입력하세요', type: 'text', autoComplete: 'name' },
@@ -50,7 +51,10 @@ const Signup = ({ inviteCode = '', onBack = () => {}, onComplete = () => {}, acc
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light px-[19px] pt-[93px]">
-      <button type="button" onClick={onBack} className="text-[24px] font-medium text-black">회원가입</button>
+      <button type="button" onClick={onBack} aria-label="뒤로 가기" className="absolute left-[30px] top-[49px] flex items-center justify-center">
+        <img src={backButton} alt="" className="h-[21px] w-[13px]" />
+      </button>
+      <h1 className="text-[24px] font-medium text-black">회원가입</h1>
       <form onSubmit={handleSubmit} className="mt-[55px] space-y-10">
         {fields.map((field) => <label key={field.key} className="flex h-[39px] items-end gap-[50px]"><span className="flex h-[39px] w-[62px] items-center py-[10px] text-[16px] text-[#020913]">{field.label}</span><input value={form[field.key]} onChange={updateField(field.key)} type={field.type} autoComplete={field.autoComplete} placeholder={field.placeholder} style={{ '--signup-accent': accentColor }} className="h-[39px] w-[250px] rounded-[10px] border border-[#848991] bg-white px-3 text-[12px] text-text-black outline-none placeholder:text-[#848991] focus:border-(--signup-accent)" /></label>)}
         {error && <p className="pt-1 text-center text-[12px] text-[#eb2b2b]">{error}</p>}

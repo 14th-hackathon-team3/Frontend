@@ -23,6 +23,7 @@ import FamilyTodoPage from './pages/family/todo/TodoPage';
 import FamilyMypage from './pages/family/mypage/Mypage';
 import FamilyOnboardingPage from './pages/family/onboarding/FamilyOnboardingPage';
 import FamilyRecoveryGuidePage from './pages/family/recovery/FamilyRecoveryGuidePage';
+import FamilyRecoveryContentPage from './pages/family/content/RecoveryContentPage';
 import FamilyInvitePage from './pages/family/auth/Family_invite';
 import FamilyInviteExpiredPage from './pages/family/auth/FamilyInviteExpiredPage';
 import FamilySignup from './pages/family/auth/Signup';
@@ -51,7 +52,7 @@ const familyPages = {
   journey: FamilyJourneyPage,
   todo: FamilyTodoPage,
   mypage: FamilyMypage,
-  recoveryContent: RecoveryContentPage,
+  recoveryContent: FamilyRecoveryContentPage,
   recoveryGuide: FamilyRecoveryGuidePage,
   onboarding: FamilyOnboardingPage,
   notification: FamilyNotificationPage,
