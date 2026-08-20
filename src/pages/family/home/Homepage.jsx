@@ -8,12 +8,7 @@ import babyImage from '../../../assets/Home_baby.png';
 import drinkImage from '../../../assets/Home_drink.png';
 import yogaImage from '../../../assets/Home_yoga.svg.svg';
 import recoveryTooltipTail from '../../../assets/Family_recovery_tooltip_tail.svg';
-import progressLine from '../../../assets/Family_progress_line.svg';
 import progressDashed from '../../../assets/Family_progress_dashed.svg';
-import progressDot from '../../../assets/Family_progress_dot.svg';
-import progressFutureDot from '../../../assets/Family_progress_future_dot.svg';
-import progressCurrent from '../../../assets/Family_progress_current.svg';
-import progressCurrentBg from '../../../assets/Family_progress_current_bg.svg';
 import selectedDayBackground from '../../../assets/Family_home_selected_day.svg';
 import { contentApi } from '../../../api/content';
 import { careApi } from '../../../api/care';
@@ -61,6 +56,53 @@ const dialSlots = [
   { left: 329, top: 89 },
   { left: 364, top: 128 },
 ];
+
+const progressSegments = [
+  { startWeek: 2, endWeek: 4, start: { x: 1.17969, y: 28.8181 }, control1: { x: 26.3464, y: 3.65142 }, control2: { x: 51.513, y: 0.505581 }, end: { x: 76.6797, y: 19.3806 } },
+  { startWeek: 4, endWeek: 5, start: { x: 76.6797, y: 19.3806 }, control1: { x: 101.846, y: 35.1097 }, control2: { x: 127.013, y: 33.5368 }, end: { x: 152.18, y: 14.6618 } },
+  { startWeek: 5, endWeek: 6, start: { x: 152.18, y: 14.6618 }, control1: { x: 177.346, y: -4.21317 }, control2: { x: 202.513, y: -3.26942 }, end: { x: 227.68, y: 17.4931 } },
+  { startWeek: 6, endWeek: 8, start: { x: 227.68, y: 17.4931 }, control1: { x: 240.263, y: 23.7847 }, control2: { x: 252.846, y: 25.0431 }, end: { x: 265.43, y: 21.2681 } },
+];
+
+const progressMilestones = [
+  { week: 2, x: 1.17969, y: 28.8181, labelTop: 80 },
+  { week: 4, x: 76.6797, y: 19.3806, labelTop: 73 },
+  { week: 5, x: 152.18, y: 14.6618, labelTop: 67 },
+  { week: 6, x: 227.68, y: 17.4931, labelTop: 72 },
+  { week: 8, x: 265.43, y: 21.2681, labelTop: 78 },
+];
+
+const getProgressPoint = (week) => {
+  const clampedWeek = Math.min(8, Math.max(2, week));
+  const segment = progressSegments.find(({ endWeek }) => clampedWeek <= endWeek) ?? progressSegments.at(-1);
+  const progress = (clampedWeek - segment.startWeek) / (segment.endWeek - segment.startWeek);
+  const inverseProgress = 1 - progress;
+
+  return {
+    week: clampedWeek,
+    x: (inverseProgress ** 3 * segment.start.x) + (3 * inverseProgress ** 2 * progress * segment.control1.x) + (3 * inverseProgress * progress ** 2 * segment.control2.x) + (progress ** 3 * segment.end.x),
+    y: (inverseProgress ** 3 * segment.start.y) + (3 * inverseProgress ** 2 * progress * segment.control1.y) + (3 * inverseProgress * progress ** 2 * segment.control2.y) + (progress ** 3 * segment.end.y),
+  };
+};
+
+const getPostpartumDay = (deliveryDate) => {
+  if (typeof deliveryDate !== 'string') return null;
+
+  const match = deliveryDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const delivery = new Date(year, month - 1, day);
+  if (delivery.getFullYear() !== year || delivery.getMonth() !== month - 1 || delivery.getDate() !== day) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const elapsedDays = Math.floor((today.getTime() - delivery.getTime()) / 86400000);
+  return elapsedDays >= 0 ? elapsedDays + 1 : null;
+};
 
 const RecoveryInfoModal = ({ onClose, stageName }) => (
   <div className="fixed inset-0 z-[60] mx-auto w-full max-w-[402px] bg-[#3b3b3b]/20">
@@ -153,7 +195,7 @@ const Homepage = ({ onNavigate = () => {} }) => {
     stage_name: '3~6주차',
     goal: '일상 기능 회복하기',
   });
-  const [currentWeek, setCurrentWeek] = useState(5);
+  const [displayWeek, setDisplayWeek] = useState(5);
   const [homeError, setHomeError] = useState('');
   const dialStartX = useRef(null);
   const didDial = useRef(false);
@@ -162,21 +204,15 @@ const Homepage = ({ onNavigate = () => {} }) => {
     const loadHome = async () => {
       try {
         const care = await careApi.getMyCare();
-        let recoveryDay = null;
+        const postpartumDay = getPostpartumDay(care?.delivery_date);
+        const postpartumWeek = care?.postpartum_week == null ? NaN : Number(care.postpartum_week);
+        let week = 5;
 
-        if (care?.delivery_date) {
-          const deliveryDate = new Date(`${care.delivery_date}T00:00:00`);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          recoveryDay = Math.floor((today - deliveryDate) / 86400000) + 1;
-          if (Number.isFinite(recoveryDay)) {
-            setSelectedDay(Math.min(60, Math.max(1, recoveryDay)));
-          }
+        if (postpartumDay != null) setSelectedDay(postpartumDay);
+        if (Number.isInteger(postpartumWeek) && postpartumWeek >= 0) {
+          week = postpartumWeek + 1;
+          setDisplayWeek(week);
         }
-
-        const calculatedWeek = recoveryDay ? Math.max(1, Math.ceil(recoveryDay / 7)) : null;
-        const week = calculatedWeek || Number(care?.postpartum_week) || 1;
-        setCurrentWeek(week);
 
         const stage = await contentApi.getCurrentStage(week);
         setRecoveryStage(stage);
@@ -209,6 +245,9 @@ const Homepage = ({ onNavigate = () => {} }) => {
       didDial.current = false;
     }, 0);
   };
+  const currentProgressPoint = getProgressPoint(displayWeek);
+  const hasStartedProgress = displayWeek >= 2;
+
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[118px] pt-[55px]">
       {homeError && (
@@ -226,13 +265,13 @@ const Homepage = ({ onNavigate = () => {} }) => {
       </button>
       <header className="px-[22px] pt-[43px]">
         <span className="inline-flex rounded-full bg-[#809CFF] px-[10px] py-[2px] text-[11px] font-semibold tracking-[0.33px] text-white">
-          산후 {currentWeek}주차
+          산후 {displayWeek}주차
         </span>
         <h1 className="mt-1 text-[24px] font-semibold tracking-[-0.48px] text-[#121212]">
           오늘의 회복 여정, 함께 살펴볼까요?
         </h1>
         <p className="mt-[6px] text-[12px] tracking-[-0.36px] text-[#666]">
-          출산 {currentWeek}주차 · 회복 여정 {selectedDay}일째
+          출산 {displayWeek}주차 · 회복 여정 {selectedDay}일째
         </p>
       </header>
 
@@ -313,73 +352,49 @@ const Homepage = ({ onNavigate = () => {} }) => {
         "
         aria-label="산후 회복 진행 정보 보기"
       >
-        {/* 전체 점선 */}
         <img
           src={progressDashed}
           alt=""
           className="pointer-events-none absolute left-[45px] top-[39px] h-[32px] w-[267px]"
         />
-
-        {/* 완료 구간 실선 */}
-        <img
-          src={progressLine}
-          alt=""
-          className="pointer-events-none absolute left-[45px] top-[45px] h-[26px] w-[154px]"
-        />
-
-        {/* 2주 */}
-        <img
-          src={progressDot}
-          alt=""
-          className="absolute left-[40px] top-[62px] h-[12px] w-[12px]"
-        />
-
-        {/* 4주 */}
-        <img
-          src={progressDot}
-          alt=""
-          className="absolute left-[116px] top-[52px] h-[12px] w-[12px]"
-        />
-        {/* 현재 5주 배경 */}
-        <img
-          src={progressCurrentBg}
-          alt=""
-          className="absolute left-[184px] top-[36px] h-[34px] w-[34px]"
-        />
-
-        {/* 현재 5주 점 */}
-        <img
-          src={progressCurrent}
-          alt=""
-          className="absolute left-[192.5px] top-[44.5px] h-[17px] w-[17px]"
-        />
-
-        {/* 6주 */}
-        <img
-          src={progressFutureDot}
-          alt=""
-          className="absolute left-[267px] top-[50px] h-[12px] w-[12px]"
-        />
-
-        {/* 8주 */}
-        <img
-          src={progressFutureDot}
-          alt=""
-          className="absolute left-[307px] top-[56px] h-[12px] w-[12px]"
-        />
-
-        {/* 주차 텍스트 */}
-        <span className="absolute left-[38px] top-[80px] text-[11px] text-gray-500">2주</span>
-
-        <span className="absolute left-[114px] top-[73px] text-[11px] text-gray-500">4주</span>
-
-        <span className="absolute left-[190px] top-[67px] text-[11px] font-medium text-[#809CFF]">
-          {currentWeek}주
-        </span>
-
-        <span className="absolute left-[265px] top-[72px] text-[11px] text-gray-300">6주</span>
-
-        <span className="absolute left-[305px] top-[78px] text-[11px] text-gray-300">8주</span>
+        {hasStartedProgress && (
+          <div
+            className="pointer-events-none absolute left-[45px] top-[39px] h-[32px] overflow-hidden"
+            style={{ width: `${currentProgressPoint.x + 2}px` }}
+          >
+            <svg width="267" height="32" viewBox="0 0 267 32" fill="none" className="h-[32px] w-[267px] max-w-none" aria-hidden="true">
+              <path d="M1.17969 28.8181C26.3464 3.65142 51.513 0.505581 76.6797 19.3806C101.846 35.1097 127.013 33.5368 152.18 14.6618C177.346 -4.21317 202.513 -3.26942 227.68 17.4931C240.263 23.7847 252.846 25.0431 265.43 21.2681" stroke="#809CFF" strokeWidth="2.35938" strokeLinecap="round" />
+            </svg>
+          </div>
+        )}
+        {progressMilestones.map((milestone) => {
+          const isPast = hasStartedProgress && milestone.week < currentProgressPoint.week;
+          return (
+            <span
+              key={milestone.week}
+              className={`pointer-events-none absolute block size-[12px] rounded-full ${isPast ? 'bg-[#809CFF]' : 'bg-[#F1EFF4]'}`}
+              style={{ left: `${45 + milestone.x - 6}px`, top: `${39 + milestone.y - 6}px` }}
+            />
+          );
+        })}
+        {hasStartedProgress && (
+          <>
+            <span className="pointer-events-none absolute block size-[34px] rounded-full bg-[#809CFF]/15" style={{ left: `${45 + currentProgressPoint.x - 17}px`, top: `${39 + currentProgressPoint.y - 17}px` }} />
+            <span className="pointer-events-none absolute block size-[17px] rounded-full bg-[#809CFF]" style={{ left: `${45 + currentProgressPoint.x - 8.5}px`, top: `${39 + currentProgressPoint.y - 8.5}px` }} />
+          </>
+        )}
+        {progressMilestones.map((milestone) => {
+          const isCurrent = hasStartedProgress && milestone.week === currentProgressPoint.week;
+          return (
+            <span
+              key={`${milestone.week}-label`}
+              className={`pointer-events-none absolute -translate-x-1/2 text-[11px] ${isCurrent ? 'font-medium text-[#809CFF]' : !hasStartedProgress || milestone.week > currentProgressPoint.week ? 'text-gray-300' : 'text-gray-500'}`}
+              style={{ left: `${45 + milestone.x}px`, top: `${milestone.labelTop}px` }}
+            >
+              {milestone.week}주
+            </span>
+          );
+        })}
       </button>
 
       <section className="mt-6">
