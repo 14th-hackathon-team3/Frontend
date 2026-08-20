@@ -99,6 +99,13 @@ const createRecords = (log, dateKey) => {
   };
 };
 
+const getTodayAnalysisText = (data) => {
+  if (!data || typeof data !== 'object') return '';
+  if (data.has_plan === false) return '';
+
+  return typeof data.ai_summary === 'string' ? data.ai_summary.trim() : '';
+};
+
 const toChartPoints = (values, { min = null, max = null } = {}) => {
   if (!Array.isArray(values) || values.length === 0) return [];
 
@@ -885,6 +892,9 @@ const JourneyPage = ({
   const [selectedLog, setSelectedLog] = useState(null);
   const [weekTrend, setWeekTrend] = useState(null);
   const [isTrendLoading, setIsTrendLoading] = useState(true);
+  const [todayAnalysis, setTodayAnalysis] = useState('');
+  const [isAnalysisLoading, setIsAnalysisLoading] = useState(true);
+  const [analysisError, setAnalysisError] = useState('');
 
 
   const [privateCards] =
@@ -979,15 +989,46 @@ const JourneyPage = ({
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    let active = true;
 
-  const dateLabel =
-    selectedDate.getTime() ===
-    today.getTime()
-      ? '오늘'
-      : `${
-          selectedDate.getMonth() +
-          1
-        }월 ${selectedDate.getDate()}일`;
+    const fetchTodayAnalysis = async () => {
+      setIsAnalysisLoading(true);
+      setAnalysisError('');
+
+      try {
+        const data = await careApi.getTodayAnalysis();
+
+        if (!active) return;
+
+        setTodayAnalysis(getTodayAnalysisText(data));
+      } catch (error) {
+        if (!active) return;
+
+        console.error('오늘의 AI 분석 조회 실패:', error);
+
+        const status = error?.response?.status ?? error?.status;
+
+        if (status === 404) {
+          setTodayAnalysis('');
+          setAnalysisError('');
+          return;
+        }
+
+        setTodayAnalysis('');
+        setAnalysisError(
+          error?.response?.data?.detail || error?.message || '오늘의 분석을 불러오지 못했습니다.',
+        );
+      } finally {
+        if (active) setIsAnalysisLoading(false);
+      }
+    };
+
+    fetchTodayAnalysis();
+
+    return () => { active = false; };
+  }, []);
+
 
   const records = createRecords(selectedLog, selectedDateKey);
 
@@ -1348,7 +1389,7 @@ const JourneyPage = ({
           mx-auto
           mt-[20px]
           flex
-          h-[80px]
+          min-h-[80px]
           w-[360px]
           items-center
           gap-[12px]
@@ -1365,16 +1406,18 @@ const JourneyPage = ({
         />
 
 
-        <p
-          className="
-            text-[12px]
-            font-medium
-            tracking-[-0.4px]
-            text-[#809CFF]
-          "
-        >
-          {dateLabel}의 분석
-        </p>
+        <div className="text-[12px] font-medium tracking-[-0.4px] text-[#809CFF]">
+          <p className="leading-5">
+            {isAnalysisLoading
+              ? '오늘의 분석을 불러오는 중이에요.'
+              : analysisError
+                ? analysisError
+                : todayAnalysis ||
+                  (selectedLog
+                    ? '오늘의 기록을 확인해보세요.'
+                    : '오늘은 아직 기록이 없어요.')}
+          </p>
+        </div>
 
       </section>
 
