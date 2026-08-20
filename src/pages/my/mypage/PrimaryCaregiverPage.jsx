@@ -6,13 +6,15 @@ import backButton from '../../../assets/back_button.svg';
 const getMemberId = (member) =>
   member.membership_id ?? member.id;
 
-// relation이 아니라 백엔드에서 내려주는 실제 사용자 이름(name)을 표시
 const getMemberLabel = (member) =>
   member.name || member.email || '가족 구성원';
 
 const PrimaryCaregiverPage = ({ onBack }) => {
   const [members, setMembers] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
+
+  // 선택된 주보호자 membership_id 목록
+  const [selectedIds, setSelectedIds] = useState([]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,7 +32,6 @@ const PrimaryCaregiverPage = ({ onBack }) => {
 
         if (!isActive) return;
 
-        // pagination 여부까지 대응
         const nextMembers = Array.isArray(data)
           ? data
           : Array.isArray(data?.results)
@@ -39,16 +40,12 @@ const PrimaryCaregiverPage = ({ onBack }) => {
 
         setMembers(nextMembers);
 
-        // 현재 주보호자로 지정된 멤버 찾기
-        const primaryMember = nextMembers.find(
-          (member) => member.is_primary,
-        );
+        // 현재 주보호자로 지정되어 있는 멤버들
+        const primaryIds = nextMembers
+          .filter((member) => member.is_primary === true)
+          .map((member) => getMemberId(member));
 
-        setSelectedId(
-          primaryMember
-            ? getMemberId(primaryMember)
-            : null,
-        );
+        setSelectedIds(primaryIds);
       } catch (requestError) {
         if (!isActive) return;
 
@@ -58,7 +55,8 @@ const PrimaryCaregiverPage = ({ onBack }) => {
         );
 
         setMembers([]);
-        setSelectedId(null);
+        setSelectedIds([]);
+
         setError(
           requestError?.response?.data?.detail ||
             requestError?.message ||
@@ -78,21 +76,110 @@ const PrimaryCaregiverPage = ({ onBack }) => {
     };
   }, []);
 
-  const savePrimaryMember = async () => {
-    if (selectedId == null) return;
+  const togglePrimaryMember = (memberId) => {
+    setError('');
+
+    setSelectedIds((prev) => {
+      const isSelected = prev.includes(memberId);
+
+      // 이미 선택된 멤버라면 해제
+      if (isSelected) {
+        return prev.filter(
+          (id) => id !== memberId,
+        );
+      }
+
+      // 최대 3명
+      if (prev.length >= 3) {
+        setError(
+          '주보호자는 최대 3명까지 지정할 수 있습니다.',
+        );
+
+        return prev;
+      }
+
+      return [...prev, memberId];
+    });
+  };
+
+  const savePrimaryMembers = async () => {
+    if (selectedIds.length === 0) {
+      setError(
+        '주보호자를 최소 1명 이상 선택해주세요.',
+      );
+      return;
+    }
 
     setIsSaving(true);
     setError('');
 
     try {
-      // PUT /api/groups/members/{membership_id}/primary/
-      await groupsApi.setPrimaryMember(selectedId);
+      /*
+       * 현재 서버의 is_primary 상태와
+       * 사용자가 화면에서 선택한 상태 비교
+       */
+      const changedMembers = members.filter(
+        (member) => {
+          const memberId = getMemberId(member);
 
-      // 주보호자 변경 후 케어 플랜 재생성
-      const plan = await careApi.generatePlan();
+          const currentIsPrimary =
+            member.is_primary === true;
 
+          const nextIsPrimary =
+            selectedIds.includes(memberId);
+
+          return (
+            currentIsPrimary !== nextIsPrimary
+          );
+        },
+      );
+
+      /*
+       * 변경된 멤버만 PATCH
+       *
+       * PATCH
+       * /api/groups/members/{membership_id}/primary/
+       *
+       * body:
+       * {
+       *   is_primary: true
+       * }
+       *
+       * 또는
+       *
+       * {
+       *   is_primary: false
+       * }
+       */
+      await Promise.all(
+        changedMembers.map((member) => {
+          const memberId =
+            getMemberId(member);
+
+          const isPrimary =
+            selectedIds.includes(memberId);
+
+          return groupsApi.setPrimaryMember(
+            memberId,
+            isPrimary,
+          );
+        }),
+      );
+
+      /*
+       * 주보호자 지정 완료 후
+       * 케어 플랜 다시 생성
+       */
+      const plan =
+        await careApi.generatePlan();
+
+      /*
+       * 기존 로직대로 생성된 plan 확인
+       */
       if (plan?.plan_id != null) {
-        await careApi.confirmPlan(plan.plan_id);
+        await careApi.confirmPlan(
+          plan.plan_id,
+        );
       }
 
       onBack();
@@ -134,9 +221,15 @@ const PrimaryCaregiverPage = ({ onBack }) => {
       </header>
 
       <section className="mx-auto mt-[27px] w-[352px]">
-        <h2 className="text-[20px] font-medium text-text-black">
-          주보호자 지정
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-[20px] font-medium text-text-black">
+            주보호자 지정
+          </h2>
+
+          <span className="text-[13px] font-medium text-[#bc75ee]">
+            {selectedIds.length}/3
+          </span>
+        </div>
 
         <div className="mt-[22px] rounded-[10px] bg-[#31302e] px-[13px] py-1">
           {isLoading ? (
@@ -150,18 +243,31 @@ const PrimaryCaregiverPage = ({ onBack }) => {
                   getMemberId(member);
 
                 const selected =
-                  memberId === selectedId;
+                  selectedIds.includes(memberId);
+
+                const limitReached =
+                  selectedIds.length >= 3 &&
+                  !selected;
 
                 return (
                   <button
                     key={memberId}
                     type="button"
                     onClick={() =>
-                      setSelectedId(memberId)
+                      togglePrimaryMember(
+                        memberId,
+                      )
                     }
-                    className="flex h-[40px] w-full items-center justify-between border-b border-white/10 text-left last:border-0"
+                    disabled={
+                      limitReached ||
+                      isSaving
+                    }
+                    className={`flex h-[40px] w-full items-center justify-between border-b border-white/10 text-left last:border-0 ${
+                      limitReached
+                        ? 'cursor-not-allowed opacity-50'
+                        : ''
+                    }`}
                   >
-                    {/* GET /api/groups/members/ 의 name 사용 */}
                     <span className="text-[16px] text-white">
                       {getMemberLabel(member)}
                     </span>
@@ -190,6 +296,8 @@ const PrimaryCaregiverPage = ({ onBack }) => {
         </div>
 
         <p className="mt-[170px] rounded-[10px] bg-white px-[14px] py-4 text-center text-[12px] leading-5 text-[#bc75ee]">
+          주보호자는 최대 3명까지 지정할 수 있으며,
+          <br />
           주보호자로 지정한 보호자에게만 투두를
           배정할 수 있습니다.
         </p>
@@ -203,9 +311,9 @@ const PrimaryCaregiverPage = ({ onBack }) => {
 
       <button
         type="button"
-        onClick={savePrimaryMember}
+        onClick={savePrimaryMembers}
         disabled={
-          selectedId == null ||
+          selectedIds.length === 0 ||
           isSaving ||
           isLoading
         }
