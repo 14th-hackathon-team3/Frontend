@@ -218,6 +218,7 @@ const Homepage = ({ onNavigate = () => {} }) => {
       )}
       <button
         type="button"
+        onClick={() => onNavigate('notification')}
         aria-label="알림"
         className="absolute right-[21px] top-[55px] z-10 flex size-[43px] items-center justify-center rounded-full bg-[#809CFF]"
       >
