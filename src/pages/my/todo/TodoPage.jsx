@@ -340,7 +340,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                   ${activeTab === 'partner' ? 'text-primary-background' : 'text-primary'}
                 `}
               >
-                Partner
+                Family
               </span>
             </button>
           </div>
