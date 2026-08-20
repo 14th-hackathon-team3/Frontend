@@ -18,11 +18,31 @@ const emotionValues = { 행복한: 'happy', 화남: 'angry', 에너지부족: 'l
 const feedingValues = { 모유: 'breast', 분유: 'formula', 혼합: 'mixed' };
 const hairValues = { '평소와 같음': 'same', '약간 빠짐': 'slight', '많이 빠짐': 'heavy' };
 const toDateInput = (date) => date.toLocaleDateString('en-CA');
+const getTodayLabel = () => new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric' }).format(new Date());
 
 const RecordPage = ({ onNavigate = () => {} }) => {
+  const [todayLabel, setTodayLabel] = useState(getTodayLabel);
   const [screen, setScreen] = useState('main');
   const [dailyLogId, setDailyLogId] = useState(null);
   const [draft, setDraft] = useState({});
+
+  useEffect(() => {
+    let timeoutId;
+
+    const updateAtMidnight = () => {
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setHours(24, 0, 0, 0);
+
+      timeoutId = window.setTimeout(() => {
+        setTodayLabel(getTodayLabel());
+        updateAtMidnight();
+      }, nextMidnight.getTime() - now.getTime());
+    };
+
+    updateAtMidnight();
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -91,7 +111,7 @@ const RecordPage = ({ onNavigate = () => {} }) => {
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[120px]">
       <header className="flex h-[74px] items-center justify-center border-b border-gray-200 bg-gray-50"><h1 className="text-[20px] font-medium text-text-black">오늘의 기록</h1></header>
-      <section className="px-[38px] pt-[17px]"><p className="text-[16px] font-medium leading-6 tracking-[-0.32px] text-black/70">4월 21일 | 2/8 완료</p><button type="button" onClick={() => setScreen('recording')} className="mx-auto mt-[18px] block h-[70px] w-[70px]" aria-label="음성 기록 시작"><img src={micIcon} alt="" className="h-full w-full" /></button><div className="mt-[18px] flex h-20 items-center gap-4 rounded-[20px] bg-primary-background px-[31px]"><img src={infoIcon} alt="안내" className="h-8 w-8 shrink-0" /><p className="text-[12px] font-medium leading-4 tracking-[-0.48px] text-primary">통증, 감정, 증상 등을 음성 메모로 기록할 수 있어요.<br />위 녹음 버튼을 눌러 기록해보세요.</p></div></section>
+      <section className="px-[38px] pt-[17px]"><p className="text-[16px] font-medium leading-6 tracking-[-0.32px] text-black/70">{todayLabel}</p><button type="button" onClick={() => setScreen('recording')} className="mx-auto mt-[18px] block h-[70px] w-[70px]" aria-label="음성 기록 시작"><img src={micIcon} alt="" className="h-full w-full" /></button><div className="mt-[18px] flex h-20 items-center gap-4 rounded-[20px] bg-primary-background px-[31px]"><img src={infoIcon} alt="안내" className="h-8 w-8 shrink-0" /><p className="text-[12px] font-medium leading-4 tracking-[-0.48px] text-primary">통증, 감정, 증상 등을 음성 메모로 기록할 수 있어요.<br />위 녹음 버튼을 눌러 기록해보세요.</p></div></section>
       <section className="relative mx-[40px] mt-[47px] h-[481px]" aria-label="기록 항목">
         {recordCards.map((card) => <div key={card.id} className={`pointer-events-none absolute left-0 h-[328px] w-full rounded-[20px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] ${card.top} ${card.background}`}><img src={card.flap ?? folderFlap} alt="" aria-hidden="true" className={`absolute -top-[18px] right-[22px] h-[18px] w-[70px] ${card.tabOpacity}`} /></div>)}
         {recordCards.map((card) => <button key={`${card.id}-action`} type="button" onClick={() => openCard(card.id)} className={`absolute left-0 w-full ${card.id === 'pain-feeding' ? 'z-30 h-[60px]' : card.id === 'mood-sleep' ? 'top-[160px] z-20 h-[321px]' : 'z-20 h-[53px]'} ${card.id === 'mood-sleep' ? '' : card.top}`} aria-label={`${card.title} 기록하기`} />)}

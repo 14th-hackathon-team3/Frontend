@@ -134,6 +134,13 @@ export const careApi = {
       auth: true,
     }),
 
+  updateTrackingVisibility: (payload) =>
+    apiRequest('/api/care/journey/tracking-visibility/', {
+      method: 'PATCH',
+      body: payload,
+      auth: true,
+    }),
+
   updateMyCare: (payload) =>
     apiRequest('/api/care/me/', {
       method: 'PATCH',
