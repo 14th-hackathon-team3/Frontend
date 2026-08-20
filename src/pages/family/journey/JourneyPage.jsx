@@ -13,6 +13,7 @@ import FolderFlap4 from '../../../assets/Rectangle4.svg';
 import hiddenInfoIcon from '../../../assets/hidden_info.png';
 import backButton from '../../../assets/back_button.svg';
 import { careApi } from '../../../api/care';
+import { EMOTION_BY_VALUE } from '../../../constants/emotions';
 
 
 const PRIVATE_CARDS_STORAGE_KEY =
@@ -73,11 +74,6 @@ const recordCards = [
   },
 ];
 
-const emotionLabels = {
-  happy: '행복한', angry: '화남', low_energy: '에너지 부족', sad: '슬픈',
-  depressed: '우울한', confused: '혼란스러운', calm: '차분한', moody: '변덕스러운',
-  irritated: '짜증나는', worried: '걱정스러운', active: '활동적인',
-};
 const feedingLabels = { breast: '모유', formula: '분유', mixed: '혼합' };
 const hairLabels = { same: '평소와 같음', slight: '약간 빠짐', heavy: '많이 빠짐' };
 const skinLabels = { 1: '매우 좋음', 2: '좋음', 3: '약간의 트러블', 4: '트러블 심함' };
@@ -95,7 +91,7 @@ const formatHours = (hours) => {
 const createRecords = (log, dateKey) => {
   const exercise = (log?.exercise ?? '').split(' / ');
   return {
-    'mood-sleep': { title: '감정/수면', sections: [{ label: '감정 상태', value: log?.emotion ? emotionLabels[log.emotion] ?? log.emotion : '기록 없음' }, { label: '수면 시간', value: formatHours(log?.sleep_hours) }] },
+    'mood-sleep': { title: '감정/수면', sections: [{ label: '감정 상태', value: log?.emotion ? EMOTION_BY_VALUE[log.emotion]?.label ?? log.emotion : '기록 없음' }, { label: '수면 시간', value: formatHours(log?.sleep_hours) }] },
     pain: { title: '통증/수유', sections: [{ label: '통증 부위', value: log?.pain_area || '기록 없음' }, { label: '통증 정도', value: log?.pain_score == null ? '기록 없음' : `${log.pain_score}/5` }, { label: '수유 방식', value: log?.breastfeeding ? feedingLabels[log.breastfeeding] ?? log.breastfeeding : '기록 없음' }] },
     skin: { title: '피부/모발', sections: [{ label: '피부 상태', value: skinLabels[log?.skin_self_score] ?? '기록 없음' }, { label: '피부 증상', value: log?.skin_symptom_tags?.join(', ') || '기록 없음' }, { label: '모발 상태', value: hairLabels[log?.hair_loss_status] ?? '기록 없음' }] },
     activity: { title: '활동량/메모', sections: [{ label: '활동 종류', value: exercise[0] || '기록 없음' }, { label: '활동량', value: exercise[1] || '기록 없음' }, { label: '자유 메모', value: log?.memo || '기록 없음' }] },
@@ -103,24 +99,61 @@ const createRecords = (log, dateKey) => {
   };
 };
 
-const toChartPoints = (values) => {
-  const numbers = values?.map((value) => Number(value)).filter(Number.isFinite);
-  if (!numbers?.length) return [];
+const toChartPoints = (values, { min = null, max = null } = {}) => {
+  if (!Array.isArray(values) || values.length === 0) return [];
 
-  const min = Math.min(...numbers);
-  const max = Math.max(...numbers);
+  const numericValues = values
+    .filter((value) => value != null && Number.isFinite(Number(value)))
+    .map(Number);
+
+  if (numericValues.length === 0) return values.map(() => null);
+
+  let resolvedMin = min ?? Math.min(...numericValues);
+  let resolvedMax = max ?? Math.max(...numericValues);
+
+  if (resolvedMin === resolvedMax) {
+    resolvedMin -= 1;
+    resolvedMax += 1;
+  }
+
+  const range = resolvedMax - resolvedMin;
 
   return values.map((value) => {
-    const number = Number(value);
-    if (!Number.isFinite(number)) return null;
-    if (min === max) return 36;
-    return 12 + ((max - number) / (max - min)) * 48;
+    if (value == null || !Number.isFinite(Number(value))) return null;
+    return 56 - ((Number(value) - resolvedMin) / range) * 44;
   });
 };
 
-const emotionIcons = {
-  happy: '😊', angry: '😠', low_energy: '😮‍💨', sad: '😢', depressed: '😞',
-  confused: '😕', calm: '😌', moody: '😐', irritated: '😣', worried: '😟', active: '🙂',
+const formatWeekday = (dateKey) => {
+  const date = new Date(`${dateKey}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? '' : ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+};
+
+const getRecentWeekDates = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const mondayOffset = (today.getDay() + 6) % 7;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - mondayOffset);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    return toDateKey(date);
+  });
+};
+
+const alignWeekValuesToDates = (apiDates, values, slotDates) => {
+  const valuesByDate = new Map();
+
+  apiDates.forEach((date, index) => {
+    if (typeof date === 'string') {
+      valuesByDate.set(date.slice(0, 10), values[index] ?? null);
+    }
+  });
+
+  return slotDates.map((date) => valuesByDate.get(date) ?? null);
 };
 
 const MotherRecordPage = ({ record, date, onBack }) => (
@@ -131,7 +164,7 @@ const MotherRecordPage = ({ record, date, onBack }) => (
     </header>
     <p className="mb-[15px] text-[14px] text-[#6E6E6E]">산모 기록 · {date}</p>
     <section className="space-y-[30px]">
-      {record.sections.map((section, index) => <div key={section.label} className={index > 0 ? 'border-t border-[#DCDCDC] pt-[30px]' : ''}><h2 className="px-[10px] text-[20px] font-medium tracking-[-0.4px] text-[#121212]">{section.label}</h2>{record.title === '감정/수면' && section.label === '감정 상태' ? <div className="mt-[15px] flex flex-wrap gap-[11px]">{Object.values(emotionLabels).map((emotion) => <span key={emotion} className={`rounded-[10px] px-[25px] py-[8px] text-[18px] font-medium tracking-[-0.36px] ${section.value === emotion ? 'bg-[#809CFF] text-[#FCFCFC]' : 'bg-[#FCFCFC] text-[#121212]'}`}>{emotion}</span>)}</div> : <p className="mt-[15px] rounded-[10px] border border-[#CBCBCB] bg-[#F6F6F6] px-4 py-[13px] text-[16px] text-[#121212]">{section.value}</p>}</div>)}
+      {record.sections.map((section, index) => <div key={section.label} className={index > 0 ? 'border-t border-[#DCDCDC] pt-[30px]' : ''}><h2 className="px-[10px] text-[20px] font-medium tracking-[-0.4px] text-[#121212]">{section.label}</h2>{record.title === '감정/수면' && section.label === '감정 상태' ? <div className="mt-[15px] flex flex-wrap gap-[11px]">{Object.values(EMOTION_BY_VALUE).map(({ label }) => <span key={label} className={`rounded-[10px] px-[25px] py-[8px] text-[18px] font-medium tracking-[-0.36px] ${section.value === label ? 'bg-[#809CFF] text-[#FCFCFC]' : 'bg-[#FCFCFC] text-[#121212]'}`}>{label}</span>)}</div> : <p className="mt-[15px] rounded-[10px] border border-[#CBCBCB] bg-[#F6F6F6] px-4 py-[13px] text-[16px] text-[#121212]">{section.value}</p>}</div>)}
     </section>
   </main>
 );
@@ -168,25 +201,31 @@ const readPrivateCards = () => {
 const TrendChart = ({
   color,
   points,
+  labels,
   area = false,
 }) => {
+  const safePoints = Array.isArray(points) ? points : [];
+  const safeLabels = Array.isArray(labels) ? labels : [];
+  const chartWidth = 289;
+  const pointGap = safePoints.length > 1 ? chartWidth / (safePoints.length - 1) : 0;
+
   return (
     <div className="mt-3">
 
-      <div className="relative h-[64px]">
+      <div className="relative mx-auto h-[58px] w-[289px]">
 
-        {points
+        {safePoints
           .slice(0, -1)
           .map((point, index) => {
 
             const nextPoint =
-              points[index + 1];
+              safePoints[index + 1];
 
-            if (!Number.isFinite(point) || !Number.isFinite(nextPoint)) {
+            if (point == null || nextPoint == null) {
               return null;
             }
 
-            const horizontal = 38;
+            const horizontal = pointGap;
 
             const vertical =
               nextPoint - point;
@@ -213,7 +252,7 @@ const TrendChart = ({
                   origin-left
                 "
                 style={{
-                  left: `${index * 38}px`,
+                  left: `${index * pointGap}px`,
                   top: `${point}px`,
                   width: `${length}px`,
                   backgroundColor: color,
@@ -239,8 +278,12 @@ const TrendChart = ({
         )}
 
 
-        {points.map(
-          (point, index) => Number.isFinite(point) && (
+        {safePoints.map((point, index) => {
+          if (point == null) {
+            return null;
+          }
+
+          return (
             <span
               key={`${point}-point`}
               className="
@@ -254,13 +297,13 @@ const TrendChart = ({
                 bg-white
               "
               style={{
-                left: `${index * 38}px`,
+                left: `${index * pointGap}px`,
                 top: `${point}px`,
                 borderColor: color,
               }}
             />
-          )
-        )}
+          );
+        })}
 
       </div>
 
@@ -268,19 +311,16 @@ const TrendChart = ({
       <div
         className="
           flex
-          w-[228px]
+          mx-auto
+          w-[289px]
           justify-between
-          text-[11px]
+          text-[10px]
           text-[#9D9D9D]
         "
       >
-        <span>월</span>
-        <span>화</span>
-        <span>수</span>
-        <span>목</span>
-        <span>금</span>
-        <span>토</span>
-        <span>일</span>
+        {safeLabels.map((label, index) => (
+          <span key={`${label}-${index}`}>{label || '-'}</span>
+        ))}
       </div>
 
     </div>
@@ -364,6 +404,7 @@ const TrackingCard = ({
   value,
   color,
   points,
+  labels,
   area,
 }) => {
   const hasData = points.some(Number.isFinite);
@@ -371,10 +412,11 @@ const TrackingCard = ({
   return (
     <article
       className="
-        rounded-[16px]
+        h-[138px]
+        rounded-[20px]
         bg-white
         px-4
-        py-4
+        py-[16px]
         shadow-[0_2px_6px_rgba(0,0,0,0.04)]
       "
     >
@@ -389,7 +431,7 @@ const TrackingCard = ({
 
         <h2
           className="
-            text-[16px]
+            text-[18px]
             font-medium
             text-[#121212]
           "
@@ -406,28 +448,32 @@ const TrackingCard = ({
           "
         >
 
-          <span
-            className={`
-              rounded-full
-              px-2
-              py-[2px]
-              text-[12px]
+          {badge && (
+            <span
+              className={`
+                rounded-[13px]
+                px-2
+                py-1
+                text-[12px]
+                font-normal
 
-              ${
-                title === '수면'
-                  ? 'bg-[#FDF0EC] text-[#EB2B2B]'
-                  : 'bg-[#EDFAF4] text-[#3A9E72]'
-              }
-            `}
-          >
-            {badge}
-          </span>
+                ${
+                  title === '수면'
+                    ? 'bg-[#FDF0EC] text-[#EB2B2B]'
+                    : 'bg-[#EDFAF4] text-[#3A9E72]'
+                }
+              `}
+            >
+              {badge}
+            </span>
+          )}
 
 
           <span
             className="
               text-[16px]
-              font-medium
+              font-normal
+              leading-[24px]
             "
             style={{
               color,
@@ -445,6 +491,7 @@ const TrackingCard = ({
         <TrendChart
           color={color}
           points={points}
+          labels={labels}
           area={area}
         />
       ) : (
@@ -471,13 +518,18 @@ const FamilyWeeklyJourneyPage = ({
 }) => {
   const sleepBanner = weekTrend?.banners?.find((banner) => banner.type === 'sleep');
   const painBanner = weekTrend?.banners?.find((banner) => banner.type === 'pain');
-  const latestSleep = [...(weekTrend?.sleep ?? [])].reverse().find((value) => value != null);
-  const latestPain = [...(weekTrend?.pain ?? [])].reverse().find((value) => value != null);
-  const sleepPoints = toChartPoints(weekTrend?.sleep);
-  const painPoints = toChartPoints(weekTrend?.pain);
-  const emotions = weekTrend?.emotion?.filter(Boolean)
-    .map((emotion) => emotionIcons[emotion] ?? '😐')
-    ?? [];
+  const emotionBanner = weekTrend?.banners?.find((banner) => banner.type === 'emotion');
+  const banners = Array.isArray(weekTrend?.banners) ? weekTrend.banners : [];
+  const apiDates = Array.isArray(weekTrend?.dates) ? weekTrend.dates : [];
+  const dates = getRecentWeekDates();
+  const labels = dates.map(formatWeekday);
+  const sleep = alignWeekValuesToDates(apiDates, Array.isArray(weekTrend?.sleep) ? weekTrend.sleep : [], dates);
+  const pain = alignWeekValuesToDates(apiDates, Array.isArray(weekTrend?.pain) ? weekTrend.pain : [], dates);
+  const weeklyEmotions = alignWeekValuesToDates(apiDates, Array.isArray(weekTrend?.emotion) ? weekTrend.emotion : [], dates);
+  const latestSleep = [...sleep].reverse().find((value) => value != null);
+  const latestPain = [...pain].reverse().find((value) => value != null);
+  const sleepPoints = toChartPoints(sleep);
+  const painPoints = toChartPoints(pain, { min: 0, max: 5 });
 
   return (
     <main
@@ -489,7 +541,7 @@ const FamilyWeeklyJourneyPage = ({
         max-w-[402px]
         bg-[#F1EFF4]
         pb-[122px]
-        pt-[76px]
+        pt-[37px]
       "
     >
 
@@ -497,7 +549,6 @@ const FamilyWeeklyJourneyPage = ({
       <header
         className="
           flex
-          h-[37px]
           items-end
           justify-between
           px-[21px]
@@ -545,7 +596,7 @@ const FamilyWeeklyJourneyPage = ({
       <div
         className="
           mx-auto
-          mt-[22px]
+          mt-[29px]
           flex
           h-[30px]
           w-[360px]
@@ -592,13 +643,14 @@ const FamilyWeeklyJourneyPage = ({
           mx-auto
           mt-[27px]
           flex
-          h-[80px]
+          min-h-20
           w-[360px]
           items-center
-          gap-[12px]
+          gap-2
           rounded-[20px]
           bg-[#F6F8FF]
           px-[15px]
+          py-[15px]
         "
       >
 
@@ -617,7 +669,10 @@ const FamilyWeeklyJourneyPage = ({
             text-[#809CFF]
           "
         >
-          최근 7일 종합 분석
+          <span>최근 7일 종합 분석</span>
+          {banners[0]?.message && (
+            <span className="mt-1 block">{banners[0].message}</span>
+          )}
         </p>
 
       </section>
@@ -627,7 +682,7 @@ const FamilyWeeklyJourneyPage = ({
       <section
         className="
           mx-auto
-          mt-[30px]
+          mt-[29px]
           w-[360px]
           space-y-[13px]
         "
@@ -638,10 +693,11 @@ const FamilyWeeklyJourneyPage = ({
         ) : (
           <TrackingCard
             title="수면"
-            badge={sleepBanner?.message ?? (latestSleep == null ? '기록 없음' : '최근 3일 감소')}
+            badge={sleepBanner?.message ?? '최근 3일 감소'}
             value={latestSleep == null ? '기록 없음' : `${latestSleep}h`}
             color="#E66161"
             points={sleepPoints}
+            labels={labels}
           />
         )}
 
@@ -651,10 +707,11 @@ const FamilyWeeklyJourneyPage = ({
         ) : (
           <TrackingCard
             title="통증"
-            badge={painBanner?.message ?? (latestPain == null ? '기록 없음' : '전반적으로 감소')}
+            badge={painBanner?.message ?? '전반적으로 감소'}
             value={latestPain == null ? '기록 없음' : String(latestPain)}
             color="#6BBF99"
             points={painPoints}
+            labels={labels}
             area
           />
         )}
@@ -665,10 +722,10 @@ const FamilyWeeklyJourneyPage = ({
         ) : (
           <article
             className="
-              rounded-[16px]
+              rounded-[20px]
               bg-white
               px-4
-              py-4
+              py-[16px]
               shadow-[0_2px_6px_rgba(0,0,0,0.04)]
             "
           >
@@ -683,7 +740,7 @@ const FamilyWeeklyJourneyPage = ({
 
               <h2
                 className="
-                  text-[16px]
+                  text-[18px]
                   font-medium
                   text-[#121212]
                 "
@@ -691,53 +748,57 @@ const FamilyWeeklyJourneyPage = ({
                 감정
               </h2>
 
-
-              <span
-                className="
-                  rounded-full
-                  bg-[#EDFAF4]
-                  px-2
-                  py-[2px]
-                  text-[12px]
-                  text-[#3A9E72]
-                "
-              >
-                {emotions.length > 0 ? '최근 긍정적인 감정 증가' : '기록 없음'}
-              </span>
+              {emotionBanner && (
+                <span
+                  className="
+                    rounded-[13px]
+                    bg-[#EDFAF4]
+                    px-2
+                    py-1
+                    text-[12px]
+                    font-normal
+                    text-[#3A9E72]
+                  "
+                >
+                  {emotionBanner.message}
+                </span>
+              )}
 
             </div>
 
 
             <div
               className="
-                mt-4
-                flex
-                justify-between
-                px-[10px]
+                mx-auto
+                mt-[16px]
+                grid
+                w-[289px]
+                grid-cols-7
                 text-[22px]
+                text-center
               "
             >
-              {emotions.length > 0 ? emotions.map((emotion, index) => <span key={`${emotion}-${index}`}>{emotion}</span>) : <span className="text-[12px] text-[#9D9D9D]">기록 없음</span>}
+              {weeklyEmotions.map((emotion, index) => (
+                <span key={`emotion-${index}`} title={emotion ? EMOTION_BY_VALUE[emotion]?.label : '기록 없음'}>
+                  {emotion ? EMOTION_BY_VALUE[emotion]?.emoji ?? null : null}
+                </span>
+              ))}
             </div>
 
 
             <div
               className="
+                mx-auto
                 mt-1
-                flex
-                justify-between
-                px-[9px]
-                text-[11px]
+                grid
+                w-[289px]
+                grid-cols-7
+                text-[10px]
+                text-center
                 text-[#9D9D9D]
               "
             >
-              <span>월</span>
-              <span>화</span>
-              <span>수</span>
-              <span>목</span>
-              <span>금</span>
-              <span>토</span>
-              <span>일</span>
+              {labels.map((label, index) => <span key={`${label}-${index}`}>{label || '-'}</span>)}
             </div>
 
           </article>
@@ -745,10 +806,13 @@ const FamilyWeeklyJourneyPage = ({
 
       </section>
 
-      {!isTrendLoading && sleepBanner && (
-        <section className="mx-auto mt-3 w-[360px] rounded-[16px] bg-[#F6F8FF] px-4 py-4 shadow-[0_2px_6px_rgba(217,123,106,0.06)]">
-          <div className="flex items-center justify-between gap-3"><p className="text-[16px] font-medium text-[#E66161]">⚠ {sleepBanner.message}</p><span className="shrink-0 rounded-full bg-[#FDF0EC] px-2 py-[2px] text-[12px] text-[#EB2B2B]">최근 3일 감소</span></div>
-          <p className="mt-3 text-[12px] text-[#666666]">최근 3일간 수면 시간이 지속적으로 낮아지고 있어요.</p>
+      {!isTrendLoading && banners.length > 0 && (
+        <section className="mx-auto mt-3 w-[360px] space-y-3">
+          {banners.map((banner, index) => (
+            <article key={`${banner.type ?? 'trend'}-${index}`} className="rounded-[16px] bg-[#F6F8FF] px-4 py-4 shadow-[0_2px_6px_rgba(0,0,0,0.04)]">
+              <p className="text-[14px] font-medium text-[#809CFF]">{banner.message}</p>
+            </article>
+          ))}
         </section>
       )}
 
