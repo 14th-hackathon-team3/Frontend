@@ -369,7 +369,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 <p className="text-[16px] text-error">{loadError}</p>
               ) : activeTab === 'my' ? (
                 sortedTodos.map((todo) => (
-                  <div key={todo.id} className="flex min-h-[19.5px] w-full items-start gap-[15px]">
+                  <div key={todo.id} className="flex min-h-[19.5px] w-full shrink-0 items-start gap-[15px]">
                     <button
                       type="button"
                       onClick={() => toggleTodo(todo.id)}
@@ -458,7 +458,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     </div>
 
                     {assignedTodos.map((todo) => (
-                      <div key={todo.id} className="flex min-h-[19.5px] w-full items-start gap-[15px]">
+                      <div key={todo.id} className="flex min-h-[19.5px] w-full shrink-0 items-start gap-[15px]">
                         <button
                           type="button"
                           onClick={() => toggleTodo(todo.id)}
@@ -510,7 +510,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     </p>
 
                     {commonTodos.map((todo) => (
-                      <div key={todo.id} className="flex min-h-[19.5px] w-full items-start gap-[15px]">
+                      <div key={todo.id} className="flex min-h-[19.5px] w-full shrink-0 items-start gap-[15px]">
                         <button
                           type="button"
                           onClick={() => toggleTodo(todo.id)}

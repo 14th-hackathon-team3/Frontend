@@ -121,7 +121,7 @@ const TrendChart = ({ color, points, area = false }) => (
         return <span key={`${point}-${index}`} className="absolute h-[2px] origin-left" style={{ left: `${index * 38}px`, top: `${point}px`, width: `${length}px`, backgroundColor: color, transform: `rotate(${angle}deg)` }} />;
       })}
       {area && <span className="absolute inset-x-0 bottom-0 h-[36px] bg-gradient-to-t from-[#e6f7ee] to-transparent" />}
-      {points.map((point, index) => <span key={`${point}-point`} className="absolute z-10 size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-gray-50" style={{ left: `${index * 38}px`, top: `${point}px`, borderColor: color }} />)}
+      {points.map((point, index) => <span key={`${index}-${point}-point`} className="absolute z-10 size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-gray-50" style={{ left: `${index * 38}px`, top: `${point}px`, borderColor: color }} />)}
     </div>
     <div className="flex w-[228px] justify-between text-[11px] text-gray-500"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
   </div>
@@ -226,7 +226,7 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
       <section className="relative mx-[40px] mt-[47px] h-[481px]" aria-label="기록 다시 보기">
         {recordCards.map((card) => <div key={card.id} className={`pointer-events-none absolute left-0 h-[328px] w-full rounded-[20px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] ${card.top} ${card.background}`}><img src={card.flap ?? folderFlap} alt="" className={`absolute -top-[18px] right-[22px] h-[18px] w-[70px] ${card.tabOpacity}`} /></div>)}
         {recordCards.map((card) => <button key={`${card.id}-action`} type="button" onClick={() => setView(card.id)} aria-label={`${card.title} 기록 보기`} className={`absolute left-0 z-20 w-full ${card.id === 'pain' ? 'h-[60px]' : card.id === 'mood-sleep' ? 'top-[160px] h-[321px]' : 'h-[53px]'} ${card.id === 'mood-sleep' ? '' : card.top}`} />)}
-        {recordCards.map((card) => <span key={card.id} className={`pointer-events-none absolute left-[29px] z-10 ${card.titleTop} text-[20px] font-medium leading-[30px] tracking-[-0.4px] text-white`}>{card.title}</span>)}
+        {recordCards.map((card) => <span key={`${card.id}-label`} className={`pointer-events-none absolute left-[29px] z-10 ${card.titleTop} text-[20px] font-medium leading-[30px] tracking-[-0.4px] text-white`}>{card.title}</span>)}
       </section>
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2"><BottomNavigation activeKey="journey" items={navigationItems} onChange={onNavigate} /></div>
       {view === 'privacy' && <PrivacySelectionSheet onClose={() => setView('journey')} />}

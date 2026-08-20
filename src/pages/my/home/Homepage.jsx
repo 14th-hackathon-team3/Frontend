@@ -171,7 +171,7 @@ const Homepage = ({ onNavigate = () => {} }) => {
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[118px] pt-[55px]">
-      <button type="button" aria-label="알림" className="absolute right-[21px] top-[55px] z-10 flex size-[43px] items-center justify-center rounded-full bg-primary"><img src={notificationIcon} alt="" className="size-[22px] brightness-0 invert" /></button>
+      <button type="button" onClick={() => onNavigate('notification')} aria-label="알림" className="absolute right-[21px] top-[55px] z-10 flex size-[43px] items-center justify-center rounded-full bg-[#9B51E0]"><img src={notificationIcon} alt="" className="size-[22px] brightness-0 invert" /></button>
       <header className="px-[22px] pt-[43px]"><span className="inline-flex rounded-full bg-primary px-[10px] py-[2px] text-[11px] font-semibold tracking-[0.33px] text-white">산후 {displayWeek}주차</span><h1 className="mt-1 text-[24px] font-semibold tracking-[-0.48px] text-[#121212]">오늘의 회복 여정, 함께 살펴볼까요?</h1><p className="mt-[6px] text-[12px] tracking-[-0.36px] text-[#666]">출산 {displayWeek}주차 · 회복 여정 {selectedDay}일째</p></header>
 
       <section className="relative mt-0 h-[282px] overflow-visible" aria-label={`회복 여정 Day ${selectedDay}`}>

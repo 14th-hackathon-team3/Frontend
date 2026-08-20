@@ -14,6 +14,7 @@ import MyMypage from './pages/my/mypage/Mypage';
 import RecoveryContentPage from './pages/my/content/RecoveryContentPage';
 import MyOnboardingPage from './pages/my/onboarding/OnboardingPage';
 import MyRecoveryGuidePage from './pages/my/recovery/RecoveryGuidePage';
+import MyNotificationPage from './pages/my/notification/Notification';
 
 // 가족 페이지
 import FamilyHomepage from './pages/family/home/Homepage';
@@ -25,6 +26,7 @@ import FamilyRecoveryGuidePage from './pages/family/recovery/FamilyRecoveryGuide
 import FamilyInvitePage from './pages/family/auth/Family_invite';
 import FamilyInviteExpiredPage from './pages/family/auth/FamilyInviteExpiredPage';
 import FamilySignup from './pages/family/auth/Signup';
+import FamilyNotificationPage from './pages/family/notification/Notification';
 
 const getInviteCode = () => {
   if (typeof window === 'undefined') return '';
@@ -41,6 +43,7 @@ const myPages = {
   recoveryContent: RecoveryContentPage,
   recoveryGuide: MyRecoveryGuidePage,
   onboarding: MyOnboardingPage,
+  notification: MyNotificationPage,
 };
 
 const familyPages = {
@@ -50,6 +53,7 @@ const familyPages = {
   mypage: FamilyMypage,
   recoveryGuide: FamilyRecoveryGuidePage,
   onboarding: FamilyOnboardingPage,
+  notification: FamilyNotificationPage,
 };
 
 function App() {

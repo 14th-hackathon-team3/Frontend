@@ -346,15 +346,15 @@ const TodoPage = ({ onNavigate = () => {} }) => {
           </div>
 
           {/* TODO 리스트 */}
-          <div className="ml-[27px] mt-[33px] flex flex-col items-start gap-[15px]">
+          <div className="ml-[27px] mt-[33px] flex h-[309px] w-[306px] flex-col items-start gap-[15px] overflow-y-auto pr-[10px]">
             {sortedTodos.map((todo) => (
-              <div key={todo.id} className="flex h-[19.5px] w-[306px] items-center gap-[15px]">
+              <div key={todo.id} className="flex min-h-[19.5px] w-full shrink-0 items-start gap-[15px]">
                 {' '}
                 <button
                   type="button"
                   onClick={() => toggleTodo(todo.id)}
                   className={`
-                        flex h-[19.5px] w-[19.5px] shrink-0
+                        mt-[2px] flex h-[19.5px] w-[19.5px] shrink-0
                         items-center justify-center rounded-[4.5px]
                         ${todo.completed ? 'bg-primary' : 'bg-[#D9D9D9]'}
                     `}
@@ -394,7 +394,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     }}
                     className="
                         min-w-0 flex-1 bg-transparent
-                        text-[16px] font-normal text-text-black
+                        text-[16px] font-normal leading-[22px] text-text-black
                         outline-none
                         "
                   />
@@ -403,7 +403,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     type="button"
                     onClick={() => setSelectedTodo(todo)}
                     className={`
-                        text-[16px] font-normal text-text-black
+                        min-w-0 flex-1 break-words text-left text-[16px] font-normal leading-[22px] text-text-black
                         ${todo.completed ? 'line-through' : ''}
                     `}
                   >
