@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { careApi } from '../../../api/care';
+import { resolveApiUrl } from '../../../api/client';
 import BottomNavigation from '../../../components/BottomNavigation';
 import backButton from '../../../assets/back_button.svg';
 import menuBookIcon from '../../../assets/recoveryjourney_menu_book.svg';
@@ -7,6 +8,7 @@ import analysisIcon from '../../../assets/Todo_star.svg';
 import folderFlap from '../../../assets/Record_folder_flap.svg';
 import activityFolderFlap from '../../../assets/Record_folder_activity_flap.svg';
 import hiddenInfoIcon from '../../../assets/hidden_info.png';
+import VoiceMemoPlayer from './VoiceMemoPlayer';
 
 const navigationItems = [
   { key: 'journey', label: '회복 여정' },
@@ -70,7 +72,7 @@ const RecordHistoryPage = ({ record, onBack }) => (
   </main>
 );
 
-const ActivityMemoHistoryPage = ({ record, onBack }) => (
+const ActivityMemoHistoryPage = ({ record, voiceMemo, onBack }) => (
   <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light px-[27px] pb-10 pt-[102px]">
     <header className="absolute inset-x-0 top-0 flex h-[74px] items-center justify-center border-b border-[#dcdcdc] bg-gray-50">
       <button type="button" onClick={onBack} aria-label="뒤로 가기" className="absolute left-5 flex h-8 w-8 items-center justify-center">
@@ -81,6 +83,7 @@ const ActivityMemoHistoryPage = ({ record, onBack }) => (
 
     <p className="mb-6 text-[16px] font-medium text-black/70">{record.date}</p>
     <section className="space-y-[30px]">{record.sections.map((section, index) => <div key={section.label}>{index > 0 && <div className="mb-[30px] border-t border-gray-200" />}<div className="space-y-[15px]"><h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">{section.label}</h2><div className={`${section.label === '자유 메모' ? 'min-h-[150px] py-[25px]' : 'flex h-[51px] items-center'} rounded-[10px] border border-[#cbcbcb] bg-[#f6f6f6] px-4 text-[16px] text-[#121212]`}>{section.text}</div></div></div>)}</section>
+    {voiceMemo && <section className="mt-[30px] space-y-[15px]"><h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">음성 메모</h2><VoiceMemoPlayer src={voiceMemo.audioUrl} /></section>}
   </main>
 );
 
@@ -165,6 +168,7 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
   const [privateCard, setPrivateCard] = useState(null);
   const [privateCards, setPrivateCards] = useState([]);
   const [selectedLog, setSelectedLog] = useState(null);
+  const [selectedVoiceMemo, setSelectedVoiceMemo] = useState(null);
   const [isLogLoading, setIsLogLoading] = useState(true);
   const [logError, setLogError] = useState('');
   const days = ['월', '화', '수', '목', '금', '토', '일'];
@@ -185,21 +189,28 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
 
   useEffect(() => {
     let isActive = true;
-    careApi.getDailyLogs().then((logs) => {
+    setIsLogLoading(true);
+    setSelectedVoiceMemo(null);
+
+    Promise.allSettled([careApi.getDailyLogs(), careApi.getVoiceMemos({ log_date: selectedDateKey })]).then(([logsResult, voiceMemosResult]) => {
       if (!isActive) return;
-      setLogError('');
-      setSelectedLog((Array.isArray(logs) ? logs : []).find((log) => log.log_date === selectedDateKey) ?? null);
-    }).catch((error) => {
-      if (!isActive) return;
-      setSelectedLog(null);
-      setLogError(error?.message || '기록을 불러오지 못했습니다.');
+      const logs = logsResult.status === 'fulfilled' ? logsResult.value : [];
+      const matchedLog = (Array.isArray(logs) ? logs : []).find((log) => log.log_date === selectedDateKey) ?? null;
+      const voiceMemos = voiceMemosResult.status === 'fulfilled' ? voiceMemosResult.value : [];
+      const memoItems = Array.isArray(voiceMemos) ? voiceMemos : voiceMemos?.results ?? [];
+      const matchedVoiceMemo = memoItems.find((memo) => memo.status === 'done'
+        && (memo.log_date === selectedDateKey || (matchedLog?.id != null && memo.daily_log_id === matchedLog.id))) ?? null;
+
+      setLogError(logsResult.status === 'rejected' ? logsResult.reason?.message || '기록을 불러오지 못했습니다.' : '');
+      setSelectedLog(matchedLog);
+      setSelectedVoiceMemo(matchedVoiceMemo?.audio_file ? { ...matchedVoiceMemo, audioUrl: resolveApiUrl(matchedVoiceMemo.audio_file) } : null);
     }).finally(() => {
       if (isActive) setIsLogLoading(false);
     });
     return () => { isActive = false; };
   }, [selectedDateKey]);
 
-  if (view === 'activity') return <ActivityMemoHistoryPage record={records.activity} onBack={() => setView('journey')} />;
+  if (view === 'activity') return <ActivityMemoHistoryPage record={records.activity} voiceMemo={selectedVoiceMemo} onBack={() => setView('journey')} />;
   if (view !== 'journey' && view !== 'privacy') return <RecordHistoryPage record={records[view]} onBack={() => setView('journey')} />;
   if (isWeekView) return <WeeklyJourneyPage onDay={() => setIsWeekView(false)} onNavigate={onNavigate} privateCard={privateCard} privateCards={privateCards} onPrivateCard={setPrivateCard} onClosePrivate={() => setPrivateCard(null)} onConfirmPrivate={(card) => { setPrivateCards((cards) => cards.includes(card) ? cards.filter((privateItem) => privateItem !== card) : [...cards, card]); setPrivateCard(null); }} />;
 

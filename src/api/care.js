@@ -13,6 +13,11 @@ export const careApi = {
   getMyCare: () => apiRequest('/api/care/me/', { auth: true }),
   createOnboarding: (payload) => apiRequest('/api/care/onboarding/', { method: 'POST', body: payload, auth: true }),
   createVoiceMemo: (payload) => apiRequest('/api/care/voice-memos/', { method: 'POST', body: payload, auth: true }),
+  getVoiceMemos: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/api/care/voice-memos/${query ? `?${query}` : ''}`, { auth: true });
+  },
+  getVoiceMemo: (id) => apiRequest(`/api/care/voice-memos/${id}/`, { auth: true }),
   confirmPlan: (planId) => apiRequest(`/api/care/plans/${planId}/confirm/`, { method: 'POST', auth: true }),
   generatePlan: () => apiRequest('/api/care/plans/generate/', { method: 'POST', auth: true }),
   getTodo: (id) => apiRequest(`/api/care/todos/${id}/`, { auth: true }),
