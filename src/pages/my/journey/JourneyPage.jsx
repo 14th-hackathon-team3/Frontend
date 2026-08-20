@@ -120,8 +120,7 @@ const formatHours = (hours) => {
     return String(hours);
   }
 
-  const totalMinutes =
-    Math.round(numberHours * 60);
+  const totalMinutes = Math.round(numberHours * 60);
 
   return `${Math.floor(totalMinutes / 60)}시간 ${totalMinutes % 60}분`;
 };
@@ -174,6 +173,16 @@ const normalizeArray = (value) => {
  * ==========================================
  * 오늘의 AI 분석
  * ==========================================
+ *
+ * GET /api/care/journey/today-analysis/
+ *
+ * {
+ *   has_plan: true,
+ *   ai_summary: "...",
+ *   bottleneck: "...",
+ *   reasoning: "...",
+ *   tomorrow_goal: "..."
+ * }
  */
 
 const getTodayAnalysisText = (data) => {
@@ -199,8 +208,7 @@ const formatWeekday = (dateKey) => {
     return '';
   }
 
-  const date =
-    new Date(`${dateKey}T00:00:00`);
+  const date = new Date(`${dateKey}T00:00:00`);
 
   if (Number.isNaN(date.getTime())) {
     return '';
@@ -227,17 +235,14 @@ const getLatestNumber = (values) => {
   return null;
 };
 
-const toChartPoints = (
-  values,
-  {
-    min = null,
-    max = null,
-  } = {},
-) => {
-  if (
-    !Array.isArray(values) ||
-    values.length === 0
-  ) {
+/*
+ * 실제 숫자를 그래프의 y 좌표로 변환
+ *
+ * 그래프 높이: 약 64px
+ * 실제 점은 10 ~ 56px 범위 사용
+ */
+const toChartPoints = (values, { min = null, max = null } = {}) => {
+  if (!Array.isArray(values) || values.length === 0) {
     return [];
   }
 
@@ -253,6 +258,9 @@ const toChartPoints = (
 
   let resolvedMax = max ?? Math.max(...numericValues);
 
+  /*
+   * 모든 값이 같은 경우 그래프가 한쪽에 붙지 않도록 보정
+   */
   if (resolvedMin === resolvedMax) {
     resolvedMin -= 1;
     resolvedMax += 1;
@@ -267,6 +275,9 @@ const toChartPoints = (
 
     const normalized = (Number(value) - resolvedMin) / range;
 
+    /*
+     * 값이 클수록 위쪽
+     */
     return 56 - normalized * 44;
   });
 };
@@ -284,10 +295,18 @@ const getBannerTone = (banner) => {
     return 'neutral';
   }
 
+  /*
+   * 수면 감소 → warning
+   * 수면 증가 → positive
+   */
   if (banner.type === 'sleep') {
     return recent < previous ? 'danger' : 'success';
   }
 
+  /*
+   * 통증 증가 → warning
+   * 통증 감소 → positive
+   */
   if (banner.type === 'pain') {
     return recent > previous ? 'danger' : 'success';
   }
@@ -418,7 +437,6 @@ const createRecords = (log, dateKey) => {
           label: '감정 상태',
           values: log.emotion ? [emotionLabels[log.emotion] ?? log.emotion] : [],
         },
-
         {
           label: '수면 시간',
           text: formatHours(log.sleep_hours),
@@ -690,24 +708,15 @@ const TrendChart = ({ color, points, labels, area = false }) => {
   return (
     <div className="mt-3">
       <div className="relative h-[64px] w-[228px]">
-        {safePoints
-          .slice(0, -1)
-          .map(
-            (
-              point,
-              index,
-            ) => {
-              const nextPoint =
-                safePoints[
-                  index + 1
-                ];
+        {safePoints.slice(0, -1).map((point, index) => {
+          const nextPoint = safePoints[index + 1];
 
-              if (
-                point == null ||
-                nextPoint == null
-              ) {
-                return null;
-              }
+          /*
+           * null 구간은 연결하지 않음
+           */
+          if (point == null || nextPoint == null) {
+            return null;
+          }
 
           const horizontal = gap;
 
@@ -824,24 +833,23 @@ const WeeklyJourneyPage = ({
 
   const banners = Array.isArray(weekTrend?.banners) ? weekTrend.banners : [];
 
-  const labels =
-    dates.map(
-      formatWeekday,
-    );
+  /*
+   * 실제 dates 값에서 요일 생성
+   */
+  const labels = dates.map(formatWeekday);
 
-  const sleepPoints =
-    toChartPoints(
-      sleep,
-    );
+  /*
+   * sleep은 자체 최소/최대값으로 스케일링
+   */
+  const sleepPoints = toChartPoints(sleep);
 
-  const painPoints =
-    toChartPoints(
-      pain,
-      {
-        min: 0,
-        max: 5,
-      },
-    );
+  /*
+   * pain은 0~5 고정 스케일
+   */
+  const painPoints = toChartPoints(pain, {
+    min: 0,
+    max: 5,
+  });
 
   const hasSleepData = sleep.some((value) => value != null && Number.isFinite(Number(value)));
 
@@ -863,19 +871,25 @@ const WeeklyJourneyPage = ({
 
   const painClasses = getBannerClasses(painTone);
 
-  const weekSummary =
-    isWeekTrendLoading
-      ? '최근 7일 기록을 분석하는 중이에요.'
-      : weekTrendError
-        ? weekTrendError
-        : banners.length > 0
-          ? banners[0].message
-          : dates.length > 0
-            ? '최근 기록에서 뚜렷한 수면·통증 변화가 감지되지 않았어요.'
-            : '최근 7일 기록이 아직 없어요.';
+  /*
+   * week-trend 응답에는
+   * 별도의 AI summary가 없으므로
+   * banner가 있으면 첫 배너 메시지를 보여줌
+   */
+  const weekSummary = isWeekTrendLoading
+    ? '최근 7일 기록을 분석하는 중이에요.'
+    : weekTrendError
+      ? weekTrendError
+      : banners.length > 0
+        ? banners[0].message
+        : dates.length > 0
+          ? '최근 7일 기록을 확인해보세요.'
+          : '최근 7일 기록이 아직 없어요.';
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light pb-[122px] pt-[37px]">
+      {/* Header */}
+
       <header className="flex items-end justify-between px-[21px]">
         <h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1>
 
@@ -887,6 +901,8 @@ const WeeklyJourneyPage = ({
           <img src={menuBookIcon} alt="" className="h-[30px] w-[30px]" />
         </button>
       </header>
+
+      {/* Day / Week */}
 
       <div className="mx-auto mt-[29px] flex h-[30px] w-[360px] rounded-[20px] bg-primary-background">
         <button
@@ -905,6 +921,8 @@ const WeeklyJourneyPage = ({
         </button>
       </div>
 
+      {/* Week 상단 분석 */}
+
       <section className="mx-auto mt-[27px] flex min-h-20 w-[360px] items-center gap-2 rounded-[20px] bg-primary-background px-[15px] py-[15px]">
         <img src={analysisIcon} alt="" className="h-[35px] w-[35px] shrink-0" />
 
@@ -912,6 +930,10 @@ const WeeklyJourneyPage = ({
       </section>
 
       <section className="mx-auto mt-[29px] w-[360px] space-y-[13px]">
+        {/* ============================
+            수면
+            ============================ */}
+
         <article
           onClick={() => onPrivateCard('수면')}
           className="cursor-pointer rounded-[20px] bg-gray-50 px-4 py-[16px]"
@@ -945,6 +967,10 @@ const WeeklyJourneyPage = ({
             <p className="mt-5 text-[12px] text-gray-500">표시할 수면 기록이 없어요.</p>
           )}
         </article>
+
+        {/* ============================
+            통증
+            ============================ */}
 
         <article
           onClick={() => onPrivateCard('통증')}
@@ -980,6 +1006,10 @@ const WeeklyJourneyPage = ({
           )}
         </article>
 
+        {/* ============================
+            감정
+            ============================ */}
+
         <article
           onClick={() => onPrivateCard('감정')}
           className="cursor-pointer rounded-[20px] bg-gray-50 px-4 py-[16px]"
@@ -994,10 +1024,7 @@ const WeeklyJourneyPage = ({
           </div>
 
           {isWeekTrendLoading ? (
-            <p className="mt-5 text-[12px] text-gray-500">
-              감정 기록을 불러오는
-              중이에요.
-            </p>
+            <p className="mt-5 text-[12px] text-gray-500">감정 기록을 불러오는 중이에요.</p>
           ) : emotion.length > 0 ? (
             <>
               <div className="mt-[16px] flex justify-between px-[10px] text-[22px]">
@@ -1021,6 +1048,45 @@ const WeeklyJourneyPage = ({
             <p className="mt-5 text-[12px] text-gray-500">표시할 감정 기록이 없어요.</p>
           )}
         </article>
+
+        {/* ============================
+            변화 / 위험 배너
+            ============================ */}
+
+        {!isWeekTrendLoading &&
+          banners.map((banner, index) => {
+            const tone = getBannerTone(banner);
+
+            const classes = getBannerClasses(tone);
+
+            return (
+              <article
+                key={`${banner.type}-${index}`}
+                className={`rounded-[20px] px-4 py-[16px] ${classes.card}`}
+              >
+                <p className={`text-[16px] font-medium ${classes.title}`}>
+                  {tone === 'danger' ? '⚠ ' : ''}
+                  {banner.message}
+                </p>
+
+                {banner.recent_avg != null && banner.prev_avg != null && (
+                  <p className="mt-3 text-[12px] text-gray-700">
+                    최근 3일 평균 {banner.recent_avg}
+                    {' · '}
+                    직전 3일 평균 {banner.prev_avg}
+                  </p>
+                )}
+              </article>
+            );
+          })}
+
+        {!isWeekTrendLoading && !weekTrendError && dates.length > 0 && banners.length === 0 && (
+          <article className="rounded-[20px] bg-gray-50 px-4 py-[16px]">
+            <p className="text-[14px] font-medium text-gray-600">
+              최근 기록에서 뚜렷한 수면·통증 변화가 감지되지 않았어요.
+            </p>
+          </article>
+        )}
       </section>
 
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2">
@@ -1029,20 +1095,10 @@ const WeeklyJourneyPage = ({
 
       {privateCard && (
         <TrackingPrivacySheet
-          title={
-            privateCard
-          }
-          isPrivate={
-            privateCards.includes(
-              privateCard,
-            )
-          }
-          onClose={
-            onClosePrivate
-          }
-          onConfirm={
-            onConfirmPrivate
-          }
+          title={privateCard}
+          isPrivate={privateCards.includes(privateCard)}
+          onClose={onClosePrivate}
+          onConfirm={onConfirmPrivate}
         />
       )}
     </main>
@@ -1055,33 +1111,10 @@ const WeeklyJourneyPage = ({
  * ==========================================
  */
 
-const createToday = () => {
-  const date = new Date();
+const JourneyPage = ({ onNavigate = () => {} }) => {
+  const today = new Date();
 
-  date.setHours(
-    0,
-    0,
-    0,
-    0,
-  );
-
-  return date;
-};
-
-const JourneyPage = ({
-  onNavigate = () => {},
-}) => {
-  /*
-   * 오늘 날짜를 state로 관리
-   */
-  const [
-    today,
-    setToday,
-  ] = useState(createToday);
-
-  const todayWeekday =
-    (today.getDay() + 6) %
-    7;
+  today.setHours(0, 0, 0, 0);
 
   const todayWeekday = (today.getDay() + 6) % 7;
 
@@ -1133,128 +1166,6 @@ const JourneyPage = ({
 
   /*
    * ======================================
-   * 자정 날짜 변경 감지
-   * ======================================
-   *
-   * 예:
-   * 8월 20일 화면을 켜둔 상태에서
-   * 8월 21일이 되면
-   *
-   * today -> 8월 21일
-   * selectedDay -> 8월 21일
-   * selectedLog -> null
-   *
-   * 이후 DailyLog effect가 실행되면서
-   * /daily-logs/today/ 재조회
-   */
-
-  useEffect(() => {
-    let currentDateKey =
-      toDateKey(new Date());
-
-    const interval =
-      setInterval(() => {
-        const now =
-          new Date();
-
-        const nextDateKey =
-          toDateKey(now);
-
-        /*
-         * 아직 같은 날짜면 아무것도 안 함
-         */
-        if (
-          nextDateKey ===
-          currentDateKey
-        ) {
-          return;
-        }
-
-        /*
-         * 날짜 변경됨
-         */
-        currentDateKey =
-          nextDateKey;
-
-        const nextToday =
-          new Date(now);
-
-        nextToday.setHours(
-          0,
-          0,
-          0,
-          0,
-        );
-
-        const nextTodayWeekday =
-          (
-            nextToday.getDay() +
-            6
-          ) % 7;
-
-        /*
-         * 새로운 오늘
-         */
-        setToday(
-          nextToday,
-        );
-
-        /*
-         * 새로운 오늘이 있는 주로 이동
-         */
-        setWeekOffset(
-          0,
-        );
-
-        /*
-         * 새 오늘 날짜 선택
-         */
-        setSelectedDayIndex(
-          nextTodayWeekday,
-        );
-
-        /*
-         * 어제 화면 데이터 제거
-         *
-         * DB 데이터는 삭제되지 않는다.
-         */
-        setSelectedLog(
-          null,
-        );
-
-        setLogError(
-          '',
-        );
-
-        /*
-         * 어제 AI 분석 화면 제거
-         */
-        setTodayAnalysis(
-          '',
-        );
-
-        setAnalysisError(
-          '',
-        );
-
-        /*
-         * 과거 기록 상세를 보고 있었다면
-         * Day 메인으로 이동
-         */
-        setView(
-          'journey',
-        );
-      }, 60 * 1000);
-
-    return () => {
-      clearInterval(
-        interval,
-      );
-    };
-  }, []);
-
-  /*
-   * ======================================
    * Day 날짜 계산
    * ======================================
    */
@@ -1298,102 +1209,30 @@ const JourneyPage = ({
    * ======================================
    * Daily Log
    * ======================================
-   *
-   * 오늘:
-   * GET /daily-logs/today/
-   *
-   * 과거:
-   * GET /daily-logs/
-   * 이후 log_date로 찾음
    */
 
   useEffect(() => {
     let isActive = true;
 
-    const fetchDailyLog =
-      async () => {
-        // 날짜가 바뀌면 이전 날짜 기록을 먼저 제거
-        setSelectedLog(
-          null,
-        );
+    const fetchDailyLog = async () => {
+      setIsLogLoading(true);
 
-        setIsLogLoading(
-          true,
-        );
+      setLogError('');
 
-        setLogError(
-          '',
-        );
+      try {
+        let log = null;
 
-        try {
-          let log = null;
-
-          /*
-           * 오늘 선택
-           */
-          if (
-            isSelectedToday
-          ) {
-            const todayLog =
-              await careApi
-                .getTodayDailyLog();
-
-            if (!isActive) {
-              return;
-            }
-
-            log =
-              todayLog ??
-              null;
-          } else {
-            /*
-             * 과거 날짜 선택
-             */
-            const response =
-              await careApi
-                .getDailyLogs();
-
-            if (!isActive) {
-              return;
-            }
-
-            const logs =
-              Array.isArray(
-                response,
-              )
-                ? response
-                : Array.isArray(
-                      response
-                        ?.results,
-                    )
-                  ? response
-                      .results
-                  : [];
-
-            /*
-             * 선택 날짜 기록 찾기
-             */
-            log =
-              logs.find(
-                (item) =>
-                  item.log_date ===
-                  selectedDateKey,
-              ) ??
-              null;
-          }
+        if (isSelectedToday) {
+          const todayLog = await careApi.getTodayDailyLog();
 
           if (!isActive) {
             return;
           }
 
-          /*
-           * 새로운 날짜 기록으로
-           * 완전히 교체
-           */
-          setSelectedLog(
-            log,
-          );
-        } catch (error) {
+          log = todayLog ?? null;
+        } else {
+          const response = await careApi.getDailyLogs();
+
           if (!isActive) {
             return;
           }
@@ -1404,26 +1243,12 @@ const JourneyPage = ({
               ? response.results
               : [];
 
-          const status =
-            error
-              ?.response
-              ?.status ??
-            error?.status;
+          log = logs.find((item) => item.log_date === selectedDateKey) ?? null;
+        }
 
-          /*
-           * 기록 없음
-           */
-          if (
-            status ===
-            404
-          ) {
-            setSelectedLog(
-              null,
-            );
-
-            setLogError(
-              '',
-            );
+        if (!isActive) {
+          return;
+        }
 
         setSelectedLog(log);
       } catch (error) {
@@ -1433,22 +1258,14 @@ const JourneyPage = ({
 
         console.error('Daily Log 조회 실패:', error);
 
-          setLogError(
-            error
-              ?.response
-              ?.data
-              ?.detail ||
-              error?.message ||
-              '기록을 불러오지 못했습니다.',
-          );
-        } finally {
-          if (
-            isActive
-          ) {
-            setIsLogLoading(
-              false,
-            );
-          }
+        const status = error?.response?.status ?? error?.status;
+
+        if (status === 404) {
+          setSelectedLog(null);
+
+          setLogError('');
+
+          return;
         }
 
         setSelectedLog(null);
@@ -1466,8 +1283,7 @@ const JourneyPage = ({
     fetchDailyLog();
 
     return () => {
-      isActive =
-        false;
+      isActive = false;
     };
   }, [selectedDateKey, isSelectedToday]);
 
@@ -1525,8 +1341,6 @@ const JourneyPage = ({
    * ======================================
    * 오늘의 AI 분석
    * ======================================
-   *
-   * today가 변경될 때마다 다시 호출
    */
 
   useEffect(() => {
@@ -1535,14 +1349,10 @@ const JourneyPage = ({
     const fetchTodayAnalysis = async () => {
       setIsAnalysisLoading(true);
 
-        setAnalysisError(
-          '',
-        );
+      setAnalysisError('');
 
-        try {
-          const data =
-            await careApi
-              .getTodayAnalysis();
+      try {
+        const data = await careApi.getTodayAnalysis();
 
         if (!isActive) {
           return;
@@ -1566,22 +1376,14 @@ const JourneyPage = ({
           return;
         }
 
-          setAnalysisError(
-            error
-              ?.response
-              ?.data
-              ?.detail ||
-              error?.message ||
-              '오늘의 분석을 불러오지 못했습니다.',
-          );
-        } finally {
-          if (
-            isActive
-          ) {
-            setIsAnalysisLoading(
-              false,
-            );
-          }
+        setTodayAnalysis('');
+
+        setAnalysisError(
+          error?.response?.data?.detail || error?.message || '오늘의 분석을 불러오지 못했습니다.',
+        );
+      } finally {
+        if (isActive) {
+          setIsAnalysisLoading(false);
         }
       }
     };
@@ -1589,72 +1391,53 @@ const JourneyPage = ({
     fetchTodayAnalysis();
 
     return () => {
-      isActive =
-        false;
+      isActive = false;
     };
-  }, [
-    today,
-  ]);
+  }, []);
 
   /*
    * ======================================
    * WEEK TREND
+   *
+   * GET /api/care/journey/week-trend/
    * ======================================
    */
 
   useEffect(() => {
-    if (
-      !isWeekView
-    ) {
+    if (!isWeekView) {
       return undefined;
     }
 
-    let isActive =
-      true;
+    let isActive = true;
 
     const fetchWeekTrend = async () => {
       setIsWeekTrendLoading(true);
 
       setWeekTrendError('');
 
-        try {
-          const data =
-            await careApi
-              .getWeekTrend();
+      try {
+        const data = await careApi.getWeekTrend();
 
         if (!isActive) {
           return;
         }
 
-          setWeekTrend(
-            data ??
-              null,
-          );
-        } catch (error) {
-          if (!isActive) {
-            return;
-          }
+        setWeekTrend(data ?? null);
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
 
         console.error('Week Trend 조회 실패:', error);
 
         setWeekTrend(null);
 
-          setWeekTrendError(
-            error
-              ?.response
-              ?.data
-              ?.detail ||
-              error?.message ||
-              '최근 7일 기록을 불러오지 못했습니다.',
-          );
-        } finally {
-          if (
-            isActive
-          ) {
-            setIsWeekTrendLoading(
-              false,
-            );
-          }
+        setWeekTrendError(
+          error?.response?.data?.detail || error?.message || '최근 7일 기록을 불러오지 못했습니다.',
+        );
+      } finally {
+        if (isActive) {
+          setIsWeekTrendLoading(false);
         }
       }
     };
@@ -1662,8 +1445,7 @@ const JourneyPage = ({
     fetchWeekTrend();
 
     return () => {
-      isActive =
-        false;
+      isActive = false;
     };
   }, [isWeekView]);
 
@@ -1683,26 +1465,8 @@ const JourneyPage = ({
     );
   }
 
-  if (
-    view !==
-      'journey' &&
-    view !==
-      'privacy'
-  ) {
-    return (
-      <RecordHistoryPage
-        record={
-          records[
-            view
-          ]
-        }
-        onBack={() =>
-          setView(
-            'journey',
-          )
-        }
-      />
-    );
+  if (view !== 'journey' && view !== 'privacy') {
+    return <RecordHistoryPage record={records[view]} onBack={() => setView('journey')} />;
   }
 
   /*
@@ -1711,9 +1475,7 @@ const JourneyPage = ({
    * ======================================
    */
 
-  if (
-    isWeekView
-  ) {
+  if (isWeekView) {
     return (
       <WeeklyJourneyPage
         onDay={() => setIsWeekView(false)}
@@ -1746,7 +1508,6 @@ const JourneyPage = ({
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[120px]">
-
       {/* Header */}
 
       <header className="flex items-end justify-between px-[21px] pt-[37px]">
@@ -1843,13 +1604,7 @@ const JourneyPage = ({
         <button
           type="button"
           aria-label="이전 주"
-          onClick={() =>
-            setWeekOffset(
-              (offset) =>
-                offset -
-                1,
-            )
-          }
+          onClick={() => setWeekOffset((offset) => offset - 1)}
           className="absolute left-2 top-[54px] text-[22px] text-[#121212]"
         >
           ‹
@@ -1858,13 +1613,7 @@ const JourneyPage = ({
         <button
           type="button"
           aria-label="다음 주"
-          onClick={() =>
-            setWeekOffset(
-              (offset) =>
-                offset +
-                1,
-            )
-          }
+          onClick={() => setWeekOffset((offset) => offset + 1)}
           className="absolute right-2 top-[54px] text-[22px] text-[#121212]"
         >
           ›
@@ -1888,17 +1637,8 @@ const JourneyPage = ({
                     selected ? 'bg-primary text-white' : 'text-[#121212]'
                   }`}
                 >
-                  <span
-                    className={`flex size-[35px] items-center justify-center rounded-full text-[20px] font-medium tracking-[-1px] ${
-                      selected
-                        ? 'bg-primary text-white'
-                        : 'text-[#121212]'
-                    }`}
-                  >
-                    {
-                      date.getDate()
-                    }
-                  </span>
+                  {date.getDate()}
+                </span>
 
                 <span
                   className={`text-[12px] font-medium tracking-[-0.6px] ${
@@ -1913,7 +1653,9 @@ const JourneyPage = ({
         </div>
       </section>
 
-      {/* 오늘의 AI 분석 */}
+      {/* ======================================
+          오늘의 AI 분석
+          ====================================== */}
 
       <section className="mx-auto mt-[69px] flex min-h-20 w-[360px] items-center gap-2 rounded-[20px] bg-primary-background px-[15px] py-[15px]">
         <img src={analysisIcon} alt="" className="h-[35px] w-[35px] shrink-0" />
@@ -1925,15 +1667,13 @@ const JourneyPage = ({
               : analysisError
                 ? analysisError
                 : todayAnalysis ||
-                  (
-                    isLogLoading
-                      ? '오늘의 기록을 불러오는 중이에요.'
-                      : logError
-                        ? logError
-                        : selectedLog
-                          ? '오늘의 기록을 확인해보세요.'
-                          : '오늘은 아직 기록이 없어요.'
-                  )
+                  (isLogLoading
+                    ? '오늘의 기록을 불러오는 중이에요.'
+                    : logError
+                      ? logError
+                      : selectedLog
+                        ? '오늘의 기록을 확인해보세요.'
+                        : '오늘은 아직 기록이 없어요.')
             : isLogLoading
               ? '기록을 불러오는 중이에요.'
               : logError
@@ -1961,71 +1701,44 @@ const JourneyPage = ({
 
       {/* 기록 카드 */}
 
-      <section
-        className="relative mx-[40px] mt-[47px] h-[481px]"
-        aria-label="기록 다시 보기"
-      >
-        {recordCards.map(
-          (card) => (
-            <div
-              key={
-                card.id
-              }
-              className={`pointer-events-none absolute left-0 h-[328px] w-full rounded-[20px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] ${card.top} ${card.background}`}
-            >
-              <img
-                src={
-                  card.flap ??
-                  folderFlap
-                }
-                alt=""
-                className={`absolute -top-[18px] right-[22px] h-[18px] w-[70px] ${card.tabOpacity}`}
-              />
-            </div>
-          ),
-        )}
-
-        {recordCards.map(
-          (card) => (
-            <button
-              key={`${card.id}-action`}
-              type="button"
-              onClick={() =>
-                setView(
-                  card.id,
-                )
-              }
-              aria-label={`${card.title} 기록 보기`}
-              className={`absolute left-0 z-20 w-full ${
-                card.id ===
-                'pain'
-                  ? 'h-[60px]'
-                  : card.id ===
-                      'mood-sleep'
-                    ? 'top-[160px] h-[321px]'
-                    : 'h-[53px]'
-              } ${
-                card.id ===
-                'mood-sleep'
-                  ? ''
-                  : card.top
-              }`}
+      <section className="relative mx-[40px] mt-[47px] h-[481px]" aria-label="기록 다시 보기">
+        {recordCards.map((card) => (
+          <div
+            key={card.id}
+            className={`pointer-events-none absolute left-0 h-[328px] w-full rounded-[20px] shadow-[0_4px_4px_rgba(0,0,0,0.25)] ${card.top} ${card.background}`}
+          >
+            <img
+              src={card.flap ?? folderFlap}
+              alt=""
+              className={`absolute -top-[18px] right-[22px] h-[18px] w-[70px] ${card.tabOpacity}`}
             />
-          ),
-        )}
+          </div>
+        ))}
 
-        {recordCards.map(
-          (card) => (
-            <span
-              key={`${card.id}-label`}
-              className={`pointer-events-none absolute left-[29px] z-10 ${card.titleTop} text-[20px] font-medium leading-[30px] tracking-[-0.4px] text-white`}
-            >
-              {
-                card.title
-              }
-            </span>
-          ),
-        )}
+        {recordCards.map((card) => (
+          <button
+            key={`${card.id}-action`}
+            type="button"
+            onClick={() => setView(card.id)}
+            aria-label={`${card.title} 기록 보기`}
+            className={`absolute left-0 z-20 w-full ${
+              card.id === 'pain'
+                ? 'h-[60px]'
+                : card.id === 'mood-sleep'
+                  ? 'top-[160px] h-[321px]'
+                  : 'h-[53px]'
+            } ${card.id === 'mood-sleep' ? '' : card.top}`}
+          />
+        ))}
+
+        {recordCards.map((card) => (
+          <span
+            key={`${card.id}-label`}
+            className={`pointer-events-none absolute left-[29px] z-10 ${card.titleTop} text-[20px] font-medium leading-[30px] tracking-[-0.4px] text-white`}
+          >
+            {card.title}
+          </span>
+        ))}
       </section>
 
       {/* Bottom Navigation */}
