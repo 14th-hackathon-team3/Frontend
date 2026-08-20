@@ -124,7 +124,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
     let isActive = true;
     careApi.getTodayTodos().then((data) => {
       if (!isActive) return;
-      const mapTodo = (todo, role) => ({ id: todo.id, text: todo.content, role, assignee: todo.assignee_name || '담당자', completed: Boolean(todo.completed_at), isPrivate: todo.visibility === 'private' });
+      const mapTodo = (todo, role) => ({ id: todo.id, text: todo.content, reason: todo.reason, role, assignee: todo.assignee_name || '담당자', completed: Boolean(todo.completed_at), isPrivate: todo.visibility === 'private' });
       setTodos([...(data.mother_todos ?? []).map((todo) => mapTodo(todo, 'mom')), ...(data.family_todos ?? []).map((todo) => mapTodo(todo, 'partner'))]);
     }).catch(() => { if (isActive) setTodos([]); });
     return () => { isActive = false; };
@@ -468,7 +468,10 @@ const TodoPage = ({ onNavigate = () => {} }) => {
             >
               <img src={todoStarIcon} alt="" className="h-[35px] w-[35px] shrink-0" />
 
-              <span className="text-[14px] font-medium text-primary">위험일 추천 이유</span>
+              <div>
+                <span className="text-[14px] font-medium text-primary">위 할 일 추천 이유</span>
+                <p className="text-[14px] font-medium text-primary">{selectedTodo.reason || '추천 이유가 없습니다.'}</p>
+              </div>
             </div>
 
             {/* 수정 / 삭제 */}

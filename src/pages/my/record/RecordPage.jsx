@@ -55,16 +55,26 @@ const RecordPage = ({ onNavigate = () => {} }) => {
       payload.skin_symptom_tags = values.selectedSymptoms.includes('해당 없음') ? [] : values.selectedSymptoms;
     }
     if (values.hairState && hairValues[values.hairState]) payload.hair_loss_status = hairValues[values.hairState];
-    if (values.activityType || values.activityTime) {
-      const duration = values.activityTime ? `${values.activityTime.hour}시간 ${values.activityTime.minute}분` : '';
-      payload.exercise = [values.activityType, duration].filter(Boolean).join(' / ');
-    }
-    if (values.memo) payload.memo = values.memo;
+    const duration = values.activityTime ? `${values.activityTime.hour}시간 ${values.activityTime.minute}분` : '';
+    payload.exercise = [values.activityType, duration].filter(Boolean).join(' / ');
+    payload.memo = values.memo ?? '';
 
-    const savedLog = dailyLogId ? await careApi.updateDailyLog(dailyLogId, payload) : await careApi.createDailyLog(payload);
-    setDailyLogId(savedLog?.id ?? dailyLogId);
-    setDraft({});
-    setScreen('main');
+    try {
+      const savedLog = dailyLogId ? await careApi.updateDailyLog(dailyLogId, payload) : await careApi.createDailyLog(payload);
+      setDailyLogId(savedLog?.id ?? dailyLogId);
+
+      try {
+        const plan = await careApi.generatePlan();
+        if (plan?.plan_id != null) await careApi.confirmPlan(plan.plan_id);
+      } catch {
+        // 플랜 생성 조건 미충족 또는 오늘 플랜이 이미 있어도 기록 저장은 유지한다.
+      }
+
+      setDraft({});
+      setScreen('main');
+    } catch {
+      // 저장에 실패하면 현재 입력 화면을 유지해 사용자가 다시 시도할 수 있게 한다.
+    }
   };
   const openCard = (cardId) => {
     if (cardId === 'mood-sleep') setScreen('mood-sleep');
