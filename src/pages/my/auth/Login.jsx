@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Signup from './Signup';
 import { authApi } from '../../../api/auth';
-import logo from '../../../assets/logo2.svg';
+import logo from '../../../assets/logo1.svg';
 import kakaoIcon from '../../../assets/kakao.svg';
 
 const Login = ({ onLogin = () => {}, onSignup = () => {} }) => {

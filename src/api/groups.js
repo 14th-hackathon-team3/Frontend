@@ -6,6 +6,7 @@ export const groupsApi = {
   getNotificationSettings: () => apiRequest('/api/groups/membership/notification-settings/', { auth: true }),
   updateNotificationSettings: (payload) => apiRequest('/api/groups/membership/notification-settings/', { method: 'PATCH', body: payload, auth: true }),
   getMembers: () => apiRequest('/api/groups/members/', { auth: true }),
+  setPrimaryMember: (membershipId) => apiRequest(`/api/groups/members/${encodeURIComponent(membershipId)}/primary/`, { method: 'PATCH', body: { is_primary: true }, auth: true }),
   removeMember: (membershipId) => apiRequest(`/api/groups/members/${encodeURIComponent(membershipId)}/`, { method: 'DELETE', auth: true }),
   getMyGroup: () => apiRequest('/api/groups/my-group/', { auth: true }),
 };

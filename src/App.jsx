@@ -51,6 +51,7 @@ const familyPages = {
   journey: FamilyJourneyPage,
   todo: FamilyTodoPage,
   mypage: FamilyMypage,
+  recoveryContent: RecoveryContentPage,
   recoveryGuide: FamilyRecoveryGuidePage,
   onboarding: FamilyOnboardingPage,
   notification: FamilyNotificationPage,

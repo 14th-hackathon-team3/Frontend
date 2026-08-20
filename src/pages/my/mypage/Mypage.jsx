@@ -9,6 +9,7 @@ import ProfilePage from './ProfilePage';
 import ProfileEditPage from './ProfileEditPage';
 import FamilyMemberInvitePage from './FamilyMemberInvitePage';
 import FamilyMemberDeletePage from './FamilyMemberDeletePage';
+import PrimaryCaregiverPage from './PrimaryCaregiverPage';
 
 const figmaSearchIcon = 'https://www.figma.com/api/mcp/asset/9c994265-572b-4fb9-bfac-3760d1c38c48.svg';
 
@@ -115,6 +116,7 @@ const Mypage = ({ onNavigate = () => {} }) => {
   if (view === 'edit') return <ProfileEditPage initialProfile={profile} onBack={() => setView('profile')} onSave={saveProfile} />;
   if (view === 'family-invite') return <FamilyMemberInvitePage onBack={() => setView('main')} />;
   if (view === 'family-delete') return <FamilyMemberDeletePage onBack={() => setView('main')} />;
+  if (view === 'primary-caregiver') return <PrimaryCaregiverPage onBack={() => setView('main')} />;
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[132px]">
@@ -122,7 +124,7 @@ const Mypage = ({ onNavigate = () => {} }) => {
       <section className="mx-auto mt-[23px] w-[360px] space-y-[15px]">
         <button type="button" onClick={() => setView('profile')} className="flex h-[77px] w-full items-center justify-between rounded-[13px] bg-[#31302e] px-[17px] text-left"><span className="flex flex-col gap-[3px]"><strong className="text-[16px] text-white">{profile.name}</strong><span className="text-[14px] text-[#fbfbff]">ID: {profile.id}</span></span><span aria-hidden="true" className="text-[28px] leading-none text-white">›</span></button>
         <section className="rounded-[13px] bg-[#31302e] p-[17px]" aria-labelledby="notification-heading"><h2 id="notification-heading" className="text-[16px] font-bold text-white">알림 설정</h2><div className="mt-[17px] space-y-[17px]">{notificationItems.map((item) => <div key={item.key} className="flex h-[24px] items-center justify-between gap-4"><span className="text-[14px] text-white">{item.label}</span><ToggleButton selected={notifications[item.key]} onClick={() => toggleNotification(item.key)} className="!h-[24px] !w-[37px] shrink-0 rounded-full !p-[2px]" aria-label={`${item.label} ${notifications[item.key] ? '켜기' : '끄기'}`}><span className={`block !size-[19px] rounded-full bg-gray-50 transition-transform ${notifications[item.key] ? 'translate-x-[6px]' : '-translate-x-[6px]'}`} /></ToggleButton></div>)}</div></section>
-        <section className="rounded-[13px] bg-[#31302e] p-[17px]"><h2 className="text-[16px] font-bold text-white">가족 구성원 변경</h2><div className="mt-[17px] space-y-[17px]"><button type="button" onClick={() => setView('family-invite')} className="flex w-full items-center justify-between text-[14px] text-white">가족 구성원 추가 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button><button type="button" onClick={() => setView('family-delete')} className="flex w-full items-center justify-between text-[14px] text-white">가족 구성원 삭제 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button></div></section>
+        <section className="rounded-[13px] bg-[#31302e] p-[17px]"><h2 className="text-[16px] font-bold text-white">가족 구성원 변경</h2><div className="mt-[17px] space-y-[17px]"><button type="button" onClick={() => setView('family-invite')} className="flex w-full items-center justify-between text-[14px] text-white">가족 구성원 추가 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button><button type="button" onClick={() => setView('family-delete')} className="flex w-full items-center justify-between text-[14px] text-white">가족 구성원 삭제 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button><button type="button" onClick={() => setView('primary-caregiver')} className="flex w-full items-center justify-between text-[14px] text-white">주보호자 지정 <span aria-hidden="true" className="text-[24px] leading-none">›</span></button></div></section>
         <button type="button" onClick={() => setIsWithdrawalOpen(true)} className="flex h-[56px] w-full items-center rounded-[13px] bg-[#31302e] px-[17px] text-[14px] font-bold text-[#ff9999]">회원 탈퇴</button>
       </section>
       {error && <p className="mx-auto mt-3 w-[360px] text-center text-[12px] text-error">{error}</p>}

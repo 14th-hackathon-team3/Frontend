@@ -56,7 +56,7 @@ function FamilyProcessingStep({ onBack }) {
 
             <span className="absolute right-[5px] top-[7px] h-[9px] w-[9px] rounded-full bg-gray-300" />
 
-            <span className="absolute right-0 top-[23px] h-[9px] w-[9px] rounded-full bg-primary" />
+            <span className="absolute right-0 top-[23px] h-[9px] w-[9px] rounded-full bg-[#809CFF]" />
 
             <span className="absolute bottom-[7px] right-[5px] h-[9px] w-[9px] rounded-full bg-gray-300" />
 

@@ -18,6 +18,7 @@ function LivingTogetherStep({
         <SelectButton
           selected={value === 'together'}
           onClick={() => onChange('together')}
+          selectedClassName="bg-[#809CFF] text-white"
         >
           네, 함께 살고 있어요.
         </SelectButton>
@@ -25,6 +26,7 @@ function LivingTogetherStep({
         <SelectButton
           selected={value === 'separate'}
           onClick={() => onChange('separate')}
+          selectedClassName="bg-[#809CFF] text-white"
         >
           아니요, 따로 살고 있어요.
         </SelectButton>
