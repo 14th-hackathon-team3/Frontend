@@ -16,10 +16,6 @@ import { careApi } from '../../../api/care';
 import { EMOTION_BY_VALUE } from '../../../constants/emotions';
 
 
-const PRIVATE_CARDS_STORAGE_KEY =
-  'recoveryJourneyPrivateCards';
-
-
 /* =========================
    Bottom Navigation
 ========================= */
@@ -77,6 +73,9 @@ const recordCards = [
 const feedingLabels = { breast: '모유', formula: '분유', mixed: '혼합' };
 const hairLabels = { same: '평소와 같음', slight: '약간 빠짐', heavy: '많이 빠짐' };
 const skinLabels = { 1: '매우 좋음', 2: '좋음', 3: '약간의 트러블', 4: '트러블 심함' };
+const trackingTitleMap = { sleep: '수면', pain: '통증', emotion: '감정' };
+const hasOwnField = (object, field) =>
+  Boolean(object) && Object.prototype.hasOwnProperty.call(object, field);
 
 const toDateKey = (date) => date.toLocaleDateString('en-CA');
 const formatDate = (dateKey) => {
@@ -91,10 +90,10 @@ const formatHours = (hours) => {
 const createRecords = (log, dateKey) => {
   const exercise = (log?.exercise ?? '').split(' / ');
   return {
-    'mood-sleep': { title: '감정/수면', sections: [{ label: '감정 상태', value: log?.emotion ? EMOTION_BY_VALUE[log.emotion]?.label ?? log.emotion : '기록 없음' }, { label: '수면 시간', value: formatHours(log?.sleep_hours) }] },
-    pain: { title: '통증/수유', sections: [{ label: '통증 부위', value: log?.pain_area || '기록 없음' }, { label: '통증 정도', value: log?.pain_score == null ? '기록 없음' : `${log.pain_score}/5` }, { label: '수유 방식', value: log?.breastfeeding ? feedingLabels[log.breastfeeding] ?? log.breastfeeding : '기록 없음' }] },
-    skin: { title: '피부/모발', sections: [{ label: '피부 상태', value: skinLabels[log?.skin_self_score] ?? '기록 없음' }, { label: '피부 증상', value: log?.skin_symptom_tags?.join(', ') || '기록 없음' }, { label: '모발 상태', value: hairLabels[log?.hair_loss_status] ?? '기록 없음' }] },
-    activity: { title: '활동량/메모', sections: [{ label: '활동 종류', value: exercise[0] || '기록 없음' }, { label: '활동량', value: exercise[1] || '기록 없음' }, { label: '자유 메모', value: log?.memo || '기록 없음' }] },
+    'mood-sleep': { title: '감정/수면', sections: [{ label: '감정 상태', isPrivate: Boolean(log) && !hasOwnField(log, 'emotion'), value: log?.emotion ? EMOTION_BY_VALUE[log.emotion]?.label ?? log.emotion : '기록 없음' }, { label: '수면 시간', isPrivate: Boolean(log) && !hasOwnField(log, 'sleep_hours'), value: formatHours(log?.sleep_hours) }] },
+    pain: { title: '통증/수유', sections: [{ label: '통증 부위', isPrivate: Boolean(log) && !hasOwnField(log, 'pain_area') && !hasOwnField(log, 'pelvic_floor_symptoms'), value: log?.pain_area || '기록 없음' }, { label: '통증 정도', isPrivate: Boolean(log) && !hasOwnField(log, 'pain_score'), value: log?.pain_score == null ? '기록 없음' : `${log.pain_score}/5` }, { label: '수유 방식', isPrivate: Boolean(log) && !hasOwnField(log, 'breastfeeding'), value: log?.breastfeeding ? feedingLabels[log.breastfeeding] ?? log.breastfeeding : '기록 없음' }] },
+    skin: { title: '피부/모발', sections: [{ label: '피부 상태', isPrivate: Boolean(log) && !hasOwnField(log, 'skin_self_score'), value: skinLabels[log?.skin_self_score] ?? '기록 없음' }, { label: '피부 증상', isPrivate: Boolean(log) && !hasOwnField(log, 'skin_symptom_tags'), value: log?.skin_symptom_tags?.join(', ') || '기록 없음' }, { label: '모발 상태', isPrivate: Boolean(log) && !hasOwnField(log, 'hair_loss_status'), value: hairLabels[log?.hair_loss_status] ?? '기록 없음' }] },
+    activity: { title: '활동량/메모', sections: [{ label: '활동 종류', isPrivate: Boolean(log) && !hasOwnField(log, 'exercise'), value: exercise[0] || '기록 없음' }, { label: '활동량', isPrivate: Boolean(log) && !hasOwnField(log, 'exercise'), value: exercise[1] || '기록 없음' }, { label: '자유 메모', isPrivate: Boolean(log) && !hasOwnField(log, 'memo'), value: log?.memo || '기록 없음' }] },
     date: formatDate(dateKey),
   };
 };
@@ -171,34 +170,10 @@ const MotherRecordPage = ({ record, date, onBack }) => (
     </header>
     <p className="mb-[15px] text-[14px] text-[#6E6E6E]">산모 기록 · {date}</p>
     <section className="space-y-[30px]">
-      {record.sections.map((section, index) => <div key={section.label} className={index > 0 ? 'border-t border-[#DCDCDC] pt-[30px]' : ''}><h2 className="px-[10px] text-[20px] font-medium tracking-[-0.4px] text-[#121212]">{section.label}</h2>{record.title === '감정/수면' && section.label === '감정 상태' ? <div className="mt-[15px] flex flex-wrap gap-[11px]">{Object.values(EMOTION_BY_VALUE).map(({ label }) => <span key={label} className={`rounded-[10px] px-[25px] py-[8px] text-[18px] font-medium tracking-[-0.36px] ${section.value === label ? 'bg-[#809CFF] text-[#FCFCFC]' : 'bg-[#FCFCFC] text-[#121212]'}`}>{label}</span>)}</div> : <p className="mt-[15px] rounded-[10px] border border-[#CBCBCB] bg-[#F6F6F6] px-4 py-[13px] text-[16px] text-[#121212]">{section.value}</p>}</div>)}
+      {record.sections.map((section, index) => <div key={section.label} className={index > 0 ? 'border-t border-[#DCDCDC] pt-[30px]' : ''}><h2 className="px-[10px] text-[20px] font-medium tracking-[-0.4px] text-[#121212]">{section.label}</h2>{section.isPrivate ? <p className="mt-[15px] rounded-[10px] border border-[#CBCBCB] bg-[#F6F6F6] px-4 py-[13px] text-[16px] text-[#9D9D9D]">비공개 처리된 항목</p> : record.title === '감정/수면' && section.label === '감정 상태' ? <div className="mt-[15px] flex flex-wrap gap-[11px]">{Object.values(EMOTION_BY_VALUE).map(({ label }) => <span key={label} className={`rounded-[10px] px-[25px] py-[8px] text-[18px] font-medium tracking-[-0.36px] ${section.value === label ? 'bg-[#809CFF] text-[#FCFCFC]' : 'bg-[#FCFCFC] text-[#121212]'}`}>{label}</span>)}</div> : <p className="mt-[15px] rounded-[10px] border border-[#CBCBCB] bg-[#F6F6F6] px-4 py-[13px] text-[16px] text-[#121212]">{section.value}</p>}</div>)}
     </section>
   </main>
 );
-
-
-/* =========================
-   비공개 데이터 불러오기
-========================= */
-
-const readPrivateCards = () => {
-  try {
-    const savedCards =
-      window.localStorage.getItem(
-        PRIVATE_CARDS_STORAGE_KEY
-      );
-
-    const parsedCards = savedCards
-      ? JSON.parse(savedCards)
-      : [];
-
-    return Array.isArray(parsedCards)
-      ? parsedCards
-      : [];
-  } catch {
-    return [];
-  }
-};
 
 
 /* =========================
@@ -895,10 +870,7 @@ const JourneyPage = ({
   const [todayAnalysis, setTodayAnalysis] = useState('');
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(true);
   const [analysisError, setAnalysisError] = useState('');
-
-
-  const [privateCards] =
-    useState(readPrivateCards);
+  const [privateCards, setPrivateCards] = useState([]);
 
 
   const weekdays = [
@@ -957,6 +929,24 @@ const JourneyPage = ({
     ];
 
   const selectedDateKey = toDateKey(selectedDate);
+
+  useEffect(() => {
+    let active = true;
+
+    careApi.getTrackingVisibility().then((response) => {
+      if (!active) return;
+
+      const hiddenCategories = Array.isArray(response?.hidden_categories)
+        ? response.hidden_categories
+        : [];
+
+      setPrivateCards(hiddenCategories.map((category) => trackingTitleMap[category]).filter(Boolean));
+    }).catch((error) => {
+      if (active) console.error('트래킹 비공개 설정 조회 실패:', error);
+    });
+
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     let active = true;

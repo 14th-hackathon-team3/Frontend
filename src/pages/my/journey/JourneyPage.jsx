@@ -145,8 +145,6 @@ const normalizeArray = (value) => {
 const hasOwnField = (object, field) =>
   Boolean(object) && Object.prototype.hasOwnProperty.call(object, field);
 
-const isMissingPrivateField = (log, field) => Boolean(log) && !hasOwnField(log, field);
-
 const privateRecordItems = [
   { label: '감정상태', fields: ['emotion'] },
   { label: '수면시간', fields: ['sleep_hours'] },
@@ -173,8 +171,6 @@ const trackingTitleMap = {
   pain: '통증',
   emotion: '감정',
 };
-
-const TRACKING_VISIBILITY_STORAGE_KEY = 'journey.hiddenTrackingCategories';
 
 /*
  * ==========================================
@@ -425,33 +421,7 @@ const createRecords = (log, dateKey) => {
     };
   }
 
-  const emotionPrivate = isMissingPrivateField(log, 'emotion');
-
-  const sleepPrivate = isMissingPrivateField(log, 'sleep_hours');
-
-  const painScorePrivate = isMissingPrivateField(log, 'pain_score');
-
-  const painAreaPrivate =
-    isMissingPrivateField(log, 'pelvic_floor_symptoms') && isMissingPrivateField(log, 'pain_area');
-
-  const breastfeedingPrivate = isMissingPrivateField(log, 'breastfeeding');
-
-  const skinScorePrivate = isMissingPrivateField(log, 'skin_self_score');
-
-  const skinTagsPrivate = isMissingPrivateField(log, 'skin_symptom_tags');
-
-  const hairPrivate = isMissingPrivateField(log, 'hair_loss_status');
-
-  const exercisePrivate = isMissingPrivateField(log, 'exercise');
-
-  const memoPrivate = isMissingPrivateField(log, 'memo');
-
-  const exercise = exercisePrivate
-    ? {
-        type: '',
-        duration: '',
-      }
-    : splitExercise(log.exercise);
+  const exercise = splitExercise(log.exercise);
 
   return {
     'mood-sleep': {
@@ -460,17 +430,11 @@ const createRecords = (log, dateKey) => {
       sections: [
         {
           label: '감정 상태',
-          isPrivate: emotionPrivate,
-          values: emotionPrivate
-            ? []
-            : log.emotion
-              ? [EMOTION_BY_VALUE[log.emotion]?.label ?? log.emotion]
-              : [],
+          values: log.emotion ? [EMOTION_BY_VALUE[log.emotion]?.label ?? log.emotion] : [],
         },
         {
           label: '수면 시간',
-          isPrivate: sleepPrivate,
-          text: sleepPrivate ? '' : formatHours(log.sleep_hours),
+          text: formatHours(log.sleep_hours),
         },
       ],
     },
@@ -481,30 +445,18 @@ const createRecords = (log, dateKey) => {
       sections: [
         {
           label: '골반저 증상',
-          isPrivate: painAreaPrivate,
-          values: painAreaPrivate
-            ? []
-            : normalizeArray(log.pelvic_floor_symptoms).length > 0
+          values:
+            normalizeArray(log.pelvic_floor_symptoms).length > 0
               ? normalizeArray(log.pelvic_floor_symptoms)
               : normalizeArray(log.pain_area),
         },
         {
           label: '증상 심화 정도',
-          isPrivate: painScorePrivate,
-          text: painScorePrivate
-            ? ''
-            : log.pain_score == null
-              ? '기록 없음'
-              : `${log.pain_score}/5`,
+          text: log.pain_score == null ? '기록 없음' : `${log.pain_score}/5`,
         },
         {
           label: '수유 방식',
-          isPrivate: breastfeedingPrivate,
-          values: breastfeedingPrivate
-            ? []
-            : log.breastfeeding
-              ? [feedingLabels[log.breastfeeding] ?? log.breastfeeding]
-              : [],
+          values: log.breastfeeding ? [feedingLabels[log.breastfeeding] ?? log.breastfeeding] : [],
         },
       ],
     },
@@ -515,18 +467,15 @@ const createRecords = (log, dateKey) => {
       sections: [
         {
           label: '피부 상태',
-          isPrivate: skinScorePrivate,
-          text: skinScorePrivate ? '' : (skinLabels[log.skin_self_score] ?? '기록 없음'),
+          text: skinLabels[log.skin_self_score] ?? '기록 없음',
         },
         {
           label: '피부 증상',
-          isPrivate: skinTagsPrivate,
-          values: skinTagsPrivate ? [] : normalizeArray(log.skin_symptom_tags),
+          values: normalizeArray(log.skin_symptom_tags),
         },
         {
           label: '모발 상태',
-          isPrivate: hairPrivate,
-          text: hairPrivate ? '' : (hairLabels[log.hair_loss_status] ?? '기록 없음'),
+          text: hairLabels[log.hair_loss_status] ?? '기록 없음',
         },
       ],
     },
@@ -537,18 +486,15 @@ const createRecords = (log, dateKey) => {
       sections: [
         {
           label: '활동량',
-          isPrivate: exercisePrivate,
-          text: exercisePrivate ? '' : exercise.duration || '기록 없음',
+          text: exercise.duration || '기록 없음',
         },
         {
           label: '활동 종류',
-          isPrivate: exercisePrivate,
-          text: exercisePrivate ? '' : exercise.type || '기록 없음',
+          text: exercise.type || '기록 없음',
         },
         {
           label: '자유 메모',
-          isPrivate: memoPrivate,
-          text: memoPrivate ? '' : log.memo || '기록 없음',
+          text: log.memo || '기록 없음',
         },
       ],
     },
@@ -974,14 +920,6 @@ const WeeklyJourneyPage = ({
 
   const emotionBanner = banners.find((banner) => banner.type === 'emotion');
 
-  const sleepTone = getBannerTone(sleepBanner);
-
-  const painTone = getBannerTone(painBanner);
-
-  const sleepClasses = getBannerClasses(sleepTone);
-
-  const painClasses = getBannerClasses(painTone);
-
   /*
    * 기존 맨 아래 변화 분석 banner 문구를
    * 상단 보라색 AI 코멘트 박스로 이동
@@ -1216,25 +1154,7 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
 
   const [privateCard, setPrivateCard] = useState(null);
 
-  /*
-   * tracking-visibility는
-   * 현재 GET 엔드포인트가 없기 때문에
-   * 서버 PATCH 응답을 localStorage에도
-   * 같이 보관하여 새로고침 시 UI 상태 유지
-   */
-  const [privateCards, setPrivateCards] = useState(() => {
-    try {
-      const saved = window.localStorage.getItem(TRACKING_VISIBILITY_STORAGE_KEY);
-
-      const categories = saved ? JSON.parse(saved) : [];
-
-      return Array.isArray(categories)
-        ? categories.map((category) => trackingTitleMap[category]).filter(Boolean)
-        : [];
-    } catch {
-      return [];
-    }
-  });
+  const [privateCards, setPrivateCards] = useState([]);
 
   const [isTrackingVisibilitySaving, setIsTrackingVisibilitySaving] = useState(false);
 
@@ -1257,6 +1177,36 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
   const [isWeekTrendLoading, setIsWeekTrendLoading] = useState(false);
 
   const [weekTrendError, setWeekTrendError] = useState('');
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchTrackingVisibility = async () => {
+      try {
+        const response = await careApi.getTrackingVisibility();
+
+        if (!isActive) {
+          return;
+        }
+
+        const hiddenCategories = Array.isArray(response?.hidden_categories)
+          ? response.hidden_categories
+          : [];
+
+        setPrivateCards(hiddenCategories.map((category) => trackingTitleMap[category]).filter(Boolean));
+      } catch (error) {
+        if (isActive) {
+          console.error('트래킹 비공개 설정 조회 실패:', error);
+        }
+      }
+    };
+
+    fetchTrackingVisibility();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const days = ['월', '화', '수', '목', '금', '토', '일'];
 
@@ -1600,28 +1550,11 @@ const JourneyPage = ({ onNavigate = () => {} }) => {
           setIsTrackingVisibilitySaving(true);
 
           try {
-            const response = await careApi.updateTrackingVisibility({
+            await careApi.updateTrackingVisibility({
               hidden_categories: hiddenCategories,
             });
 
-            const savedHiddenCategories = Array.isArray(response?.hidden_categories)
-              ? response.hidden_categories
-              : hiddenCategories;
-
-            const savedPrivateCards = savedHiddenCategories
-              .map((item) => trackingTitleMap[item])
-              .filter(Boolean);
-
-            setPrivateCards(savedPrivateCards);
-
-            try {
-              window.localStorage.setItem(
-                TRACKING_VISIBILITY_STORAGE_KEY,
-                JSON.stringify(savedHiddenCategories),
-              );
-            } catch {
-              // 서버 저장은 유지
-            }
+            setPrivateCards(nextPrivateCards);
 
             setPrivateCard(null);
           } catch (error) {
