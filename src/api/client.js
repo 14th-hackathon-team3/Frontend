@@ -3,6 +3,17 @@ const API_BASE_URL = (
   'https://bailey44.pythonanywhere.com'
 ).replace(/\/$/, '');
 
+export const resolveApiUrl = (path) => {
+  if (!path) return '';
+  if (/^[a-z][a-z\d+.-]*:/i.test(path)) return path;
+
+  try {
+    return new URL(path, `${API_BASE_URL}/`).toString();
+  } catch {
+    return path;
+  }
+};
+
 const ACCESS_TOKEN_KEY = 'becoming_mom_access_token';
 const REFRESH_TOKEN_KEY = 'becoming_mom_refresh_token';
 

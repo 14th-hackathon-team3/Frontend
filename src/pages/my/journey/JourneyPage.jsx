@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { careApi } from '../../../api/care';
+import { resolveApiUrl } from '../../../api/client';
 import BottomNavigation from '../../../components/BottomNavigation';
 import backButton from '../../../assets/back_button.svg';
 import menuBookIcon from '../../../assets/recoveryjourney_menu_book.svg';
@@ -7,6 +8,7 @@ import analysisIcon from '../../../assets/Todo_star.svg';
 import folderFlap from '../../../assets/Record_folder_flap.svg';
 import activityFolderFlap from '../../../assets/Record_folder_activity_flap.svg';
 import hiddenInfoIcon from '../../../assets/hidden_info.png';
+import VoiceMemoPlayer from './VoiceMemoPlayer';
 
 const navigationItems = [
   { key: 'journey', label: '회복 여정' },
@@ -99,13 +101,10 @@ const skinLabels = {
   4: '트러블 심함',
 };
 
-const toDateKey = (date) =>
-  date.toLocaleDateString('en-CA');
+const toDateKey = (date) => date.toLocaleDateString('en-CA');
 
 const formatRecordDate = (dateKey) => {
-  const [year, month, day] = dateKey
-    .split('-')
-    .map(Number);
+  const [year, month, day] = dateKey.split('-').map(Number);
 
   return `${year}년 ${month}월 ${day}일`;
 };
@@ -124,19 +123,13 @@ const formatHours = (hours) => {
   const totalMinutes =
     Math.round(numberHours * 60);
 
-  return `${Math.floor(totalMinutes / 60)}시간 ${
-    totalMinutes % 60
-  }분`;
+  return `${Math.floor(totalMinutes / 60)}시간 ${totalMinutes % 60}분`;
 };
 
 const splitExercise = (exercise) => {
-  const value =
-    typeof exercise === 'string'
-      ? exercise.trim()
-      : '';
+  const value = typeof exercise === 'string' ? exercise.trim() : '';
 
-  const [type = '', duration = ''] =
-    value.split(' / ');
+  const [type = '', duration = ''] = value.split(' / ');
 
   if (duration) {
     return {
@@ -192,9 +185,7 @@ const getTodayAnalysisText = (data) => {
     return '';
   }
 
-  return typeof data.ai_summary === 'string'
-    ? data.ai_summary.trim()
-    : '';
+  return typeof data.ai_summary === 'string' ? data.ai_summary.trim() : '';
 };
 
 /*
@@ -215,15 +206,7 @@ const formatWeekday = (dateKey) => {
     return '';
   }
 
-  const weekdays = [
-    '일',
-    '월',
-    '화',
-    '수',
-    '목',
-    '금',
-    '토',
-  ];
+  const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
   return weekdays[date.getDay()];
 };
@@ -233,17 +216,10 @@ const getLatestNumber = (values) => {
     return null;
   }
 
-  for (
-    let index = values.length - 1;
-    index >= 0;
-    index -= 1
-  ) {
+  for (let index = values.length - 1; index >= 0; index -= 1) {
     const value = values[index];
 
-    if (
-      value != null &&
-      Number.isFinite(Number(value))
-    ) {
+    if (value != null && Number.isFinite(Number(value))) {
       return Number(value);
     }
   }
@@ -266,42 +242,30 @@ const toChartPoints = (
   }
 
   const numericValues = values
-    .filter(
-      (value) =>
-        value != null &&
-        Number.isFinite(Number(value)),
-    )
+    .filter((value) => value != null && Number.isFinite(Number(value)))
     .map(Number);
 
   if (numericValues.length === 0) {
     return values.map(() => null);
   }
 
-  let resolvedMin =
-    min ?? Math.min(...numericValues);
+  let resolvedMin = min ?? Math.min(...numericValues);
 
-  let resolvedMax =
-    max ?? Math.max(...numericValues);
+  let resolvedMax = max ?? Math.max(...numericValues);
 
   if (resolvedMin === resolvedMax) {
     resolvedMin -= 1;
     resolvedMax += 1;
   }
 
-  const range =
-    resolvedMax - resolvedMin;
+  const range = resolvedMax - resolvedMin;
 
   return values.map((value) => {
-    if (
-      value == null ||
-      !Number.isFinite(Number(value))
-    ) {
+    if (value == null || !Number.isFinite(Number(value))) {
       return null;
     }
 
-    const normalized =
-      (Number(value) - resolvedMin) /
-      range;
+    const normalized = (Number(value) - resolvedMin) / range;
 
     return 56 - normalized * 44;
   });
@@ -312,29 +276,20 @@ const getBannerTone = (banner) => {
     return 'neutral';
   }
 
-  const recent =
-    Number(banner.recent_avg);
+  const recent = Number(banner.recent_avg);
 
-  const previous =
-    Number(banner.prev_avg);
+  const previous = Number(banner.prev_avg);
 
-  if (
-    !Number.isFinite(recent) ||
-    !Number.isFinite(previous)
-  ) {
+  if (!Number.isFinite(recent) || !Number.isFinite(previous)) {
     return 'neutral';
   }
 
   if (banner.type === 'sleep') {
-    return recent < previous
-      ? 'danger'
-      : 'success';
+    return recent < previous ? 'danger' : 'success';
   }
 
   if (banner.type === 'pain') {
-    return recent > previous
-      ? 'danger'
-      : 'success';
+    return recent > previous ? 'danger' : 'success';
   }
 
   return 'neutral';
@@ -343,39 +298,27 @@ const getBannerTone = (banner) => {
 const getBannerClasses = (tone) => {
   if (tone === 'danger') {
     return {
-      badge:
-        'bg-[#fff1f1] text-[#ff5f5f]',
-      value:
-        'text-[#ff5f5f]',
-      card:
-        'bg-[#fff5ff]',
-      title:
-        'text-[#ff5f5f]',
+      badge: 'bg-[#fff1f1] text-[#ff5f5f]',
+      value: 'text-[#ff5f5f]',
+      card: 'bg-[#fff5ff]',
+      title: 'text-[#ff5f5f]',
     };
   }
 
   if (tone === 'success') {
     return {
-      badge:
-        'bg-[#effbf4] text-[#53c690]',
-      value:
-        'text-[#53c690]',
-      card:
-        'bg-[#effbf4]',
-      title:
-        'text-[#53c690]',
+      badge: 'bg-[#effbf4] text-[#53c690]',
+      value: 'text-[#53c690]',
+      card: 'bg-[#effbf4]',
+      title: 'text-[#53c690]',
     };
   }
 
   return {
-    badge:
-      'bg-gray-100 text-gray-500',
-    value:
-      'text-gray-500',
-    card:
-      'bg-gray-50',
-    title:
-      'text-gray-700',
+    badge: 'bg-gray-100 text-gray-500',
+    value: 'text-gray-500',
+    card: 'bg-gray-50',
+    title: 'text-gray-700',
   };
 };
 
@@ -386,8 +329,7 @@ const getBannerClasses = (tone) => {
  */
 
 const createRecords = (log, dateKey) => {
-  const date =
-    formatRecordDate(dateKey);
+  const date = formatRecordDate(dateKey);
 
   if (!log) {
     return {
@@ -465,8 +407,7 @@ const createRecords = (log, dateKey) => {
     };
   }
 
-  const exercise =
-    splitExercise(log.exercise);
+  const exercise = splitExercise(log.exercise);
 
   return {
     'mood-sleep': {
@@ -475,20 +416,12 @@ const createRecords = (log, dateKey) => {
       sections: [
         {
           label: '감정 상태',
-          values: log.emotion
-            ? [
-                emotionLabels[
-                  log.emotion
-                ] ?? log.emotion,
-              ]
-            : [],
+          values: log.emotion ? [emotionLabels[log.emotion] ?? log.emotion] : [],
         },
 
         {
           label: '수면 시간',
-          text: formatHours(
-            log.sleep_hours,
-          ),
+          text: formatHours(log.sleep_hours),
         },
       ],
     },
@@ -500,35 +433,19 @@ const createRecords = (log, dateKey) => {
         {
           label: '골반저 증상',
           values:
-            normalizeArray(
-              log.pelvic_floor_symptoms,
-            ).length > 0
-              ? normalizeArray(
-                  log.pelvic_floor_symptoms,
-                )
-              : normalizeArray(
-                  log.pain_area,
-                ),
+            normalizeArray(log.pelvic_floor_symptoms).length > 0
+              ? normalizeArray(log.pelvic_floor_symptoms)
+              : normalizeArray(log.pain_area),
         },
 
         {
           label: '증상 심화 정도',
-          text:
-            log.pain_score == null
-              ? '기록 없음'
-              : `${log.pain_score}/5`,
+          text: log.pain_score == null ? '기록 없음' : `${log.pain_score}/5`,
         },
 
         {
           label: '수유 방식',
-          values: log.breastfeeding
-            ? [
-                feedingLabels[
-                  log.breastfeeding
-                ] ??
-                  log.breastfeeding,
-              ]
-            : [],
+          values: log.breastfeeding ? [feedingLabels[log.breastfeeding] ?? log.breastfeeding] : [],
         },
       ],
     },
@@ -539,28 +456,17 @@ const createRecords = (log, dateKey) => {
       sections: [
         {
           label: '피부 상태',
-          text:
-            skinLabels[
-              log.skin_self_score
-            ] ??
-            '기록 없음',
+          text: skinLabels[log.skin_self_score] ?? '기록 없음',
         },
 
         {
           label: '피부 증상',
-          values:
-            normalizeArray(
-              log.skin_symptom_tags,
-            ),
+          values: normalizeArray(log.skin_symptom_tags),
         },
 
         {
           label: '모발 상태',
-          text:
-            hairLabels[
-              log.hair_loss_status
-            ] ??
-            '기록 없음',
+          text: hairLabels[log.hair_loss_status] ?? '기록 없음',
         },
       ],
     },
@@ -571,23 +477,17 @@ const createRecords = (log, dateKey) => {
       sections: [
         {
           label: '활동량',
-          text:
-            exercise.duration ||
-            '기록 없음',
+          text: exercise.duration || '기록 없음',
         },
 
         {
           label: '활동 종류',
-          text:
-            exercise.type ||
-            '기록 없음',
+          text: exercise.type || '기록 없음',
         },
 
         {
           label: '자유 메모',
-          text:
-            log.memo ||
-            '기록 없음',
+          text: log.memo || '기록 없음',
         },
       ],
     },
@@ -600,10 +500,7 @@ const createRecords = (log, dateKey) => {
  * ==========================================
  */
 
-const RecordHistoryPage = ({
-  record,
-  onBack,
-}) => (
+const RecordHistoryPage = ({ record, onBack }) => (
   <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light px-[31px] pt-[74px]">
     <header className="absolute inset-x-0 top-0 flex h-[74px] items-center justify-center border-b border-gray-200 bg-gray-50">
       <button
@@ -612,69 +509,46 @@ const RecordHistoryPage = ({
         aria-label="뒤로 가기"
         className="absolute left-5 flex h-8 w-8 items-center justify-center"
       >
-        <img
-          src={backButton}
-          alt=""
-          className="h-[21px] w-[13px]"
-        />
+        <img src={backButton} alt="" className="h-[21px] w-[13px]" />
       </button>
 
-      <h1 className="text-[20px] font-medium text-text-black">
-        {record.title} 기록
-      </h1>
+      <h1 className="text-[20px] font-medium text-text-black">{record.title} 기록</h1>
     </header>
 
-    <p className="pt-6 text-[16px] font-medium text-black/70">
-      {record.date}
-    </p>
+    <p className="pt-6 text-[16px] font-medium text-black/70">{record.date}</p>
 
     <section className="mt-6 rounded-[20px] bg-gray-50 p-6">
-      {record.sections.map(
-        (section, index) => (
-          <div key={section.label}>
-            {index > 0 && (
-              <div className="my-7 border-t border-gray-200" />
-            )}
+      {record.sections.map((section, index) => (
+        <div key={section.label}>
+          {index > 0 && <div className="my-7 border-t border-gray-200" />}
 
-            <h2 className="text-[20px] font-medium">
-              {section.label}
-            </h2>
+          <h2 className="text-[20px] font-medium">{section.label}</h2>
 
-            {section.values ? (
-              section.values.length > 0 ? (
-                <div className="mt-5 flex flex-wrap gap-[10px]">
-                  {section.values.map(
-                    (value) => (
-                      <span
-                        key={value}
-                        className="rounded-[10px] bg-primary px-5 py-[10px] text-[16px] font-medium text-white"
-                      >
-                        {value}
-                      </span>
-                    ),
-                  )}
-                </div>
-              ) : (
-                <p className="mt-4 text-[18px] font-medium leading-7 text-primary">
-                  기록 없음
-                </p>
-              )
+          {section.values ? (
+            section.values.length > 0 ? (
+              <div className="mt-5 flex flex-wrap gap-[10px]">
+                {section.values.map((value) => (
+                  <span
+                    key={value}
+                    className="rounded-[10px] bg-primary px-5 py-[10px] text-[16px] font-medium text-white"
+                  >
+                    {value}
+                  </span>
+                ))}
+              </div>
             ) : (
-              <p className="mt-4 text-[18px] font-medium leading-7 text-primary">
-                {section.text}
-              </p>
-            )}
-          </div>
-        ),
-      )}
+              <p className="mt-4 text-[18px] font-medium leading-7 text-primary">기록 없음</p>
+            )
+          ) : (
+            <p className="mt-4 text-[18px] font-medium leading-7 text-primary">{section.text}</p>
+          )}
+        </div>
+      ))}
     </section>
   </main>
 );
 
-const ActivityMemoHistoryPage = ({
-  record,
-  onBack,
-}) => (
+const ActivityMemoHistoryPage = ({ record, voiceMemo, onBack }) => (
   <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light px-[27px] pb-10 pt-[102px]">
     <header className="absolute inset-x-0 top-0 flex h-[74px] items-center justify-center border-b border-[#dcdcdc] bg-gray-50">
       <button
@@ -683,50 +557,44 @@ const ActivityMemoHistoryPage = ({
         aria-label="뒤로 가기"
         className="absolute left-5 flex h-8 w-8 items-center justify-center"
       >
-        <img
-          src={backButton}
-          alt=""
-          className="h-[21px] w-[13px]"
-        />
+        <img src={backButton} alt="" className="h-[21px] w-[13px]" />
       </button>
 
-      <h1 className="text-[20px] font-medium text-text-black">
-        활동량/메모
-      </h1>
+      <h1 className="text-[20px] font-medium text-text-black">활동량/메모</h1>
     </header>
 
-    <p className="mb-6 text-[16px] font-medium text-black/70">
-      {record.date}
-    </p>
+    <p className="mb-6 text-[16px] font-medium text-black/70">{record.date}</p>
 
     <section className="space-y-[30px]">
-      {record.sections.map(
-        (section, index) => (
-          <div key={section.label}>
-            {index > 0 && (
-              <div className="mb-[30px] border-t border-gray-200" />
-            )}
+      {record.sections.map((section, index) => (
+        <div key={section.label}>
+          {index > 0 && <div className="mb-[30px] border-t border-gray-200" />}
 
-            <div className="space-y-[15px]">
-              <h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">
-                {section.label}
-              </h2>
+          <div className="space-y-[15px]">
+            <h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">
+              {section.label}
+            </h2>
 
-              <div
-                className={`${
-                  section.label ===
-                  '자유 메모'
-                    ? 'min-h-[150px] py-[25px]'
-                    : 'flex h-[51px] items-center'
-                } rounded-[10px] border border-[#cbcbcb] bg-[#f6f6f6] px-4 text-[16px] text-[#121212]`}
-              >
-                {section.text}
-              </div>
+            <div
+              className={`${
+                section.label === '자유 메모'
+                  ? 'min-h-[150px] py-[25px]'
+                  : 'flex h-[51px] items-center'
+              } rounded-[10px] border border-[#cbcbcb] bg-[#f6f6f6] px-4 text-[16px] text-[#121212]`}
+            >
+              {section.text}
             </div>
           </div>
-        ),
-      )}
+        </div>
+      ))}
     </section>
+
+    {voiceMemo && (
+      <section className="mt-[30px] space-y-[15px]">
+        <h2 className="text-[20px] font-medium tracking-[-0.4px] text-text-black">음성 메모</h2>
+        <VoiceMemoPlayer src={voiceMemo.audioUrl} />
+      </section>
+    )}
   </main>
 );
 
@@ -736,13 +604,8 @@ const ActivityMemoHistoryPage = ({
  * ==========================================
  */
 
-const PrivacySelectionSheet = ({
-  onClose,
-}) => {
-  const [
-    selectedItems,
-    setSelectedItems,
-  ] = useState([]);
+const PrivacySelectionSheet = ({ onClose }) => {
+  const [selectedItems, setSelectedItems] = useState([]);
 
   const privateRecordItems = [
     '감정상태',
@@ -763,12 +626,7 @@ const PrivacySelectionSheet = ({
 
   const toggleItem = (item) => {
     setSelectedItems((items) =>
-      items.includes(item)
-        ? items.filter(
-            (selected) =>
-              selected !== item,
-          )
-        : [...items, item],
+      items.includes(item) ? items.filter((selected) => selected !== item) : [...items, item],
     );
   };
 
@@ -792,31 +650,22 @@ const PrivacySelectionSheet = ({
         </h2>
 
         <div className="mt-[38px] grid grid-cols-3 gap-x-[9px] gap-y-[9px]">
-          {privateRecordItems.map(
-            (item) => {
-              const selected =
-                selectedItems.includes(
-                  item,
-                );
+          {privateRecordItems.map((item) => {
+            const selected = selectedItems.includes(item);
 
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() =>
-                    toggleItem(item)
-                  }
-                  className={`h-[36px] rounded-[10px] text-[15px] font-medium tracking-[-0.3px] ${
-                    selected
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-200 text-text-black'
-                  }`}
-                >
-                  {item}
-                </button>
-              );
-            },
-          )}
+            return (
+              <button
+                key={item}
+                type="button"
+                onClick={() => toggleItem(item)}
+                className={`h-[36px] rounded-[10px] text-[15px] font-medium tracking-[-0.3px] ${
+                  selected ? 'bg-primary text-white' : 'bg-gray-200 text-text-black'
+                }`}
+              >
+                {item}
+              </button>
+            );
+          })}
         </div>
       </section>
     </div>
@@ -829,29 +678,14 @@ const PrivacySelectionSheet = ({
  * ==========================================
  */
 
-const TrendChart = ({
-  color,
-  points,
-  labels,
-  area = false,
-}) => {
-  const safePoints =
-    Array.isArray(points)
-      ? points
-      : [];
+const TrendChart = ({ color, points, labels, area = false }) => {
+  const safePoints = Array.isArray(points) ? points : [];
 
-  const safeLabels =
-    Array.isArray(labels)
-      ? labels
-      : [];
+  const safeLabels = Array.isArray(labels) ? labels : [];
 
   const chartWidth = 228;
 
-  const gap =
-    safePoints.length > 1
-      ? chartWidth /
-        (safePoints.length - 1)
-      : 0;
+  const gap = safePoints.length > 1 ? chartWidth / (safePoints.length - 1) : 0;
 
   return (
     <div className="mt-3">
@@ -875,105 +709,62 @@ const TrendChart = ({
                 return null;
               }
 
-              const horizontal =
-                gap;
+          const horizontal = gap;
 
-              const vertical =
-                nextPoint -
-                point;
+          const vertical = nextPoint - point;
 
-              const length =
-                Math.sqrt(
-                  horizontal ** 2 +
-                    vertical ** 2,
-                );
+          const length = Math.sqrt(horizontal ** 2 + vertical ** 2);
 
-              const angle =
-                Math.atan2(
-                  vertical,
-                  horizontal,
-                ) *
-                (180 / Math.PI);
+          const angle = Math.atan2(vertical, horizontal) * (180 / Math.PI);
 
-              return (
-                <span
-                  key={`line-${index}`}
-                  className="absolute h-[2px] origin-left"
-                  style={{
-                    left: `${
-                      index *
-                      gap
-                    }px`,
-                    top: `${point}px`,
-                    width: `${length}px`,
-                    backgroundColor:
-                      color,
-                    transform:
-                      `rotate(${angle}deg)`,
-                  }}
-                />
-              );
-            },
-          )}
+          return (
+            <span
+              key={`line-${index}`}
+              className="absolute h-[2px] origin-left"
+              style={{
+                left: `${index * gap}px`,
+                top: `${point}px`,
+                width: `${length}px`,
+                backgroundColor: color,
+                transform: `rotate(${angle}deg)`,
+              }}
+            />
+          );
+        })}
 
         {area && (
           <span className="absolute inset-x-0 bottom-0 h-[36px] bg-gradient-to-t from-[#e6f7ee] to-transparent" />
         )}
 
-        {safePoints.map(
-          (
-            point,
-            index,
-          ) => {
-            if (
-              point == null
-            ) {
-              return null;
-            }
+        {safePoints.map((point, index) => {
+          if (point == null) {
+            return null;
+          }
 
-            return (
-              <span
-                key={`point-${index}`}
-                className="absolute z-10 size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-gray-50"
-                style={{
-                  left: `${
-                    index *
-                    gap
-                  }px`,
-                  top: `${point}px`,
-                  borderColor:
-                    color,
-                }}
-              />
-            );
-          },
-        )}
+          return (
+            <span
+              key={`point-${index}`}
+              className="absolute z-10 size-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-gray-50"
+              style={{
+                left: `${index * gap}px`,
+                top: `${point}px`,
+                borderColor: color,
+              }}
+            />
+          );
+        })}
       </div>
 
       <div className="flex w-[228px] justify-between text-[11px] text-gray-500">
-        {safeLabels.map(
-          (
-            label,
-            index,
-          ) => (
-            <span
-              key={`${label}-${index}`}
-            >
-              {label || '-'}
-            </span>
-          ),
-        )}
+        {safeLabels.map((label, index) => (
+          <span key={`${label}-${index}`}>{label || '-'}</span>
+        ))}
       </div>
     </div>
   );
 };
 
-const TrackingPrivacySheet = ({
-  title,
-  isPrivate,
-  onClose,
-  onConfirm,
-}) => (
+const TrackingPrivacySheet = ({ title, isPrivate, onClose, onConfirm }) => (
   <div className="fixed inset-0 z-30 mx-auto w-full max-w-[402px] bg-black/15">
     <button
       type="button"
@@ -994,21 +785,11 @@ const TrackingPrivacySheet = ({
 
       <button
         type="button"
-        onClick={() =>
-          onConfirm(title)
-        }
+        onClick={() => onConfirm(title)}
         className="mt-[56px] flex items-center gap-3 text-[16px] font-medium text-text-black"
       >
-        <img
-          src={hiddenInfoIcon}
-          alt=""
-          className="size-[24px]"
-        />
-
-        보호자에게 비공개{' '}
-        {isPrivate
-          ? '해제하기'
-          : '하기'}
+        <img src={hiddenInfoIcon} alt="" className="size-[24px]" />
+        보호자에게 비공개 {isPrivate ? '해제하기' : '하기'}
       </button>
     </section>
   </div>
@@ -1033,40 +814,15 @@ const WeeklyJourneyPage = ({
   isWeekTrendLoading,
   weekTrendError,
 }) => {
-  const dates =
-    Array.isArray(
-      weekTrend?.dates,
-    )
-      ? weekTrend.dates
-      : [];
+  const dates = Array.isArray(weekTrend?.dates) ? weekTrend.dates : [];
 
-  const sleep =
-    Array.isArray(
-      weekTrend?.sleep,
-    )
-      ? weekTrend.sleep
-      : [];
+  const sleep = Array.isArray(weekTrend?.sleep) ? weekTrend.sleep : [];
 
-  const pain =
-    Array.isArray(
-      weekTrend?.pain,
-    )
-      ? weekTrend.pain
-      : [];
+  const pain = Array.isArray(weekTrend?.pain) ? weekTrend.pain : [];
 
-  const emotion =
-    Array.isArray(
-      weekTrend?.emotion,
-    )
-      ? weekTrend.emotion
-      : [];
+  const emotion = Array.isArray(weekTrend?.emotion) ? weekTrend.emotion : [];
 
-  const banners =
-    Array.isArray(
-      weekTrend?.banners,
-    )
-      ? weekTrend.banners
-      : [];
+  const banners = Array.isArray(weekTrend?.banners) ? weekTrend.banners : [];
 
   const labels =
     dates.map(
@@ -1087,67 +843,25 @@ const WeeklyJourneyPage = ({
       },
     );
 
-  const hasSleepData =
-    sleep.some(
-      (value) =>
-        value != null &&
-        Number.isFinite(
-          Number(value),
-        ),
-    );
+  const hasSleepData = sleep.some((value) => value != null && Number.isFinite(Number(value)));
 
-  const hasPainData =
-    pain.some(
-      (value) =>
-        value != null &&
-        Number.isFinite(
-          Number(value),
-        ),
-    );
+  const hasPainData = pain.some((value) => value != null && Number.isFinite(Number(value)));
 
-  const latestSleep =
-    getLatestNumber(
-      sleep,
-    );
+  const latestSleep = getLatestNumber(sleep);
 
-  const latestPain =
-    getLatestNumber(
-      pain,
-    );
+  const latestPain = getLatestNumber(pain);
 
-  const sleepBanner =
-    banners.find(
-      (banner) =>
-        banner.type ===
-        'sleep',
-    );
+  const sleepBanner = banners.find((banner) => banner.type === 'sleep');
 
-  const painBanner =
-    banners.find(
-      (banner) =>
-        banner.type ===
-        'pain',
-    );
+  const painBanner = banners.find((banner) => banner.type === 'pain');
 
-  const sleepTone =
-    getBannerTone(
-      sleepBanner,
-    );
+  const sleepTone = getBannerTone(sleepBanner);
 
-  const painTone =
-    getBannerTone(
-      painBanner,
-    );
+  const painTone = getBannerTone(painBanner);
 
-  const sleepClasses =
-    getBannerClasses(
-      sleepTone,
-    );
+  const sleepClasses = getBannerClasses(sleepTone);
 
-  const painClasses =
-    getBannerClasses(
-      painTone,
-    );
+  const painClasses = getBannerClasses(painTone);
 
   const weekSummary =
     isWeekTrendLoading
@@ -1163,24 +877,14 @@ const WeeklyJourneyPage = ({
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-primary-light pb-[122px] pt-[37px]">
       <header className="flex items-end justify-between px-[21px]">
-        <h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">
-          Recovery Journey
-        </h1>
+        <h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1>
 
         <button
           type="button"
-          onClick={() =>
-            onNavigate(
-              'recoveryGuide',
-            )
-          }
+          onClick={() => onNavigate('recoveryGuide')}
           aria-label="리커버리 가이드 보기"
         >
-          <img
-            src={menuBookIcon}
-            alt=""
-            className="h-[30px] w-[30px]"
-          />
+          <img src={menuBookIcon} alt="" className="h-[30px] w-[30px]" />
         </button>
       </header>
 
@@ -1202,185 +906,89 @@ const WeeklyJourneyPage = ({
       </div>
 
       <section className="mx-auto mt-[27px] flex min-h-20 w-[360px] items-center gap-2 rounded-[20px] bg-primary-background px-[15px] py-[15px]">
-        <img
-          src={analysisIcon}
-          alt=""
-          className="h-[35px] w-[35px] shrink-0"
-        />
+        <img src={analysisIcon} alt="" className="h-[35px] w-[35px] shrink-0" />
 
-        <p className="px-[15px] text-[12px] font-medium leading-5 text-primary">
-          {weekSummary}
-        </p>
+        <p className="px-[15px] text-[12px] font-medium leading-5 text-primary">{weekSummary}</p>
       </section>
 
       <section className="mx-auto mt-[29px] w-[360px] space-y-[13px]">
         <article
-          onClick={() =>
-            onPrivateCard(
-              '수면',
-            )
-          }
+          onClick={() => onPrivateCard('수면')}
           className="cursor-pointer rounded-[20px] bg-gray-50 px-4 py-[16px]"
         >
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-[18px] font-medium">
-              {privateCards.includes(
-                '수면',
-              ) && (
-                <img
-                  src={
-                    hiddenInfoIcon
-                  }
-                  alt="비공개"
-                  className="size-[20px]"
-                />
+              {privateCards.includes('수면') && (
+                <img src={hiddenInfoIcon} alt="비공개" className="size-[20px]" />
               )}
-
               수면
             </h2>
 
             <div className="flex items-center gap-2">
               {sleepBanner && (
-                <span
-                  className={`rounded-[13px] px-2 py-1 text-[12px] ${sleepClasses.badge}`}
-                >
-                  {
-                    sleepBanner.message
-                  }
+                <span className={`rounded-[13px] px-2 py-1 text-[12px] ${sleepClasses.badge}`}>
+                  {sleepBanner.message}
                 </span>
               )}
 
-              <span
-                className={`text-[16px] ${
-                  sleepBanner
-                    ? sleepClasses.value
-                    : 'text-gray-600'
-                }`}
-              >
-                {latestSleep ==
-                null
-                  ? '-'
-                  : `${latestSleep}h`}
+              <span className={`text-[16px] ${sleepBanner ? sleepClasses.value : 'text-gray-600'}`}>
+                {latestSleep == null ? '-' : `${latestSleep}h`}
               </span>
             </div>
           </div>
 
           {isWeekTrendLoading ? (
-            <p className="mt-5 text-[12px] text-gray-500">
-              수면 기록을 불러오는
-              중이에요.
-            </p>
+            <p className="mt-5 text-[12px] text-gray-500">수면 기록을 불러오는 중이에요.</p>
           ) : hasSleepData ? (
-            <TrendChart
-              color="#ff5f5f"
-              points={
-                sleepPoints
-              }
-              labels={labels}
-            />
+            <TrendChart color="#ff5f5f" points={sleepPoints} labels={labels} />
           ) : (
-            <p className="mt-5 text-[12px] text-gray-500">
-              표시할 수면 기록이
-              없어요.
-            </p>
+            <p className="mt-5 text-[12px] text-gray-500">표시할 수면 기록이 없어요.</p>
           )}
         </article>
 
         <article
-          onClick={() =>
-            onPrivateCard(
-              '통증',
-            )
-          }
+          onClick={() => onPrivateCard('통증')}
           className="cursor-pointer rounded-[20px] bg-gray-50 px-4 py-[16px]"
         >
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-[18px] font-medium">
-              {privateCards.includes(
-                '통증',
-              ) && (
-                <img
-                  src={
-                    hiddenInfoIcon
-                  }
-                  alt="비공개"
-                  className="size-[20px]"
-                />
+              {privateCards.includes('통증') && (
+                <img src={hiddenInfoIcon} alt="비공개" className="size-[20px]" />
               )}
-
               통증
             </h2>
 
             <div className="flex items-center gap-2">
               {painBanner && (
-                <span
-                  className={`rounded-[13px] px-2 py-1 text-[12px] ${painClasses.badge}`}
-                >
-                  {
-                    painBanner.message
-                  }
+                <span className={`rounded-[13px] px-2 py-1 text-[12px] ${painClasses.badge}`}>
+                  {painBanner.message}
                 </span>
               )}
 
-              <span
-                className={`text-[16px] ${
-                  painBanner
-                    ? painClasses.value
-                    : 'text-gray-600'
-                }`}
-              >
-                {latestPain ==
-                null
-                  ? '-'
-                  : latestPain}
+              <span className={`text-[16px] ${painBanner ? painClasses.value : 'text-gray-600'}`}>
+                {latestPain == null ? '-' : latestPain}
               </span>
             </div>
           </div>
 
           {isWeekTrendLoading ? (
-            <p className="mt-5 text-[12px] text-gray-500">
-              통증 기록을 불러오는
-              중이에요.
-            </p>
+            <p className="mt-5 text-[12px] text-gray-500">통증 기록을 불러오는 중이에요.</p>
           ) : hasPainData ? (
-            <TrendChart
-              color="#53c690"
-              area
-              points={
-                painPoints
-              }
-              labels={labels}
-            />
+            <TrendChart color="#53c690" area points={painPoints} labels={labels} />
           ) : (
-            <p className="mt-5 text-[12px] text-gray-500">
-              표시할 통증 기록이
-              없어요.
-            </p>
+            <p className="mt-5 text-[12px] text-gray-500">표시할 통증 기록이 없어요.</p>
           )}
         </article>
 
         <article
-          onClick={() =>
-            onPrivateCard(
-              '감정',
-            )
-          }
+          onClick={() => onPrivateCard('감정')}
           className="cursor-pointer rounded-[20px] bg-gray-50 px-4 py-[16px]"
         >
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-[18px] font-medium">
-              {privateCards.includes(
-                '감정',
-              ) && (
-                <img
-                  src={
-                    hiddenInfoIcon
-                  }
-                  alt="비공개"
-                  className="size-[20px]"
-                />
+              {privateCards.includes('감정') && (
+                <img src={hiddenInfoIcon} alt="비공개" className="size-[20px]" />
               )}
-
               감정
             </h2>
           </div>
@@ -1393,68 +1001,30 @@ const WeeklyJourneyPage = ({
           ) : emotion.length > 0 ? (
             <>
               <div className="mt-[16px] flex justify-between px-[10px] text-[22px]">
-                {emotion.map(
-                  (
-                    value,
-                    index,
-                  ) => (
-                    <span
-                      key={`emotion-${index}`}
-                      title={
-                        value
-                          ? emotionLabels[
-                              value
-                            ] ??
-                            value
-                          : '기록 없음'
-                      }
-                    >
-                      {value
-                        ? emotionEmoji[
-                            value
-                          ] ??
-                          '😐'
-                        : '−'}
-                    </span>
-                  ),
-                )}
+                {emotion.map((value, index) => (
+                  <span
+                    key={`emotion-${index}`}
+                    title={value ? (emotionLabels[value] ?? value) : '기록 없음'}
+                  >
+                    {value ? (emotionEmoji[value] ?? '😐') : '−'}
+                  </span>
+                ))}
               </div>
 
               <div className="mt-1 flex justify-between px-[9px] text-[11px] text-gray-500">
-                {labels.map(
-                  (
-                    label,
-                    index,
-                  ) => (
-                    <span
-                      key={`emotion-label-${index}`}
-                    >
-                      {label ||
-                        '-'}
-                    </span>
-                  ),
-                )}
+                {labels.map((label, index) => (
+                  <span key={`emotion-label-${index}`}>{label || '-'}</span>
+                ))}
               </div>
             </>
           ) : (
-            <p className="mt-5 text-[12px] text-gray-500">
-              표시할 감정 기록이
-              없어요.
-            </p>
+            <p className="mt-5 text-[12px] text-gray-500">표시할 감정 기록이 없어요.</p>
           )}
         </article>
       </section>
 
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2">
-        <BottomNavigation
-          activeKey="journey"
-          items={
-            navigationItems
-          }
-          onChange={
-            onNavigate
-          }
-        />
+        <BottomNavigation activeKey="journey" items={navigationItems} onChange={onNavigate} />
       </div>
 
       {privateCard && (
@@ -1513,106 +1083,53 @@ const JourneyPage = ({
     (today.getDay() + 6) %
     7;
 
-  const [
-    selectedDayIndex,
-    setSelectedDayIndex,
-  ] = useState(
-    todayWeekday,
-  );
+  const todayWeekday = (today.getDay() + 6) % 7;
 
-  const [
-    weekOffset,
-    setWeekOffset,
-  ] = useState(0);
+  const [selectedDayIndex, setSelectedDayIndex] = useState(todayWeekday);
 
-  const [
-    view,
-    setView,
-  ] = useState(
-    'journey',
-  );
+  const [weekOffset, setWeekOffset] = useState(0);
 
-  const [
-    isWeekView,
-    setIsWeekView,
-  ] = useState(false);
+  const [view, setView] = useState('journey');
 
-  const [
-    privateCard,
-    setPrivateCard,
-  ] = useState(null);
+  const [isWeekView, setIsWeekView] = useState(false);
 
-  const [
-    privateCards,
-    setPrivateCards,
-  ] = useState([]);
+  const [privateCard, setPrivateCard] = useState(null);
+
+  const [privateCards, setPrivateCards] = useState([]);
 
   /*
    * Day Log
    */
 
-  const [
-    selectedLog,
-    setSelectedLog,
-  ] = useState(null);
+  const [selectedLog, setSelectedLog] = useState(null);
 
-  const [
-    isLogLoading,
-    setIsLogLoading,
-  ] = useState(true);
+  const [selectedVoiceMemo, setSelectedVoiceMemo] = useState(null);
 
-  const [
-    logError,
-    setLogError,
-  ] = useState('');
+  const [isLogLoading, setIsLogLoading] = useState(true);
+
+  const [logError, setLogError] = useState('');
 
   /*
    * 오늘 AI 분석
    */
 
-  const [
-    todayAnalysis,
-    setTodayAnalysis,
-  ] = useState('');
+  const [todayAnalysis, setTodayAnalysis] = useState('');
 
-  const [
-    isAnalysisLoading,
-    setIsAnalysisLoading,
-  ] = useState(true);
+  const [isAnalysisLoading, setIsAnalysisLoading] = useState(true);
 
-  const [
-    analysisError,
-    setAnalysisError,
-  ] = useState('');
+  const [analysisError, setAnalysisError] = useState('');
 
   /*
    * Week Trend
    */
 
-  const [
-    weekTrend,
-    setWeekTrend,
-  ] = useState(null);
+  const [weekTrend, setWeekTrend] = useState(null);
 
-  const [
-    isWeekTrendLoading,
-    setIsWeekTrendLoading,
-  ] = useState(false);
+  const [isWeekTrendLoading, setIsWeekTrendLoading] = useState(false);
 
-  const [
-    weekTrendError,
-    setWeekTrendError,
-  ] = useState('');
+  const [weekTrendError, setWeekTrendError] = useState('');
 
-  const days = [
-    '월',
-    '화',
-    '수',
-    '목',
-    '금',
-    '토',
-    '일',
-  ];
+  const days = ['월', '화', '수', '목', '금', '토', '일'];
 
   /*
    * ======================================
@@ -1742,73 +1259,40 @@ const JourneyPage = ({
    * ======================================
    */
 
-  const weekStart =
-    new Date(today);
+  const weekStart = new Date(today);
 
-  weekStart.setDate(
-    today.getDate() -
-      todayWeekday +
-      weekOffset * 7,
+  weekStart.setDate(today.getDate() - todayWeekday + weekOffset * 7);
+
+  const weekDates = Array.from(
+    {
+      length: 7,
+    },
+    (_, index) => {
+      const date = new Date(weekStart);
+
+      date.setDate(weekStart.getDate() + index);
+
+      return date;
+    },
   );
 
-  const weekDates =
-    Array.from(
-      {
-        length: 7,
-      },
-      (_, index) => {
-        const date =
-          new Date(
-            weekStart,
-          );
+  const selectedDate = weekDates[selectedDayIndex];
 
-        date.setDate(
-          weekStart.getDate() +
-            index,
-        );
+  const selectedDateKey = toDateKey(selectedDate);
 
-        return date;
-      },
-    );
+  const isSelectedToday = selectedDate.getTime() === today.getTime();
 
-  const selectedDate =
-    weekDates[
-      selectedDayIndex
-    ];
+  const selectedDateLabel = isSelectedToday
+    ? '오늘'
+    : `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`;
 
-  const selectedDateKey =
-    toDateKey(
-      selectedDate,
-    );
+  const selectedDay = selectedDayIndex + 1;
 
-  const isSelectedToday =
-    selectedDate.getTime() ===
-    today.getTime();
-
-  const selectedDateLabel =
-    isSelectedToday
-      ? '오늘'
-      : `${
-          selectedDate.getMonth() +
-          1
-        }월 ${selectedDate.getDate()}일`;
-
-  const selectedDay =
-    selectedDayIndex + 1;
-
-  const setSelectedDay = (
-    day,
-  ) => {
-    setSelectedDayIndex(
-      day - 1,
-    );
+  const setSelectedDay = (day) => {
+    setSelectedDayIndex(day - 1);
   };
 
-  const records =
-    createRecords(
-      selectedLog,
-      selectedDateKey,
-    );
+  const records = createRecords(selectedLog, selectedDateKey);
 
   /*
    * ======================================
@@ -1914,10 +1398,11 @@ const JourneyPage = ({
             return;
           }
 
-          console.error(
-            'Daily Log 조회 실패:',
-            error,
-          );
+          const logs = Array.isArray(response)
+            ? response
+            : Array.isArray(response?.results)
+              ? response.results
+              : [];
 
           const status =
             error
@@ -1940,12 +1425,13 @@ const JourneyPage = ({
               '',
             );
 
-            return;
-          }
+        setSelectedLog(log);
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
 
-          setSelectedLog(
-            null,
-          );
+        console.error('Daily Log 조회 실패:', error);
 
           setLogError(
             error
@@ -1964,7 +1450,18 @@ const JourneyPage = ({
             );
           }
         }
-      };
+
+        setSelectedLog(null);
+
+        setLogError(
+          error?.response?.data?.detail || error?.message || '기록을 불러오지 못했습니다.',
+        );
+      } finally {
+        if (isActive) {
+          setIsLogLoading(false);
+        }
+      }
+    };
 
     fetchDailyLog();
 
@@ -1972,10 +1469,57 @@ const JourneyPage = ({
       isActive =
         false;
     };
-  }, [
-    selectedDateKey,
-    isSelectedToday,
-  ]);
+  }, [selectedDateKey, isSelectedToday]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchVoiceMemo = async () => {
+      setSelectedVoiceMemo(null);
+
+      try {
+        const response = await careApi.getVoiceMemos({
+          log_date: selectedDateKey,
+        });
+
+        if (!isActive) {
+          return;
+        }
+
+        const voiceMemos = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.results)
+            ? response.results
+            : [];
+
+        const voiceMemo =
+          voiceMemos.find((memo) => memo.status === 'done' && memo.audio_file) ?? null;
+
+        setSelectedVoiceMemo(
+          voiceMemo
+            ? {
+                ...voiceMemo,
+                audioUrl: resolveApiUrl(voiceMemo.audio_file),
+              }
+            : null,
+        );
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+
+        console.error('음성 메모 조회 실패:', error);
+
+        setSelectedVoiceMemo(null);
+      }
+    };
+
+    fetchVoiceMemo();
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedDateKey]);
 
   /*
    * ======================================
@@ -1988,11 +1532,8 @@ const JourneyPage = ({
   useEffect(() => {
     let isActive = true;
 
-    const fetchTodayAnalysis =
-      async () => {
-        setIsAnalysisLoading(
-          true,
-        );
+    const fetchTodayAnalysis = async () => {
+      setIsAnalysisLoading(true);
 
         setAnalysisError(
           '',
@@ -2003,49 +1544,27 @@ const JourneyPage = ({
             await careApi
               .getTodayAnalysis();
 
-          if (!isActive) {
-            return;
-          }
+        if (!isActive) {
+          return;
+        }
 
-          setTodayAnalysis(
-            getTodayAnalysisText(
-              data,
-            ),
-          );
-        } catch (error) {
-          if (!isActive) {
-            return;
-          }
+        setTodayAnalysis(getTodayAnalysisText(data));
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
 
-          console.error(
-            '오늘의 AI 분석 조회 실패:',
-            error,
-          );
+        console.error('오늘의 AI 분석 조회 실패:', error);
 
-          const status =
-            error
-              ?.response
-              ?.status ??
-            error?.status;
+        const status = error?.response?.status ?? error?.status;
 
-          if (
-            status ===
-            404
-          ) {
-            setTodayAnalysis(
-              '',
-            );
+        if (status === 404) {
+          setTodayAnalysis('');
 
-            setAnalysisError(
-              '',
-            );
+          setAnalysisError('');
 
-            return;
-          }
-
-          setTodayAnalysis(
-            '',
-          );
+          return;
+        }
 
           setAnalysisError(
             error
@@ -2064,7 +1583,8 @@ const JourneyPage = ({
             );
           }
         }
-      };
+      }
+    };
 
     fetchTodayAnalysis();
 
@@ -2092,24 +1612,19 @@ const JourneyPage = ({
     let isActive =
       true;
 
-    const fetchWeekTrend =
-      async () => {
-        setIsWeekTrendLoading(
-          true,
-        );
+    const fetchWeekTrend = async () => {
+      setIsWeekTrendLoading(true);
 
-        setWeekTrendError(
-          '',
-        );
+      setWeekTrendError('');
 
         try {
           const data =
             await careApi
               .getWeekTrend();
 
-          if (!isActive) {
-            return;
-          }
+        if (!isActive) {
+          return;
+        }
 
           setWeekTrend(
             data ??
@@ -2120,14 +1635,9 @@ const JourneyPage = ({
             return;
           }
 
-          console.error(
-            'Week Trend 조회 실패:',
-            error,
-          );
+        console.error('Week Trend 조회 실패:', error);
 
-          setWeekTrend(
-            null,
-          );
+        setWeekTrend(null);
 
           setWeekTrendError(
             error
@@ -2146,7 +1656,8 @@ const JourneyPage = ({
             );
           }
         }
-      };
+      }
+    };
 
     fetchWeekTrend();
 
@@ -2154,9 +1665,7 @@ const JourneyPage = ({
       isActive =
         false;
     };
-  }, [
-    isWeekView,
-  ]);
+  }, [isWeekView]);
 
   /*
    * ======================================
@@ -2164,20 +1673,12 @@ const JourneyPage = ({
    * ======================================
    */
 
-  if (
-    view ===
-    'activity'
-  ) {
+  if (view === 'activity') {
     return (
       <ActivityMemoHistoryPage
-        record={
-          records.activity
-        }
-        onBack={() =>
-          setView(
-            'journey',
-          )
-        }
+        record={records.activity}
+        voiceMemo={selectedVoiceMemo}
+        onBack={() => setView('journey')}
       />
     );
   }
@@ -2215,61 +1716,23 @@ const JourneyPage = ({
   ) {
     return (
       <WeeklyJourneyPage
-        onDay={() =>
-          setIsWeekView(
-            false,
-          )
-        }
-        onNavigate={
-          onNavigate
-        }
-        privateCard={
-          privateCard
-        }
-        privateCards={
-          privateCards
-        }
-        onPrivateCard={
-          setPrivateCard
-        }
-        onClosePrivate={() =>
-          setPrivateCard(
-            null,
-          )
-        }
-        weekTrend={
-          weekTrend
-        }
-        isWeekTrendLoading={
-          isWeekTrendLoading
-        }
-        weekTrendError={
-          weekTrendError
-        }
-        onConfirmPrivate={(
-          card,
-        ) => {
-          setPrivateCards(
-            (cards) =>
-              cards.includes(
-                card,
-              )
-                ? cards.filter(
-                    (
-                      privateItem,
-                    ) =>
-                      privateItem !==
-                      card,
-                  )
-                : [
-                    ...cards,
-                    card,
-                  ],
+        onDay={() => setIsWeekView(false)}
+        onNavigate={onNavigate}
+        privateCard={privateCard}
+        privateCards={privateCards}
+        onPrivateCard={setPrivateCard}
+        onClosePrivate={() => setPrivateCard(null)}
+        weekTrend={weekTrend}
+        isWeekTrendLoading={isWeekTrendLoading}
+        weekTrendError={weekTrendError}
+        onConfirmPrivate={(card) => {
+          setPrivateCards((cards) =>
+            cards.includes(card)
+              ? cards.filter((privateItem) => privateItem !== card)
+              : [...cards, card],
           );
 
-          setPrivateCard(
-            null,
-          );
+          setPrivateCard(null);
         }}
       />
     );
@@ -2287,24 +1750,14 @@ const JourneyPage = ({
       {/* Header */}
 
       <header className="flex items-end justify-between px-[21px] pt-[37px]">
-        <h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">
-          Recovery Journey
-        </h1>
+        <h1 className="text-[24px] font-medium tracking-[-0.48px] text-black">Recovery Journey</h1>
 
         <button
           type="button"
-          onClick={() =>
-            onNavigate(
-              'recoveryGuide',
-            )
-          }
+          onClick={() => onNavigate('recoveryGuide')}
           aria-label="리커버리 가이드 보기"
         >
-          <img
-            src={menuBookIcon}
-            alt=""
-            className="h-[30px] w-[30px]"
-          />
+          <img src={menuBookIcon} alt="" className="h-[30px] w-[30px]" />
         </button>
       </header>
 
@@ -2320,11 +1773,7 @@ const JourneyPage = ({
 
         <button
           type="button"
-          onClick={() =>
-            setIsWeekView(
-              true,
-            )
-          }
+          onClick={() => setIsWeekView(true)}
           className="w-1/2 text-[16px] font-medium tracking-[-0.8px] text-primary"
         >
           Week
@@ -2334,9 +1783,7 @@ const JourneyPage = ({
       {/* 기존 레이아웃 위치 유지용 */}
 
       <section className="invisible relative mx-auto mt-[22px] h-[120px] w-[360px] rounded-[20px] bg-gray-50 px-[28px] pt-[17px]">
-        <p className="text-[12px] font-medium tracking-[-0.6px]">
-          6월
-        </p>
+        <p className="text-[12px] font-medium tracking-[-0.6px]">6월</p>
 
         <button
           type="button"
@@ -2355,64 +1802,43 @@ const JourneyPage = ({
         </button>
 
         <div className="mt-[10px] flex justify-between">
-          {days.map(
-            (
-              day,
-              index,
-            ) => {
-              const number =
-                index + 1;
+          {days.map((day, index) => {
+            const number = index + 1;
 
-              const selected =
-                number ===
-                selectedDay;
+            const selected = number === selectedDay;
 
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() =>
-                    setSelectedDay(
-                      number,
-                    )
-                  }
-                  className="flex w-[35px] flex-col items-center gap-3"
+            return (
+              <button
+                key={day}
+                type="button"
+                onClick={() => setSelectedDay(number)}
+                className="flex w-[35px] flex-col items-center gap-3"
+              >
+                <span
+                  className={`flex size-[35px] items-center justify-center rounded-full text-[20px] font-medium tracking-[-1px] ${
+                    selected ? 'bg-primary text-white' : 'text-[#121212]'
+                  }`}
                 >
-                  <span
-                    className={`flex size-[35px] items-center justify-center rounded-full text-[20px] font-medium tracking-[-1px] ${
-                      selected
-                        ? 'bg-primary text-white'
-                        : 'text-[#121212]'
-                    }`}
-                  >
-                    {number}
-                  </span>
+                  {number}
+                </span>
 
-                  <span
-                    className={`text-[12px] font-medium tracking-[-0.6px] ${
-                      selected
-                        ? 'text-primary'
-                        : 'text-[#121212]'
-                    }`}
-                  >
-                    {day}
-                  </span>
-                </button>
-              );
-            },
-          )}
+                <span
+                  className={`text-[12px] font-medium tracking-[-0.6px] ${
+                    selected ? 'text-primary' : 'text-[#121212]'
+                  }`}
+                >
+                  {day}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
       {/* 실제 날짜 선택 */}
 
       <section className="relative z-10 mx-auto -mt-[120px] h-[120px] w-[360px] rounded-[20px] bg-gray-50 px-[28px] pt-[17px]">
-        <p className="text-[12px] font-medium tracking-[-0.6px]">
-          {weekDates[
-            0
-          ].getMonth() + 1}
-          월
-        </p>
+        <p className="text-[12px] font-medium tracking-[-0.6px]">{weekDates[0].getMonth() + 1}월</p>
 
         <button
           type="button"
@@ -2445,31 +1871,22 @@ const JourneyPage = ({
         </button>
 
         <div className="mt-[10px] flex justify-between">
-          {weekDates.map(
-            (
-              date,
-              index,
-            ) => {
-              const selected =
-                index ===
-                selectedDayIndex;
+          {weekDates.map((date, index) => {
+            const selected = index === selectedDayIndex;
 
-              const isToday =
-                date.getTime() ===
-                today.getTime();
+            const isToday = date.getTime() === today.getTime();
 
-              return (
-                <button
-                  key={
-                    date.toISOString()
-                  }
-                  type="button"
-                  onClick={() =>
-                    setSelectedDayIndex(
-                      index,
-                    )
-                  }
-                  className="flex w-[35px] flex-col items-center gap-3"
+            return (
+              <button
+                key={date.toISOString()}
+                type="button"
+                onClick={() => setSelectedDayIndex(index)}
+                className="flex w-[35px] flex-col items-center gap-3"
+              >
+                <span
+                  className={`flex size-[35px] items-center justify-center rounded-full text-[20px] font-medium tracking-[-1px] ${
+                    selected ? 'bg-primary text-white' : 'text-[#121212]'
+                  }`}
                 >
                   <span
                     className={`flex size-[35px] items-center justify-center rounded-full text-[20px] font-medium tracking-[-1px] ${
@@ -2483,34 +1900,23 @@ const JourneyPage = ({
                     }
                   </span>
 
-                  <span
-                    className={`text-[12px] font-medium tracking-[-0.6px] ${
-                      selected
-                        ? 'text-primary'
-                        : 'text-[#121212]'
-                    }`}
-                  >
-                    {isToday
-                      ? '오늘'
-                      : days[
-                          index
-                        ]}
-                  </span>
-                </button>
-              );
-            },
-          )}
+                <span
+                  className={`text-[12px] font-medium tracking-[-0.6px] ${
+                    selected ? 'text-primary' : 'text-[#121212]'
+                  }`}
+                >
+                  {isToday ? '오늘' : days[index]}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </section>
 
       {/* 오늘의 AI 분석 */}
 
       <section className="mx-auto mt-[69px] flex min-h-20 w-[360px] items-center gap-2 rounded-[20px] bg-primary-background px-[15px] py-[15px]">
-        <img
-          src={analysisIcon}
-          alt=""
-          className="h-[35px] w-[35px] shrink-0"
-        />
+        <img src={analysisIcon} alt="" className="h-[35px] w-[35px] shrink-0" />
 
         <p className="px-[15px] text-[12px] font-medium leading-5 tracking-[-0.6px] text-primary">
           {isSelectedToday
@@ -2541,25 +1947,15 @@ const JourneyPage = ({
       {/* 기록 다시 보기 */}
 
       <div className="mx-[21px] mt-[19px] flex items-center justify-between">
-        <h2 className="text-[20px] font-medium tracking-[-0.4px]">
-          기록 다시 보기
-        </h2>
+        <h2 className="text-[20px] font-medium tracking-[-0.4px]">기록 다시 보기</h2>
 
         <button
           type="button"
           aria-label="비공개 항목 선택"
-          onClick={() =>
-            setView(
-              'privacy',
-            )
-          }
+          onClick={() => setView('privacy')}
           className="flex size-[30px] items-center justify-center"
         >
-          <img
-            src={hiddenInfoIcon}
-            alt=""
-            className="size-[30px]"
-          />
+          <img src={hiddenInfoIcon} alt="" className="size-[30px]" />
         </button>
       </div>
 
@@ -2635,27 +2031,10 @@ const JourneyPage = ({
       {/* Bottom Navigation */}
 
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2">
-        <BottomNavigation
-          activeKey="journey"
-          items={
-            navigationItems
-          }
-          onChange={
-            onNavigate
-          }
-        />
+        <BottomNavigation activeKey="journey" items={navigationItems} onChange={onNavigate} />
       </div>
 
-      {view ===
-        'privacy' && (
-        <PrivacySelectionSheet
-          onClose={() =>
-            setView(
-              'journey',
-            )
-          }
-        />
-      )}
+      {view === 'privacy' && <PrivacySelectionSheet onClose={() => setView('journey')} />}
     </main>
   );
 };

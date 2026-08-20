@@ -24,6 +24,7 @@ const ProcessingAudioModal = ({ onCancel }) => (
 );
 
 const formatTime = (seconds) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+const delay = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 
 const RecordingPage = ({ onBack, onComplete }) => {
   const [isRecorded, setIsRecorded] = useState(false);
@@ -37,6 +38,7 @@ const RecordingPage = ({ onBack, onComplete }) => {
   const timerRef = useRef(null);
   const recordedAudioRef = useRef(null);
   const uploadCancelledRef = useRef(false);
+  const processingIdRef = useRef(0);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) window.clearInterval(timerRef.current);
@@ -74,6 +76,8 @@ const RecordingPage = ({ onBack, onComplete }) => {
   useEffect(() => {
     const startTimer = window.setTimeout(() => startRecording(), 0);
     return () => {
+      uploadCancelledRef.current = true;
+      processingIdRef.current += 1;
       window.clearTimeout(startTimer);
       const recorder = mediaRecorderRef.current;
       if (recorder && recorder.state !== 'inactive') recorder.stop();
@@ -85,6 +89,8 @@ const RecordingPage = ({ onBack, onComplete }) => {
   const finishRecording = async () => {
     const recorder = mediaRecorderRef.current;
     if (!recorder || recorder.state === 'inactive') return;
+    const processingId = processingIdRef.current + 1;
+    processingIdRef.current = processingId;
     setIsRecorded(true);
     setIsProcessing(true);
     setIsPaused(false);
@@ -104,10 +110,41 @@ const RecordingPage = ({ onBack, onComplete }) => {
     formData.append('audio', audioBlob, `voice-memo.${extension}`);
 
     try {
-      await careApi.createVoiceMemo(formData);
-      if (!uploadCancelledRef.current) onComplete();
+      const voiceMemo = await careApi.createVoiceMemo(formData);
+      const isCurrentProcessing = () => !uploadCancelledRef.current && processingIdRef.current === processingId;
+      if (!isCurrentProcessing()) return;
+
+      if (voiceMemo.status === 'done') {
+        onComplete();
+        return;
+      }
+
+      if (voiceMemo.status === 'pending' && voiceMemo.id != null) {
+        while (isCurrentProcessing()) {
+          await delay(2500);
+          if (!isCurrentProcessing()) return;
+
+          const updatedVoiceMemo = await careApi.getVoiceMemo(voiceMemo.id);
+          if (!isCurrentProcessing()) return;
+
+          if (updatedVoiceMemo.status === 'done') {
+            onComplete();
+            return;
+          }
+
+          if (updatedVoiceMemo.status === 'failed') {
+            setError('음성 기록을 처리하지 못했습니다. 다시 시도해주세요.');
+            setIsProcessing(false);
+            return;
+          }
+        }
+        return;
+      }
+
+      setError('음성 기록을 처리하지 못했습니다. 다시 시도해주세요.');
+      setIsProcessing(false);
     } catch (requestError) {
-      if (!uploadCancelledRef.current) {
+      if (!uploadCancelledRef.current && processingIdRef.current === processingId) {
         setError(requestError.message || '음성 기록을 저장하지 못했습니다.');
         setIsProcessing(false);
       }
@@ -115,6 +152,7 @@ const RecordingPage = ({ onBack, onComplete }) => {
   };
 
   const restartRecording = async () => {
+    processingIdRef.current += 1;
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== 'inactive') recorder.stop();
     stopStream();
@@ -151,14 +189,21 @@ const RecordingPage = ({ onBack, onComplete }) => {
   };
 
   const cancelProcessing = () => {
+    processingIdRef.current += 1;
     uploadCancelledRef.current = true;
     setIsProcessing(false);
+  };
+
+  const handleBack = () => {
+    uploadCancelledRef.current = true;
+    processingIdRef.current += 1;
+    onBack();
   };
 
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light">
       <header className="relative flex h-[112px] items-end justify-center border-b border-[#dcdcdc] bg-gray-50 pb-3">
-        <button type="button" onClick={onBack} aria-label="뒤로 가기" className="absolute bottom-3 left-5 flex size-8 items-center justify-center">
+        <button type="button" onClick={handleBack} aria-label="뒤로 가기" className="absolute bottom-3 left-5 flex size-8 items-center justify-center">
           <img src={backButton} alt="" className="h-[21px] w-[13px]" />
         </button>
         <h1 className="text-[20px] font-medium text-text-black">오늘의 기록</h1>
