@@ -238,9 +238,13 @@ const Mypage = ({ onNavigate = () => {} }) => {
     name: '홍길동',
     id: 'Hong_gildong',
     password: 'Becomingmom!123',
+    motherId: '',
     birthDate: '2026-07-13',
     photo: null,
   });
+
+  const [assignedMother, setAssignedMother] = useState(null);
+  const [isMotherLoading, setIsMotherLoading] = useState(true);
 
 
   /* =========================
@@ -254,7 +258,8 @@ const Mypage = ({ onNavigate = () => {} }) => {
     Promise.allSettled([
       authApi.me(),
       groupsApi.getNotificationSettings(),
-    ]).then(([userResult, settingsResult]) => {
+      groupsApi.getMembers(),
+    ]).then(([userResult, settingsResult, membersResult]) => {
 
       if (!isActive) return;
 
@@ -290,6 +295,23 @@ const Mypage = ({ onNavigate = () => {} }) => {
           )
         );
       }
+
+      if (membersResult.status === 'fulfilled') {
+        const members = Array.isArray(membersResult.value)
+          ? membersResult.value
+          : [];
+
+        const mother = members.find((member) => member.role === 'owner')
+          ?? null;
+
+        setAssignedMother(mother);
+        setProfile((current) => ({
+          ...current,
+          motherId: mother?.email ?? '',
+        }));
+      }
+
+      setIsMotherLoading(false);
 
     });
 
@@ -590,6 +612,61 @@ const Mypage = ({ onNavigate = () => {} }) => {
 
 
         {/* =========================
+            담당 산모
+        ========================= */}
+        <section
+          className="
+            rounded-[13px]
+            bg-[#31302E]
+            px-[17px]
+            py-[16px]
+          "
+          aria-labelledby="assigned-mother-heading"
+        >
+
+          <h2
+            id="assigned-mother-heading"
+            className="
+              text-[16px]
+              font-bold
+              text-white
+            "
+          >
+            담당 산모
+          </h2>
+
+
+          {isMotherLoading ? (
+            <p className="mt-[10px] text-[14px] text-[#D8D8D8]">
+              담당 산모 정보를 불러오는 중이에요.
+            </p>
+          ) : assignedMother ? (
+            <div className="mt-[10px] flex items-center justify-between">
+              <span className="flex flex-col gap-[3px]">
+                <strong className="text-[15px] font-medium text-white">
+                  {assignedMother.name}
+                </strong>
+                <span className="text-[13px] text-[#D8D8D8]">
+                  {assignedMother.email}
+                </span>
+              </span>
+
+              {assignedMother.relation && (
+                <span className="rounded-full bg-[#607BEB] px-[10px] py-[4px] text-[12px] text-white">
+                  {assignedMother.relation}
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="mt-[10px] text-[14px] text-[#D8D8D8]">
+              연결된 산모가 없어요.
+            </p>
+          )}
+
+        </section>
+
+
+        {/* =========================
             Notification
         ========================= */}
         <section
@@ -744,6 +821,8 @@ const Mypage = ({ onNavigate = () => {} }) => {
           activeKey="mypage"
           items={navigationItems}
           onChange={onNavigate}
+          activeBgClass="bg-[#809CFF]"
+          activeIconClass="text-[#F6F8FF]"
         />
       </div>
 

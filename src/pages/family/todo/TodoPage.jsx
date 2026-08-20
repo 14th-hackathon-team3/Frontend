@@ -9,8 +9,8 @@ import homeIcon from '../../../assets/navigationbar_home.svg';
 import taskIcon from '../../../assets/navigationbar_task.svg';
 import accountIcon from '../../../assets/navigationbar_account.svg';
 
-import todoStarIcon from '../../../assets/Todo_star.svg';
-import recordInfoIcon from '../../../assets/Record_info.png';
+import todoStarIcon from '../../../assets/Family_star.svg';
+import recordInfoIcon from '../../../assets/error.svg';
 
 const navigationItems = [
   {
@@ -74,19 +74,43 @@ const PartnerIcon = ({ className = '' }) => {
   );
 };
 
-const calendarDays = [
-  { date: 1, label: '월' },
-  { date: 2, label: '오늘', isToday: true },
-  { date: 3, label: '수' },
-  { date: 4, label: '목' },
-  { date: 5, label: '금' },
-  { date: 6, label: '토' },
-  { date: 7, label: '일' },
-];
+const weekdayLabels = ['월', '화', '수', '목', '금', '토', '일'];
+
+const toLocalDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const createCurrentWeek = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const todayKey = toLocalDateKey(today);
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    const key = toLocalDateKey(date);
+
+    return {
+      key,
+      date: date.getDate(),
+      month: date.getMonth() + 1,
+      label: key === todayKey ? '오늘' : weekdayLabels[index],
+      isToday: key === todayKey,
+    };
+  });
+};
+
+const calendarDays = createCurrentWeek();
+const todayKey = toLocalDateKey(new Date());
 
 const TodoPage = ({ onNavigate = () => {} }) => {
   const [activeTab, setActiveTab] = useState('my');
-  const [selectedDate, setSelectedDate] = useState(2);
+  const [selectedDate, setSelectedDate] = useState(todayKey);
 
   const todoScrollRef = useRef(null);
   const [scrollThumbTop, setScrollThumbTop] = useState(0);
@@ -108,6 +132,9 @@ const TodoPage = ({ onNavigate = () => {} }) => {
   };
 
   const [todos, setTodos] = useState([]);
+  const [aiMessage, setAiMessage] = useState('오늘의 회복을 위해 준비한 할 일을 확인해보세요.');
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     let isActive = true;
@@ -115,7 +142,15 @@ const TodoPage = ({ onNavigate = () => {} }) => {
       if (!isActive) return;
       const mapTodo = (todo, role) => ({ id: todo.id, text: todo.content, role, todoType: todo.assignee_membership ? 'assigned' : 'common', assignee: todo.assignee_name || '담당자', completed: Boolean(todo.completed_at), isPrivate: todo.visibility === 'private' });
       setTodos([...(data.mother_todos ?? []).map((todo) => mapTodo(todo, 'mom')), ...(data.family_todos ?? []).map((todo) => mapTodo(todo, 'partner'))]);
-    }).catch(() => { if (isActive) setTodos([]); });
+      setAiMessage(data.bottleneck || data.message || '오늘의 회복을 위해 준비한 할 일을 확인해보세요.');
+      setLoadError('');
+    }).catch(() => {
+      if (!isActive) return;
+      setTodos([]);
+      setLoadError('할 일을 불러오지 못했어요. 잠시 후 다시 확인해주세요.');
+    }).finally(() => {
+      if (isActive) setIsLoading(false);
+    });
     return () => { isActive = false; };
   }, []);
 
@@ -144,7 +179,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
     .sort((a, b) => Number(a.completed) - Number(b.completed));
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-[402px] bg-primary-light">
+    <main className="mx-auto min-h-screen w-full max-w-[402px] bg-[#F1EFF4]">
       <h1 className="sr-only">할 일</h1>
 
       <div className="mx-auto flex w-[360px] flex-col gap-[15px] pt-[90px]">
@@ -169,20 +204,20 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 tracking-[-0.6px] text-gray-900
               "
             >
-              6월
+              {new Date().getMonth() + 1}월
             </p>
 
             <div className="flex h-[61px] w-[305px] items-center gap-[10px]">
               {calendarDays.map((item) => {
-                const isSelected = selectedDate === item.date;
+                const isSelected = selectedDate === item.key;
 
                 return (
                   <button
-                    key={item.date}
+                    key={item.key}
                     type="button"
-                    onClick={() => setSelectedDate(item.date)}
+                    onClick={() => setSelectedDate(item.key)}
                     aria-pressed={isSelected}
-                    aria-label={`${item.date}일 ${item.label}`}
+                    aria-label={`${item.month}월 ${item.date}일 ${item.label}`}
                     className="
                       flex h-[61px] w-[35px]
                       flex-col items-center gap-[12px]
@@ -193,7 +228,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                         flex h-[35px] w-[35px]
                         items-center justify-center rounded-full
                         text-[20px] font-medium tracking-[-1px]
-                        ${isSelected ? 'bg-primary text-gray-50' : 'text-gray-900'}
+                        ${isSelected ? 'bg-[#809CFF] text-gray-50' : 'text-gray-900'}
                       `}
                     >
                       {item.date}
@@ -202,7 +237,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     <span
                       className={`
                         text-[12px] tracking-[-0.6px]
-                        ${item.isToday ? 'font-bold text-primary' : 'font-medium text-gray-900'}
+                        ${item.isToday ? 'font-bold text-[#809CFF]' : 'font-medium text-gray-900'}
                       `}
                     >
                       {item.label}
@@ -220,7 +255,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
           className="
             flex h-[80px] w-[360px]
             items-center gap-[8px]
-            rounded-[20px] bg-primary-background
+            rounded-[20px] bg-[#F6F8FF]
             px-[15px] py-[15px]
             text-left
           "
@@ -233,12 +268,10 @@ const TodoPage = ({ onNavigate = () => {} }) => {
               min-w-0 flex-1
               text-[12px] font-medium
               leading-[16px] tracking-[-0.6px]
-              text-primary
+              text-[#809CFF]
             "
           >
-            요 며칠 수면 시간이 줄고 있어요. 이대로 이어지면
-            <br />
-            지칠 수 있으니, 오늘은 휴식 위주의 할 일을 준비했어요.
+            {aiMessage}
           </p>
 
           <span
@@ -247,7 +280,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
               mr-[2px] h-[8px] w-[8px] shrink-0
               rotate-45
               border-r-[1.5px] border-t-[1.5px]
-              border-primary
+              border-[#809CFF]
             "
           />
         </button>
@@ -271,20 +304,20 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 flex h-[50px] w-[160px] shrink-0
                 items-center justify-center gap-[10px]
                 rounded-[20px]
-                ${activeTab === 'my' ? 'bg-primary' : 'bg-primary-background'}
+                ${activeTab === 'my' ? 'bg-[#809CFF]' : 'bg-[#F6F8FF]'}
               `}
             >
               <MomIcon
                 className={`
                     h-[16px] w-[16px]
-                    ${activeTab === 'my' ? 'text-primary-background' : 'text-primary'}
+                    ${activeTab === 'my' ? 'text-[#F6F8FF]' : 'text-[#809CFF]'}
                 `}
               />
 
               <span
                 className={`
                   text-[16px] font-medium tracking-[0.48px]
-                  ${activeTab === 'my' ? 'text-primary-background' : 'text-primary'}
+                  ${activeTab === 'my' ? 'text-[#F6F8FF]' : 'text-[#809CFF]'}
                 `}
               >
                 Mom
@@ -299,20 +332,20 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 flex h-[50px] w-[160px] shrink-0
                 items-center justify-center gap-[10px]
                 rounded-[20px]
-                ${activeTab === 'family' ? 'bg-primary' : 'bg-primary-background'}
+                ${activeTab === 'family' ? 'bg-[#809CFF]' : 'bg-[#F6F8FF]'}
               `}
             >
               <PartnerIcon
                 className={`
                     h-[24px] w-[24px]
-                    ${activeTab === 'family' ? 'text-primary-background' : 'text-primary'}
+                    ${activeTab === 'family' ? 'text-[#F6F8FF]' : 'text-[#809CFF]'}
                 `}
               />
 
               <span
                 className={`
                   text-[16px] font-medium tracking-[0.48px]
-                  ${activeTab === 'family' ? 'text-primary-background' : 'text-primary'}
+                  ${activeTab === 'family' ? 'text-[#F6F8FF]' : 'text-[#809CFF]'}
                 `}
               >
                 Family
@@ -326,20 +359,24 @@ const TodoPage = ({ onNavigate = () => {} }) => {
               ref={todoScrollRef}
               onScroll={handleTodoScroll}
               className={`
-                flex h-full w-full flex-col items-start gap-[15px]
-                ${activeTab === 'family' ? 'todo-scroll overflow-y-auto' : ''}
+                todo-scroll flex h-full w-full flex-col items-start gap-[15px]
+                overflow-y-auto pr-[10px]
               `}
             >
-              {activeTab === 'my' ? (
+              {isLoading ? (
+                <p className="text-[16px] text-gray-500">할 일을 불러오는 중이에요.</p>
+              ) : loadError ? (
+                <p className="text-[16px] text-error">{loadError}</p>
+              ) : activeTab === 'my' ? (
                 sortedTodos.map((todo) => (
-                  <div key={todo.id} className="flex h-[19.5px] w-full items-center gap-[15px]">
+                  <div key={todo.id} className="flex min-h-[19.5px] w-full items-start gap-[15px]">
                     <button
                       type="button"
                       onClick={() => toggleTodo(todo.id)}
                       className={`
-                        flex h-[19.5px] w-[19.5px] shrink-0
+                        mt-[2px] flex h-[19.5px] w-[19.5px] shrink-0
                         items-center justify-center rounded-[4.5px]
-                        ${todo.completed ? 'bg-primary' : 'bg-[#D9D9D9]'}
+                        ${todo.completed ? 'bg-[#809CFF]' : 'bg-[#D9D9D9]'}
                       `}
                       aria-label={todo.completed ? '할 일 완료 취소' : '할 일 완료'}
                     >
@@ -364,7 +401,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
 
                     <span
                       className={`
-                        text-[16px] font-normal text-text-black
+                        min-w-0 flex-1 break-words text-[16px] font-normal leading-[22px] text-text-black
                         ${todo.completed ? 'line-through' : ''}
                       `}
                     >
@@ -376,7 +413,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 <>
                   <div className="flex w-full flex-col gap-[15px]">
                     <div className="relative flex items-center gap-[4px]">
-                      <p className="text-[16px] font-medium leading-normal text-primary">
+                      <p className="text-[16px] font-medium leading-normal text-[#809CFF]">
                         보호자님을 위한 추천 To-do
                       </p>
 
@@ -421,14 +458,14 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     </div>
 
                     {assignedTodos.map((todo) => (
-                      <div key={todo.id} className="flex h-[19.5px] w-full items-center gap-[15px]">
+                      <div key={todo.id} className="flex min-h-[19.5px] w-full items-start gap-[15px]">
                         <button
                           type="button"
                           onClick={() => toggleTodo(todo.id)}
                           className={`
-                            flex h-[19.5px] w-[19.5px] shrink-0
+                            mt-[2px] flex h-[19.5px] w-[19.5px] shrink-0
                             items-center justify-center rounded-[4.5px]
-                            ${todo.completed ? 'bg-primary' : 'bg-[#D9D9D9]'}
+                            ${todo.completed ? 'bg-[#809CFF]' : 'bg-[#D9D9D9]'}
                           `}
                           aria-label={todo.completed ? '할 일 완료 취소' : '할 일 완료'}
                         >
@@ -453,14 +490,14 @@ const TodoPage = ({ onNavigate = () => {} }) => {
 
                         <span
                           className={`
-                            text-[16px] font-normal text-text-black
+                            min-w-0 flex-1 break-words text-[16px] font-normal leading-[22px] text-text-black
                             ${todo.completed ? 'line-through' : ''}
                           `}
                         >
                           {todo.text}
                         </span>
 
-                        <span className="ml-auto mr-[18px] shrink-0 text-[12px] font-normal tracking-[-0.36px] text-gray-900">
+                        <span className="mr-[8px] mt-[3px] shrink-0 text-[12px] font-normal tracking-[-0.36px] text-gray-900">
                           {todo.assignee || '담당자'}
                         </span>
                       </div>
@@ -468,19 +505,19 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                   </div>
 
                   <div className="mt-[8px] flex w-full flex-col gap-[15px]">
-                    <p className="text-[16px] font-medium leading-normal text-primary">
+                    <p className="text-[16px] font-medium leading-normal text-[#809CFF]">
                       공통 To-do
                     </p>
 
                     {commonTodos.map((todo) => (
-                      <div key={todo.id} className="flex h-[19.5px] w-full items-center gap-[15px]">
+                      <div key={todo.id} className="flex min-h-[19.5px] w-full items-start gap-[15px]">
                         <button
                           type="button"
                           onClick={() => toggleTodo(todo.id)}
                           className={`
-                            flex h-[19.5px] w-[19.5px] shrink-0
+                            mt-[2px] flex h-[19.5px] w-[19.5px] shrink-0
                             items-center justify-center rounded-[4.5px]
-                            ${todo.completed ? 'bg-primary' : 'bg-[#D9D9D9]'}
+                            ${todo.completed ? 'bg-[#809CFF]' : 'bg-[#D9D9D9]'}
                           `}
                           aria-label={todo.completed ? '할 일 완료 취소' : '할 일 완료'}
                         >
@@ -505,14 +542,14 @@ const TodoPage = ({ onNavigate = () => {} }) => {
 
                         <span
                           className={`
-                            text-[16px] font-normal text-text-black
+                            min-w-0 flex-1 break-words text-[16px] font-normal leading-[22px] text-text-black
                             ${todo.completed ? 'line-through' : ''}
                           `}
                         >
                           {todo.text}
                         </span>
 
-                        <span className="ml-auto mr-[18px] shrink-0 text-[12px] font-normal tracking-[-0.36px] text-gray-900">
+                        <span className="mr-[8px] mt-[3px] shrink-0 text-[12px] font-normal tracking-[-0.36px] text-gray-900">
                           {todo.assignee || '담당자'}
                         </span>
                       </div>
@@ -535,7 +572,13 @@ const TodoPage = ({ onNavigate = () => {} }) => {
       </div>
 
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2">
-        <BottomNavigation activeKey="todo" items={navigationItems.filter((item) => item.key !== 'record')} onChange={onNavigate} />
+        <BottomNavigation
+          activeKey="todo"
+          items={navigationItems.filter((item) => item.key !== 'record')}
+          onChange={onNavigate}
+          activeBgClass="bg-[#809CFF]"
+          activeIconClass="text-[#F6F8FF]"
+        />
       </div>
     </main>
   );

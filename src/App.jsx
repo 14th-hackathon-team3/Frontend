@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { authApi } from './api/auth';
+import { groupsApi } from './api/groups';
 
 import Login from './pages/my/auth/Login';
 
@@ -21,6 +22,15 @@ import FamilyTodoPage from './pages/family/todo/TodoPage';
 import FamilyMypage from './pages/family/mypage/Mypage';
 import FamilyOnboardingPage from './pages/family/onboarding/FamilyOnboardingPage';
 import FamilyRecoveryGuidePage from './pages/family/recovery/FamilyRecoveryGuidePage';
+import FamilyInvitePage from './pages/family/auth/Family_invite';
+import FamilyInviteExpiredPage from './pages/family/auth/FamilyInviteExpiredPage';
+import FamilySignup from './pages/family/auth/Signup';
+
+const getInviteCode = () => {
+  if (typeof window === 'undefined') return '';
+  const pathCode = window.location.pathname.match(/^\/invite\/([^/]+)\/?$/)?.[1];
+  return decodeURIComponent(pathCode || new URLSearchParams(window.location.search).get('invite_code') || '');
+};
 
 const myPages = {
   home: MyHomepage,
@@ -43,8 +53,31 @@ const familyPages = {
 };
 
 function App() {
-  const [activePage, setActivePage] = useState('login');
+  const [inviteCode] = useState(getInviteCode);
+  const [invitation, setInvitation] = useState(null);
+  const [activePage, setActivePage] = useState(inviteCode ? 'invite-loading' : 'login');
   const [userType, setUserType] = useState(null);
+
+  useEffect(() => {
+    if (!inviteCode) return;
+
+    let active = true;
+    groupsApi.verifyInvite(inviteCode)
+      .then((data) => {
+        if (!active) return;
+        if (data?.is_valid === false) {
+          setActivePage('invite-expired');
+          return;
+        }
+        setInvitation(data);
+        setActivePage('family-invite');
+      })
+      .catch(() => {
+        if (active) setActivePage('invite-expired');
+      });
+
+    return () => { active = false; };
+  }, [inviteCode]);
 
   const handleLogin = async () => {
     const user = await authApi.me();
@@ -57,6 +90,22 @@ function App() {
     setUserType(user.user_type);
     setActivePage('onboarding');
   };
+
+  if (activePage === 'invite-loading') {
+    return <main className="mx-auto flex min-h-screen w-full max-w-[402px] items-center justify-center bg-[#F6F8FF] text-[14px] text-[#666]">초대 링크를 확인하고 있어요.</main>;
+  }
+
+  if (activePage === 'invite-expired') {
+    return <FamilyInviteExpiredPage />;
+  }
+
+  if (activePage === 'family-invite') {
+    return <FamilyInvitePage motherName={invitation?.mother_name} onAccept={() => setActivePage('family-signup')} />;
+  }
+
+  if (activePage === 'family-signup') {
+    return <FamilySignup inviteCode={inviteCode} onBack={() => setActivePage('family-invite')} onComplete={handleSignup} />;
+  }
 
   if (activePage === 'login') {
     return <Login onLogin={handleLogin} onSignup={handleSignup} />;

@@ -1,10 +1,9 @@
 import inviteLogo from '../../../assets/logo2.svg';
 
 const FamilyInvitePage = ({
+  motherName = '산모',
   onAccept,
 }) => {
-  const motherName = '김이화';
-
   return (
     <main
       className="

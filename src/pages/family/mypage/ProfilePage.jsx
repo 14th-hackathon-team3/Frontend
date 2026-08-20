@@ -113,7 +113,7 @@ const ProfilePage = ({
     {
       icon: passwordIcon,
       label: '비밀번호',
-      value: profile?.password ?? '',
+      value: profile?.password || '••••••••',
 
       // 파란 원 추가
       hasCircle: false,
@@ -122,7 +122,7 @@ const ProfilePage = ({
     {
       icon: profileEditIcon,
       label: '담당 산모 ID',
-      value: profile?.motherId ?? 'Hong_gildong',
+      value: profile?.motherId || '연결된 산모 없음',
 
       // 파란 원 추가
       hasCircle: false,
