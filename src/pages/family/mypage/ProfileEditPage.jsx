@@ -152,9 +152,7 @@ const ProfileEditPage = ({
           <input
             type="text"
             value={profile?.id ?? ''}
-            onChange={(event) =>
-              updateField('id', event.target.value)
-            }
+            readOnly
             className="
               mt-[12px]
               h-[51px]
@@ -166,6 +164,7 @@ const ProfileEditPage = ({
               px-[14px]
               text-[14px]
               text-[#1C1B1F]
+              text-[#6E6E6E]
               outline-none
               focus:border-[#809CFF]
             "
@@ -182,11 +181,9 @@ const ProfileEditPage = ({
           </span>
 
           <input
-            type="text"
-            value={profile?.password ?? ''}
-            onChange={(event) =>
-              updateField('password', event.target.value)
-            }
+            type="password"
+            value="••••••••"
+            readOnly
             className="
               mt-[12px]
               h-[51px]
@@ -198,6 +195,7 @@ const ProfileEditPage = ({
               px-[14px]
               text-[14px]
               text-[#1C1B1F]
+              text-[#6E6E6E]
               outline-none
               focus:border-[#809CFF]
             "
@@ -216,9 +214,7 @@ const ProfileEditPage = ({
           <input
             type="text"
             value={profile?.motherId ?? ''}
-            onChange={(event) =>
-              updateField('motherId', event.target.value)
-            }
+            readOnly
             className="
               mt-[12px]
               h-[51px]
@@ -230,6 +226,7 @@ const ProfileEditPage = ({
               px-[14px]
               text-[14px]
               text-[#1C1B1F]
+              text-[#6E6E6E]
               outline-none
               focus:border-[#809CFF]
             "

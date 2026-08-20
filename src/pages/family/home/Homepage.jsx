@@ -16,6 +16,7 @@ import progressCurrent from '../../../assets/Family_progress_current.svg';
 import progressCurrentBg from '../../../assets/Family_progress_current_bg.svg';
 import selectedDayBackground from '../../../assets/Family_home_selected_day.svg';
 import { contentApi } from '../../../api/content';
+import { careApi } from '../../../api/care';
 
 const navigationItems = [
   { key: 'journey', label: '회복 여정' },
@@ -152,14 +153,39 @@ const Homepage = ({ onNavigate = () => {} }) => {
     stage_name: '3~6주차',
     goal: '일상 기능 회복하기',
   });
+  const [currentWeek, setCurrentWeek] = useState(5);
+  const [homeError, setHomeError] = useState('');
   const dialStartX = useRef(null);
   const didDial = useRef(false);
 
   useEffect(() => {
-    contentApi
-      .getCurrentStage(5)
-      .then(setRecoveryStage)
-      .catch(() => {});
+    const loadHome = async () => {
+      try {
+        const care = await careApi.getMyCare();
+        let recoveryDay = null;
+
+        if (care?.delivery_date) {
+          const deliveryDate = new Date(`${care.delivery_date}T00:00:00`);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          recoveryDay = Math.floor((today - deliveryDate) / 86400000) + 1;
+          if (Number.isFinite(recoveryDay)) {
+            setSelectedDay(Math.min(60, Math.max(1, recoveryDay)));
+          }
+        }
+
+        const calculatedWeek = recoveryDay ? Math.max(1, Math.ceil(recoveryDay / 7)) : null;
+        const week = calculatedWeek || Number(care?.postpartum_week) || 1;
+        setCurrentWeek(week);
+
+        const stage = await contentApi.getCurrentStage(week);
+        setRecoveryStage(stage);
+      } catch (requestError) {
+        setHomeError(requestError.message || '홈 정보를 불러오지 못했어요.');
+      }
+    };
+
+    loadHome();
   }, []);
 
   const moveDial = (direction) => {
@@ -185,6 +211,11 @@ const Homepage = ({ onNavigate = () => {} }) => {
   };
   return (
     <main className="relative mx-auto min-h-screen w-full max-w-[402px] overflow-hidden bg-primary-light pb-[118px] pt-[55px]">
+      {homeError && (
+        <p role="alert" className="absolute left-[22px] right-[76px] top-[58px] z-20 text-[11px] text-[#d33]">
+          {homeError}
+        </p>
+      )}
       <button
         type="button"
         aria-label="알림"
@@ -194,17 +225,17 @@ const Homepage = ({ onNavigate = () => {} }) => {
       </button>
       <header className="px-[22px] pt-[43px]">
         <span className="inline-flex rounded-full bg-[#809CFF] px-[10px] py-[2px] text-[11px] font-semibold tracking-[0.33px] text-white">
-          산후 5주차
+          산후 {currentWeek}주차
         </span>
         <h1 className="mt-1 text-[24px] font-semibold tracking-[-0.48px] text-[#121212]">
           오늘의 회복 여정, 함께 살펴볼까요?
         </h1>
         <p className="mt-[6px] text-[12px] tracking-[-0.36px] text-[#666]">
-          출산 5주차 · 회복 여정 {selectedDay}일째
+          출산 {currentWeek}주차 · 회복 여정 {selectedDay}일째
         </p>
       </header>
 
-      <section className="relative mt-0 h-[282px] overflow-visible" aria-label="회복 여정 Day 36">
+      <section className="relative mt-0 h-[282px] overflow-visible" aria-label={`회복 여정 Day ${selectedDay}`}>
         <img
           src={heroBackground}
           alt=""
@@ -342,7 +373,7 @@ const Homepage = ({ onNavigate = () => {} }) => {
         <span className="absolute left-[114px] top-[73px] text-[11px] text-gray-500">4주</span>
 
         <span className="absolute left-[190px] top-[67px] text-[11px] font-medium text-[#809CFF]">
-          5주
+          {currentWeek}주
         </span>
 
         <span className="absolute left-[265px] top-[72px] text-[11px] text-gray-300">6주</span>

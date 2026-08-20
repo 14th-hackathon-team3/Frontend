@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import BottomNavigation from '../../../components/BottomNavigation';
 
@@ -11,6 +11,8 @@ import FolderFlap3 from '../../../assets/Rectangle3.svg';
 import FolderFlap4 from '../../../assets/Rectangle4.svg';
 
 import hiddenInfoIcon from '../../../assets/hidden_info.png';
+import backButton from '../../../assets/back_button.svg';
+import { careApi } from '../../../api/care';
 
 
 const PRIVATE_CARDS_STORAGE_KEY =
@@ -35,30 +37,34 @@ const navigationItems = [
 
 const recordCards = [
   {
+    id: 'activity',
     title: '활동량/메모',
     top: 'top-0',
     titleTop: 'top-[24px]',
-    background: 'bg-[#EEF2FF]',
+    background: 'bg-[#809CFF]/10',
     flap: FolderFlap4,
   },
 
   {
+    id: 'skin',
     title: '피부/모발',
     top: 'top-[50px]',
     titleTop: 'top-[74px]',
-    background: 'bg-[#B9C7FF]',
+    background: 'bg-[#809CFF]/40',
     flap: FolderFlap3,
   },
 
   {
+    id: 'pain',
     title: '통증/수유',
     top: 'top-[100px]',
     titleTop: 'top-[124px]',
-    background: 'bg-[#97ADFF]',
+    background: 'bg-[#809CFF]/60',
     flap: FolderFlap2,
   },
 
   {
+    id: 'mood-sleep',
     title: '감정/수면',
     top: 'top-[153px]',
     titleTop: 'top-[177px]',
@@ -66,6 +72,69 @@ const recordCards = [
     flap: FolderFlap1,
   },
 ];
+
+const emotionLabels = {
+  happy: '행복한', angry: '화남', low_energy: '에너지 부족', sad: '슬픈',
+  depressed: '우울한', confused: '혼란스러운', calm: '차분한', moody: '변덕스러운',
+  irritated: '짜증나는', worried: '걱정스러운', active: '활동적인',
+};
+const feedingLabels = { breast: '모유', formula: '분유', mixed: '혼합' };
+const hairLabels = { same: '평소와 같음', slight: '약간 빠짐', heavy: '많이 빠짐' };
+const skinLabels = { 1: '매우 좋음', 2: '좋음', 3: '약간의 트러블', 4: '트러블 심함' };
+
+const toDateKey = (date) => date.toLocaleDateString('en-CA');
+const formatDate = (dateKey) => {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  return `${year}년 ${month}월 ${day}일`;
+};
+const formatHours = (hours) => {
+  if (hours == null) return '기록 없음';
+  const minutes = Math.round(Number(hours) * 60);
+  return `${Math.floor(minutes / 60)}시간 ${minutes % 60}분`;
+};
+const createRecords = (log, dateKey) => {
+  const exercise = (log?.exercise ?? '').split(' / ');
+  return {
+    'mood-sleep': { title: '감정/수면', sections: [{ label: '감정 상태', value: log?.emotion ? emotionLabels[log.emotion] ?? log.emotion : '기록 없음' }, { label: '수면 시간', value: formatHours(log?.sleep_hours) }] },
+    pain: { title: '통증/수유', sections: [{ label: '통증 부위', value: log?.pain_area || '기록 없음' }, { label: '통증 정도', value: log?.pain_score == null ? '기록 없음' : `${log.pain_score}/5` }, { label: '수유 방식', value: log?.breastfeeding ? feedingLabels[log.breastfeeding] ?? log.breastfeeding : '기록 없음' }] },
+    skin: { title: '피부/모발', sections: [{ label: '피부 상태', value: skinLabels[log?.skin_self_score] ?? '기록 없음' }, { label: '피부 증상', value: log?.skin_symptom_tags?.join(', ') || '기록 없음' }, { label: '모발 상태', value: hairLabels[log?.hair_loss_status] ?? '기록 없음' }] },
+    activity: { title: '활동량/메모', sections: [{ label: '활동 종류', value: exercise[0] || '기록 없음' }, { label: '활동량', value: exercise[1] || '기록 없음' }, { label: '자유 메모', value: log?.memo || '기록 없음' }] },
+    date: formatDate(dateKey),
+  };
+};
+
+const toChartPoints = (values) => {
+  const numbers = values?.map((value) => Number(value)).filter(Number.isFinite);
+  if (!numbers?.length) return [];
+
+  const min = Math.min(...numbers);
+  const max = Math.max(...numbers);
+
+  return values.map((value) => {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    if (min === max) return 36;
+    return 12 + ((max - number) / (max - min)) * 48;
+  });
+};
+
+const emotionIcons = {
+  happy: '😊', angry: '😠', low_energy: '😮‍💨', sad: '😢', depressed: '😞',
+  confused: '😕', calm: '😌', moody: '😐', irritated: '😣', worried: '😟', active: '🙂',
+};
+
+const MotherRecordPage = ({ record, date, onBack }) => (
+  <main className="relative mx-auto min-h-screen w-full max-w-[402px] bg-[#F1EFF4] px-[30px] pt-[140px]">
+    <header className="absolute inset-x-0 top-0 flex h-[112px] items-end justify-center border-b border-[#DCDCDC] bg-[#FCFCFC] pb-3">
+      <button type="button" onClick={onBack} aria-label="뒤로 가기" className="absolute left-5 flex size-8 items-center justify-center"><img src={backButton} alt="" className="h-[21px] w-[13px]" /></button>
+      <h1 className="text-[20px] font-medium text-[#121212]">{record.title}</h1>
+    </header>
+    <p className="mb-[15px] text-[14px] text-[#6E6E6E]">산모 기록 · {date}</p>
+    <section className="space-y-[30px]">
+      {record.sections.map((section, index) => <div key={section.label} className={index > 0 ? 'border-t border-[#DCDCDC] pt-[30px]' : ''}><h2 className="px-[10px] text-[20px] font-medium tracking-[-0.4px] text-[#121212]">{section.label}</h2>{record.title === '감정/수면' && section.label === '감정 상태' ? <div className="mt-[15px] flex flex-wrap gap-[11px]">{Object.values(emotionLabels).map((emotion) => <span key={emotion} className={`rounded-[10px] px-[25px] py-[8px] text-[18px] font-medium tracking-[-0.36px] ${section.value === emotion ? 'bg-[#809CFF] text-[#FCFCFC]' : 'bg-[#FCFCFC] text-[#121212]'}`}>{emotion}</span>)}</div> : <p className="mt-[15px] rounded-[10px] border border-[#CBCBCB] bg-[#F6F6F6] px-4 py-[13px] text-[16px] text-[#121212]">{section.value}</p>}</div>)}
+    </section>
+  </main>
+);
 
 
 /* =========================
@@ -112,6 +181,10 @@ const TrendChart = ({
 
             const nextPoint =
               points[index + 1];
+
+            if (!Number.isFinite(point) || !Number.isFinite(nextPoint)) {
+              return null;
+            }
 
             const horizontal = 38;
 
@@ -167,7 +240,7 @@ const TrendChart = ({
 
 
         {points.map(
-          (point, index) => (
+          (point, index) => Number.isFinite(point) && (
             <span
               key={`${point}-point`}
               className="
@@ -293,6 +366,8 @@ const TrackingCard = ({
   points,
   area,
 }) => {
+  const hasData = points.some(Number.isFinite);
+
   return (
     <article
       className="
@@ -366,11 +441,17 @@ const TrackingCard = ({
       </div>
 
 
-      <TrendChart
-        color={color}
-        points={points}
-        area={area}
-      />
+      {hasData ? (
+        <TrendChart
+          color={color}
+          points={points}
+          area={area}
+        />
+      ) : (
+        <p className="mt-8 text-center text-[12px] text-[#9D9D9D]">
+          기록 없음
+        </p>
+      )}
 
     </article>
   );
@@ -385,7 +466,19 @@ const FamilyWeeklyJourneyPage = ({
   onDay,
   onNavigate,
   privateCards,
+  weekTrend,
+  isTrendLoading,
 }) => {
+  const sleepBanner = weekTrend?.banners?.find((banner) => banner.type === 'sleep');
+  const painBanner = weekTrend?.banners?.find((banner) => banner.type === 'pain');
+  const latestSleep = [...(weekTrend?.sleep ?? [])].reverse().find((value) => value != null);
+  const latestPain = [...(weekTrend?.pain ?? [])].reverse().find((value) => value != null);
+  const sleepPoints = toChartPoints(weekTrend?.sleep);
+  const painPoints = toChartPoints(weekTrend?.pain);
+  const emotions = weekTrend?.emotion?.filter(Boolean)
+    .map((emotion) => emotionIcons[emotion] ?? '😐')
+    ?? [];
+
   return (
     <main
       className="
@@ -394,7 +487,7 @@ const FamilyWeeklyJourneyPage = ({
         min-h-screen
         w-full
         max-w-[402px]
-        bg-[#F6F8FF]
+        bg-[#F1EFF4]
         pb-[122px]
         pt-[76px]
       "
@@ -404,18 +497,19 @@ const FamilyWeeklyJourneyPage = ({
       <header
         className="
           flex
-          items-center
+          h-[37px]
+          items-end
           justify-between
-          px-[16px]
+          px-[21px]
         "
       >
 
         <h1
           className="
-            text-[20px]
+            text-[24px]
             font-medium
-            tracking-[-0.4px]
-            text-[#121212]
+            tracking-[-0.48px]
+            text-black
           "
         >
           Recovery Journey
@@ -430,16 +524,18 @@ const FamilyWeeklyJourneyPage = ({
           aria-label="리커버리 가이드 보기"
           className="
             flex
-            size-[30px]
+            h-[30px]
+            w-[37px]
+            flex-col
             items-center
-            justify-center
           "
         >
           <img
             src={menuBookIcon}
             alt=""
-            className="size-[24px]"
+            className="size-[30px]"
           />
+          <span className="mt-[1px] whitespace-nowrap text-[8px] text-[#848991]">가이드 보기</span>
         </button>
 
       </header>
@@ -451,10 +547,10 @@ const FamilyWeeklyJourneyPage = ({
           mx-auto
           mt-[22px]
           flex
-          h-[26px]
-          w-[370px]
+          h-[30px]
+          w-[360px]
           rounded-[20px]
-          bg-[#F0F2F9]
+          bg-[#F6F8FF]
         "
       >
 
@@ -464,7 +560,7 @@ const FamilyWeeklyJourneyPage = ({
           className="
             w-1/2
             rounded-[20px]
-            text-[12px]
+            text-[16px]
             font-medium
             text-[#809CFF]
           "
@@ -479,7 +575,7 @@ const FamilyWeeklyJourneyPage = ({
             w-1/2
             rounded-[20px]
             bg-[#809CFF]
-            text-[12px]
+            text-[16px]
             font-medium
             text-white
           "
@@ -496,12 +592,12 @@ const FamilyWeeklyJourneyPage = ({
           mx-auto
           mt-[27px]
           flex
-          h-[70px]
+          h-[80px]
           w-[360px]
           items-center
           gap-[12px]
           rounded-[20px]
-          bg-[#F2F4FC]
+          bg-[#F6F8FF]
           px-[15px]
         "
       >
@@ -509,7 +605,7 @@ const FamilyWeeklyJourneyPage = ({
         <img
           src={analysisIcon}
           alt=""
-          className="size-[30px]"
+          className="size-[35px]"
         />
 
 
@@ -531,7 +627,7 @@ const FamilyWeeklyJourneyPage = ({
       <section
         className="
           mx-auto
-          mt-[29px]
+          mt-[30px]
           w-[360px]
           space-y-[13px]
         "
@@ -542,18 +638,10 @@ const FamilyWeeklyJourneyPage = ({
         ) : (
           <TrackingCard
             title="수면"
-            badge="최근 3일 감소"
-            value="5.3h"
+            badge={sleepBanner?.message ?? (latestSleep == null ? '기록 없음' : '최근 3일 감소')}
+            value={latestSleep == null ? '기록 없음' : `${latestSleep}h`}
             color="#E66161"
-            points={[
-              28,
-              13,
-              36,
-              28,
-              46,
-              61,
-              52,
-            ]}
+            points={sleepPoints}
           />
         )}
 
@@ -563,18 +651,10 @@ const FamilyWeeklyJourneyPage = ({
         ) : (
           <TrackingCard
             title="통증"
-            badge="전반적으로 감소"
-            value="4"
+            badge={painBanner?.message ?? (latestPain == null ? '기록 없음' : '전반적으로 감소')}
+            value={latestPain == null ? '기록 없음' : String(latestPain)}
             color="#6BBF99"
-            points={[
-              14,
-              14,
-              36,
-              36,
-              58,
-              58,
-              36,
-            ]}
+            points={painPoints}
             area
           />
         )}
@@ -622,7 +702,7 @@ const FamilyWeeklyJourneyPage = ({
                   text-[#3A9E72]
                 "
               >
-                최근 긍정적인 감정 증가
+                {emotions.length > 0 ? '최근 긍정적인 감정 증가' : '기록 없음'}
               </span>
 
             </div>
@@ -637,13 +717,7 @@ const FamilyWeeklyJourneyPage = ({
                 text-[22px]
               "
             >
-              <span>😊</span>
-              <span>🙂</span>
-              <span>🙂</span>
-              <span>😌</span>
-              <span>🙂</span>
-              <span>😊</span>
-              <span>😊</span>
+              {emotions.length > 0 ? emotions.map((emotion, index) => <span key={`${emotion}-${index}`}>{emotion}</span>) : <span className="text-[12px] text-[#9D9D9D]">기록 없음</span>}
             </div>
 
 
@@ -671,6 +745,13 @@ const FamilyWeeklyJourneyPage = ({
 
       </section>
 
+      {!isTrendLoading && sleepBanner && (
+        <section className="mx-auto mt-3 w-[360px] rounded-[16px] bg-[#F6F8FF] px-4 py-4 shadow-[0_2px_6px_rgba(217,123,106,0.06)]">
+          <div className="flex items-center justify-between gap-3"><p className="text-[16px] font-medium text-[#E66161]">⚠ {sleepBanner.message}</p><span className="shrink-0 rounded-full bg-[#FDF0EC] px-2 py-[2px] text-[12px] text-[#EB2B2B]">최근 3일 감소</span></div>
+          <p className="mt-3 text-[12px] text-[#666666]">최근 3일간 수면 시간이 지속적으로 낮아지고 있어요.</p>
+        </section>
+      )}
+
 
       {/* Bottom Navigation */}
       <div
@@ -686,6 +767,8 @@ const FamilyWeeklyJourneyPage = ({
           activeKey="journey"
           items={navigationItems}
           onChange={onNavigate}
+          activeBgClass="bg-[#809CFF]"
+          activeIconClass="text-[#F6F8FF]"
         />
       </div>
 
@@ -733,6 +816,11 @@ const JourneyPage = ({
     isWeekView,
     setIsWeekView,
   ] = useState(false);
+
+  const [selectedRecordId, setSelectedRecordId] = useState(null);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [weekTrend, setWeekTrend] = useState(null);
+  const [isTrendLoading, setIsTrendLoading] = useState(true);
 
 
   const [privateCards] =
@@ -794,6 +882,39 @@ const JourneyPage = ({
       selectedDayIndex
     ];
 
+  const selectedDateKey = toDateKey(selectedDate);
+
+  useEffect(() => {
+    let active = true;
+
+    careApi.getDailyLogs().then((logs) => {
+      if (!active) return;
+      setSelectedLog(
+        (Array.isArray(logs) ? logs : []).find(
+          (log) => log.log_date === selectedDateKey
+        ) ?? null
+      );
+    }).catch(() => {
+      if (active) setSelectedLog(null);
+    });
+
+    return () => { active = false; };
+  }, [selectedDateKey]);
+
+  useEffect(() => {
+    let active = true;
+
+    careApi.getWeekTrend().then((trend) => {
+      if (active) setWeekTrend(trend);
+    }).catch(() => {
+      if (active) setWeekTrend(null);
+    }).finally(() => {
+      if (active) setIsTrendLoading(false);
+    });
+
+    return () => { active = false; };
+  }, []);
+
 
   const dateLabel =
     selectedDate.getTime() ===
@@ -803,6 +924,18 @@ const JourneyPage = ({
           selectedDate.getMonth() +
           1
         }월 ${selectedDate.getDate()}일`;
+
+  const records = createRecords(selectedLog, selectedDateKey);
+
+  if (selectedRecordId) {
+    return (
+      <MotherRecordPage
+        record={records[selectedRecordId]}
+        date={records.date}
+        onBack={() => setSelectedRecordId(null)}
+      />
+    );
+  }
 
 
   /* =========================
@@ -819,6 +952,8 @@ const JourneyPage = ({
         privateCards={
           privateCards
         }
+        weekTrend={weekTrend}
+        isTrendLoading={isTrendLoading}
       />
     );
   }
@@ -833,7 +968,7 @@ const JourneyPage = ({
         w-full
         max-w-[402px]
         overflow-hidden
-        bg-[#F6F8FF]
+        bg-[#F1EFF4]
         pb-[120px]
         pt-[76px]
       "
@@ -845,18 +980,19 @@ const JourneyPage = ({
       <header
         className="
           flex
-          items-center
+          h-[37px]
+          items-end
           justify-between
-          px-[16px]
+          px-[21px]
         "
       >
 
         <h1
           className="
-            text-[20px]
+            text-[24px]
             font-medium
-            tracking-[-0.4px]
-            text-[#121212]
+            tracking-[-0.48px]
+            text-black
           "
         >
           Recovery Journey
@@ -872,18 +1008,25 @@ const JourneyPage = ({
           }
           aria-label="리커버리 가이드 보기"
           className="
+            relative
             flex
-            size-[30px]
+            h-[30px]
+            w-[37px]
+            flex-col
             items-center
-            justify-center
+            justify-start
           "
         >
 
           <img
             src={menuBookIcon}
             alt=""
-            className="size-[24px]"
+            className="size-[30px]"
           />
+
+          <span className="mt-[1px] whitespace-nowrap text-[8px] text-[#848991]">
+            가이드 보기
+          </span>
 
         </button>
 
@@ -898,10 +1041,10 @@ const JourneyPage = ({
           mx-auto
           mt-[22px]
           flex
-          h-[26px]
-          w-[370px]
+          h-[30px]
+          w-[360px]
           rounded-[20px]
-          bg-[#F0F2F9]
+          bg-[#F6F8FF]
         "
       >
 
@@ -911,7 +1054,7 @@ const JourneyPage = ({
             w-1/2
             rounded-[20px]
             bg-[#809CFF]
-            text-[12px]
+            text-[16px]
             font-medium
             text-white
           "
@@ -928,7 +1071,7 @@ const JourneyPage = ({
           className="
             w-1/2
             rounded-[20px]
-            text-[12px]
+            text-[16px]
             font-medium
             text-[#809CFF]
           "
@@ -946,13 +1089,13 @@ const JourneyPage = ({
         className="
           relative
           mx-auto
-          mt-[20px]
-          h-[112px]
+          mt-[22px]
+          h-[120px]
           w-[360px]
           rounded-[20px]
           bg-white
-          px-[22px]
-          pt-[14px]
+          px-[28px]
+          pt-[17px]
         "
       >
 
@@ -981,12 +1124,12 @@ const JourneyPage = ({
           className="
             absolute
             left-[8px]
-            top-[49px]
+            top-[53px]
             flex
-            size-[20px]
+            size-[15px]
             items-center
             justify-center
-            text-[19px]
+            text-[17px]
             text-[#121212]
           "
         >
@@ -1007,12 +1150,12 @@ const JourneyPage = ({
           className="
             absolute
             right-[8px]
-            top-[49px]
+            top-[53px]
             flex
-            size-[20px]
+            size-[15px]
             items-center
             justify-center
-            text-[19px]
+            text-[17px]
             text-[#121212]
           "
         >
@@ -1022,10 +1165,9 @@ const JourneyPage = ({
 
         <div
           className="
-            mt-[8px]
+            mt-[10px]
             flex
-            justify-between
-            px-[7px]
+            gap-[10px]
           "
         >
 
@@ -1058,18 +1200,18 @@ const JourneyPage = ({
                     w-[35px]
                     flex-col
                     items-center
-                    gap-[6px]
+                    gap-[12px]
                   "
                 >
 
                   <span
                     className={`
                       flex
-                      size-[31px]
+                      size-[35px]
                       items-center
                       justify-center
                       rounded-full
-                      text-[15px]
+                      text-[20px]
                       font-medium
 
                       ${
@@ -1085,7 +1227,7 @@ const JourneyPage = ({
 
                   <span
                     className={`
-                      text-[10px]
+                      text-[12px]
                       font-medium
 
                       ${
@@ -1115,17 +1257,17 @@ const JourneyPage = ({
       ========================= */}
       <div
         className="
-          mx-[16px]
+          mx-[21px]
           mt-[20px]
         "
       >
 
         <h2
           className="
-            text-[16px]
+            text-[20px]
             font-medium
-            tracking-[-0.3px]
-            text-[#121212]
+            tracking-[-0.4px]
+            text-black
           "
         >
           기록 다시 보기
@@ -1140,14 +1282,14 @@ const JourneyPage = ({
       <section
         className="
           mx-auto
-          mt-[15px]
+          mt-[20px]
           flex
-          h-[70px]
+          h-[80px]
           w-[360px]
           items-center
           gap-[12px]
           rounded-[20px]
-          bg-[#F2F4FC]
+          bg-[#F6F8FF]
           px-[15px]
         "
       >
@@ -1155,7 +1297,7 @@ const JourneyPage = ({
         <img
           src={analysisIcon}
           alt=""
-          className="size-[30px]"
+          className="size-[35px]"
         />
 
 
@@ -1182,7 +1324,7 @@ const JourneyPage = ({
           mx-auto
           mt-[38px]
           h-[430px]
-          w-[322px]
+          w-[323px]
         "
         aria-label="산모 기록 다시 보기"
       >
@@ -1199,7 +1341,7 @@ const JourneyPage = ({
                 h-[328px]
                 w-full
                 rounded-[20px]
-                shadow-[0_2px_4px_rgba(0,0,0,0.12)]
+                shadow-[0_4px_4px_rgba(0,0,0,0.25)]
 
                 ${card.top}
                 ${card.background}
@@ -1223,6 +1365,23 @@ const JourneyPage = ({
           )
         )}
 
+        {recordCards.map((card) => (
+          <button
+            key={`${card.id}-action`}
+            type="button"
+            onClick={() => setSelectedRecordId(card.id)}
+            aria-label={`산모의 ${card.title} 기록 보기`}
+            className={`
+              absolute
+              left-0
+              z-20
+              w-full
+              ${card.id === 'pain' ? 'h-[60px]' : card.id === 'mood-sleep' ? 'top-[160px] h-[321px]' : 'h-[53px]'}
+              ${card.id === 'mood-sleep' ? '' : card.top}
+            `}
+          />
+        ))}
+
 
         {/* 폴더 제목 */}
         {recordCards.map(
@@ -1234,10 +1393,10 @@ const JourneyPage = ({
                 absolute
                 left-[29px]
                 z-10
-                text-[16px]
+                text-[20px]
                 font-medium
-                leading-[24px]
-                tracking-[-0.3px]
+                leading-[30px]
+                tracking-[-0.4px]
                 text-white
 
                 ${card.titleTop}
@@ -1268,6 +1427,10 @@ const JourneyPage = ({
           activeKey="journey"
           items={navigationItems}
           onChange={onNavigate}
+          activeBgClass="bg-[#809CFF]"
+          activeIconClass="text-[#F6F8FF]"
+          activeBgClass="bg-[#809CFF]"
+          activeIconClass="text-[#F6F8FF]"
         />
 
       </div>
