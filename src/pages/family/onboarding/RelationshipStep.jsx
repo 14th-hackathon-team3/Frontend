@@ -64,6 +64,7 @@ function RelationshipStep({
             key={option}
             selected={value === option}
             onClick={() => onChange(option)}
+            selectedClassName="bg-[#809CFF] text-gray-50"
           >
             {option}
           </Chip>

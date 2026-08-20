@@ -90,6 +90,7 @@ function FamilyOnboardingPage({ onNavigate = () => {} }) {
           current={step}
           total={3}
           className="mt-[21px]"
+          progressClassName="bg-[#809CFF]"
         />
 
         {/* 현재 Step */}
