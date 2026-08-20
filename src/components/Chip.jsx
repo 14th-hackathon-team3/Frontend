@@ -9,6 +9,7 @@ function Chip({
   variant = 'default',
   onClick,
   className = '',
+  selectedClassName = 'bg-primary text-gray-50',
   ...props
 }) {
   return (
@@ -22,7 +23,7 @@ function Chip({
         font-sans font-medium
         transition-colors
         ${variantStyles[variant]}
-        ${selected ? 'bg-primary text-gray-50' : 'bg-gray-50 text-text-black'}
+        ${selected ? selectedClassName : 'bg-gray-50 text-text-black'}
         ${className}
       `}
       {...props}
