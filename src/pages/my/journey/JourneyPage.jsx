@@ -38,9 +38,12 @@ const formatHours = (hours) => {
   const totalMinutes = Math.round(Number(hours) * 60);
   return `${Math.floor(totalMinutes / 60)}시간 ${totalMinutes % 60}분`;
 };
-const splitExercise = (exercise = '') => {
-  const [type = '', duration = ''] = exercise.split(' / ');
-  return { type, duration };
+const splitExercise = (exercise) => {
+  const value = typeof exercise === 'string' ? exercise.trim() : '';
+  const [type = '', duration = ''] = value.split(' / ');
+  if (duration) return { type, duration };
+  if (/^\d+시간 \d+분$/.test(type)) return { type: '', duration: type };
+  return { type, duration: '' };
 };
 const createRecords = (log, dateKey) => {
   const date = formatRecordDate(dateKey);
@@ -50,7 +53,7 @@ const createRecords = (log, dateKey) => {
     'mood-sleep': { title: '감정/수면', date, sections: [{ label: '감정 상태', values: log.emotion ? [emotionLabels[log.emotion] ?? log.emotion] : [] }, { label: '수면 시간', text: formatHours(log.sleep_hours) }] },
     pain: { title: '통증/수유', date, sections: [{ label: '골반저 증상', values: log.pelvic_floor_symptoms ?? (log.pain_area ? [log.pain_area] : []) }, { label: '증상 심화 정도', text: log.pain_score == null ? '기록 없음' : `${log.pain_score}/5` }, { label: '수유 방식', values: log.breastfeeding ? [feedingLabels[log.breastfeeding] ?? log.breastfeeding] : [] }] },
     skin: { title: '피부/모발', date, sections: [{ label: '피부 상태', text: skinLabels[log.skin_self_score] ?? '기록 없음' }, { label: '피부 증상', values: log.skin_symptom_tags ?? [] }, { label: '모발 상태', text: hairLabels[log.hair_loss_status] ?? '기록 없음' }] },
-    activity: { title: '활동량/메모', date, sections: [{ label: '활동량', text: exercise.duration || '기록 없음' }, { label: '활동 종류', text: exercise.type || log.exercise || '기록 없음' }, { label: '자유 메모', text: log.memo || '기록 없음' }] },
+    activity: { title: '활동량/메모', date, sections: [{ label: '활동량', text: exercise.duration || '기록 없음' }, { label: '활동 종류', text: exercise.type || '기록 없음' }, { label: '자유 메모', text: log.memo || '기록 없음' }] },
   };
 };
 
