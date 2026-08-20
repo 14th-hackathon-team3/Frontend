@@ -1,4 +1,4 @@
-import inviteLogo from '../../../assets/logo2.svg';
+import inviteLogo from '../../../assets/logo1.svg';
 
 const FamilyInvitePage = ({
   motherName = '산모',
@@ -35,7 +35,8 @@ const FamilyInvitePage = ({
           src={inviteLogo}
           alt="초대"
           className="
-            w-[180px]
+            h-[80px]
+            w-[78px]
             object-contain
           "
         />
@@ -44,7 +45,7 @@ const FamilyInvitePage = ({
         <h1
           className="
             mt-[80px]
-            text-[24px]
+            text-[20px]
             font-medium
             leading-[34px]
             text-[#121212]
@@ -59,7 +60,7 @@ const FamilyInvitePage = ({
         <p
           className="
             mt-[15px]
-            text-[16px]
+            text-[12px]
             font-normal
             leading-[24px]
             text-[#666666]
@@ -87,7 +88,7 @@ const FamilyInvitePage = ({
           justify-center
           rounded-[10px]
           bg-[#809CFF]
-          text-[16px]
+          text-[12px]
           font-semibold
           text-white
         "

@@ -1,4 +1,4 @@
-function ProgressBar({ current, total, className = '' }) {
+function ProgressBar({ current, total, className = '', progressClassName = 'bg-primary' }) {
   const progress = Math.min(Math.max((current / total) * 100, 0), 100);
 
   return (
@@ -14,7 +14,7 @@ function ProgressBar({ current, total, className = '' }) {
       aria-valuenow={current}
     >
       <div
-        className="h-full rounded-full bg-primary transition-[width] duration-300"
+        className={`h-full rounded-full transition-[width] duration-300 ${progressClassName}`}
         style={{ width: `${progress}%` }}
       />
     </div>

@@ -1,4 +1,4 @@
-import inviteLogo from '../../../assets/logo2.svg';
+import inviteLogo from '../../../assets/logo1.svg';
 
 const FamilyInviteExpiredPage = () => {
   return (
@@ -31,7 +31,8 @@ const FamilyInviteExpiredPage = () => {
           src={inviteLogo}
           alt=""
           className="
-            w-[180px]
+            h-[80px]
+            w-[78px]
             object-contain
           "
         />
@@ -49,7 +50,7 @@ const FamilyInviteExpiredPage = () => {
         >
           <h1
             className="
-              text-[24px]
+              text-[20px]
               font-medium
               text-[#121212]
             "
@@ -60,7 +61,7 @@ const FamilyInviteExpiredPage = () => {
           <p
             className="
               mt-[21px]
-              text-[16px]
+              text-[12px]
               font-normal
               leading-[24px]
               text-[#666666]

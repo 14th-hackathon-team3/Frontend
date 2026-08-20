@@ -410,7 +410,7 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     {todo.text}
                   </button>
                 )}
-                {todo.role === 'mom' && todo.isPrivate && <PrivateIcon />}
+                {todo.isPrivate && <PrivateIcon />}
                 {activeTab === 'partner' && (
                   <span
                     className="

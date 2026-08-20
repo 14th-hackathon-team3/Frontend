@@ -1,4 +1,4 @@
-function SelectButton({ children, selected = false, onClick, className = '', ...props }) {
+function SelectButton({ children, selected = false, onClick, className = '', selectedClassName = 'bg-primary text-white', ...props }) {
   return (
     <button
       type="button"
@@ -9,7 +9,7 @@ function SelectButton({ children, selected = false, onClick, className = '', ...
         rounded-[20px] p-[10px]
         font-sans text-[16px] font-medium
         transition-colors
-        ${selected ? 'bg-primary text-white' : 'bg-gray-50 text-gray-900'}
+        ${selected ? selectedClassName : 'bg-gray-50 text-gray-900'}
         ${className}
       `}
       {...props}

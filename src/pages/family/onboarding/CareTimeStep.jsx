@@ -57,6 +57,7 @@ function CareTimeStep({
             onClick={() =>
               handleToggle(option.id)
             }
+            selectedClassName="bg-[#809CFF] text-white"
             className="!h-[86px] !text-[16px]"
           >
             {option.label}
