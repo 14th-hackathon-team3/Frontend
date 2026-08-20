@@ -67,7 +67,7 @@ const PartnerIcon = ({ className = '' }) => {
       aria-hidden="true"
     >
       <path
-        d="M1 20V17.2C1 16.6333 1.14583 16.1125 1.4375 15.6375C1.72917 15.1625 2.11667 14.8 2.6 14.55C3.63333 14.0333 4.68333 13.6458 5.75 13.3875C6.81667 13.1292 7.9 13 9 13C10.1 13 11.1833 13.1292 12.25 13.3875C13.3167 13.6458 14.3667 14.0333 15.4 14.55C15.8833 14.8 16.2708 15.1625 16.5625 15.6375C16.8542 16.1125 17 16.6333 17 17.2V20H1ZM19 20V17C19 16.2667 18.7958 15.5625 18.3875 14.8875C17.9792 14.2125 17.4 13.6333 16.65 13.15C17.5 13.25 18.3 13.4208 19.05 13.6625C19.8 13.9042 20.5 14.2 21.15 14.55C21.75 14.8833 22.2083 15.2542 22.525 15.6625C22.8417 16.0708 23 16.5167 23 17V20H19ZM6.175 10.825C5.39167 10.0417 5 9.1 5 8C5 6.9 5.39167 5.95833 6.175 5.175C6.95833 4.39167 7.9 4 9 4C10.1 4 11.0417 4.39167 11.825 5.175C12.6083 5.95833 13 6.9 13 8C13 9.1 12.6083 10.0417 11.825 10.825C11.0417 11.6083 10.1 12 9 12C7.9 12 6.95833 11.6083 6.175 10.825ZM17.825 10.825C17.0417 11.6083 16.1 12 15 12C14.8167 12 14.5833 11.9792 14.3 11.9375C14.0167 11.8958 13.7833 11.85 13.6 11.8C14.05 11.2667 14.3958 10.675 14.6375 10.025C14.8792 9.375 15 8.7 15 8C15 7.3 14.8792 6.625 14.6375 5.975C14.3958 5.325 14.05 4.73333 13.6 4.2C13.8333 4.11667 14.0667 4.0625 14.3 4.0375C14.5333 4.0125 14.7667 4 15 4C16.1 4 17.0417 4.39167 17.825 5.175C18.6083 5.95833 19 6.9 19 8C19 9.1 18.6083 10.0417 17.825 10.825Z"
+        d="M1 20V17.2C1 16.6333 1.14583 16.1125 1.4375 15.6375C1.72917 15.1625 2.11667 14.8 2.6 14.55C3.63333 14.0333 4.68333 13.6458 5.75 13.3875C6.81667 13.1292 7.9 13 9 13C10.1 13 11.1833 13.1292 12.25 13.3875C13.3167 13.6458 14.3667 13.9042 15.4 14.55C15.8833 14.8 16.2708 15.1625 16.5625 15.6375C16.8542 16.1125 17 16.6333 17 17.2V20H1ZM19 20V17C19 16.2667 18.7958 15.5625 18.3875 14.8875C17.9792 14.2125 17.4 13.6333 16.65 13.15C17.5 13.25 18.3 13.4208 19.05 13.6625C19.8 13.9042 20.5 14.2 21.15 14.55C21.75 14.8833 22.2083 15.2542 22.525 15.6625C22.8417 16.0708 23 16.5167 23 17V20H19ZM6.175 10.825C5.39167 10.0417 5 9.1 5 8C5 6.9 5.39167 5.95833 6.175 5.175C6.95833 4.39167 7.9 4 9 4C10.1 4 11.0417 4.39167 11.825 5.175C12.6083 5.95833 13 6.9 13 8C13 9.1 12.6083 10.0417 11.825 10.825C11.0417 11.6083 10.1 12 9 12C7.9 12 6.95833 11.6083 6.175 10.825ZM17.825 10.825C17.0417 11.6083 16.1 12 15 12C14.8167 12 14.5833 11.9792 14.3 11.9375C14.0167 11.8958 13.7833 11.85 13.6 11.8C14.05 11.2667 14.3958 10.675 14.6375 10.025C14.8792 9.375 15 8.7 15 8C15 7.3 14.8792 6.625 14.6375 5.975C14.3958 5.325 14.05 4.73333 13.6 4.2C13.8333 4.11667 14.0667 4.0625 14.3 4.0375C14.5333 4.0125 14.7667 4 15 4C16.1 4 17.0417 4.39167 17.825 5.175C18.6083 5.95833 19 6.9 19 8C19 9.1 18.6083 10.0417 17.825 10.825Z"
         fill="currentColor"
       />
     </svg>
@@ -75,9 +75,18 @@ const PartnerIcon = ({ className = '' }) => {
 };
 
 const PrivateIcon = () => (
-  <span className="relative inline-block h-[20px] w-[20px] shrink-0" aria-hidden="true">
+  <span
+    className="relative inline-block h-[20px] w-[20px] shrink-0"
+    aria-hidden="true"
+  >
     {/* Partner 아이콘 */}
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="absolute inset-0">
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      className="absolute inset-0"
+    >
       <path
         d="M0.833336 16.6666V14.3333C0.833336 13.861 0.954864 13.427 1.19792 13.0312C1.44097 12.6353 1.76389 12.3333 2.16667 12.1249C3.02778 11.6944 3.90278 11.3714 4.79167 11.1562C5.68056 10.9409 6.58334 10.8333 7.5 10.8333C8.41667 10.8333 9.31945 10.9409 10.2083 11.1562C11.0972 11.3714 11.9722 11.6944 12.8333 12.1249C13.2361 12.3333 13.559 12.6353 13.8021 13.0312C14.0451 13.427 14.1667 13.861 14.1667 14.3333V16.6666H0.833336ZM15.8333 16.6666V14.1666C15.8333 13.5555 15.6632 12.9687 15.3229 12.4062C14.9826 11.8437 14.5 11.361 13.875 10.9583C14.5833 11.0416 15.25 11.1839 15.875 11.3853C16.5 11.5867 17.0833 11.8333 17.625 12.1249C18.125 12.4027 18.5069 12.7117 18.7708 13.052C19.0347 13.3923 19.1667 13.7638 19.1667 14.1666V16.6666H15.8333ZM5.14584 9.02075C4.49306 8.36797 4.16667 7.58325 4.16667 6.66659C4.16667 5.74992 4.49306 4.9652 5.14584 4.31242C5.79861 3.65964 6.58334 3.33325 7.5 3.33325C8.41667 3.33325 9.20139 3.65964 9.85417 4.31242C10.5069 4.9652 10.8333 5.74992 10.8333 6.66659C10.8333 7.58325 10.5069 8.36797 9.85417 9.02075C9.20139 9.67353 8.41667 9.99992 7.5 9.99992C6.58334 9.99992 5.79861 9.67353 5.14584 9.02075ZM14.8542 9.02075C14.2014 9.67353 13.4167 9.99992 12.5 9.99992C12.3472 9.99992 12.1528 9.98256 11.9167 9.94783C11.6806 9.91311 11.4861 9.87492 11.3333 9.83325C11.7083 9.38881 11.9965 8.89575 12.1979 8.35409C12.3993 7.81242 12.5 7.24992 12.5 6.66659C12.5 6.08325 12.3993 5.52075 12.1979 4.97909C11.9965 4.43742 11.7083 3.94436 11.3333 3.49992C11.5278 3.43047 11.7222 3.38534 11.9167 3.3645C12.1111 3.34367 12.3056 3.33325 12.5 3.33325C13.4167 3.33325 14.2014 3.65964 14.8542 4.31242C15.5069 4.9652 15.8333 5.74992 15.8333 6.66659C15.8333 7.58325 15.5069 8.36797 14.8542 9.02075Z"
         fill="#C485F8"
@@ -92,8 +101,16 @@ const PrivateIcon = () => (
       fill="none"
       className="absolute left-[1px] top-[1px]"
     >
-      <path d="M0.589256 1.70044L14.4781 15.5893" stroke="#C485F8" strokeWidth="1.66667" />
-      <path d="M1.70037 0.589355L15.5893 14.4782" stroke="white" strokeWidth="1.66667" />
+      <path
+        d="M0.589256 1.70044L14.4781 15.5893"
+        stroke="#C485F8"
+        strokeWidth="1.66667"
+      />
+      <path
+        d="M1.70037 0.589355L15.5893 14.4782"
+        stroke="white"
+        strokeWidth="1.66667"
+      />
     </svg>
   </span>
 );
@@ -102,18 +119,35 @@ const calendarDays = ['월', '화', '수', '목', '금', '토', '일'];
 
 const TodoPage = ({ onNavigate = () => {} }) => {
   const [activeTab, setActiveTab] = useState('my');
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+
+  // 현재 날짜를 state로 관리
+  // 자정이 지나면 이 값을 새 날짜로 변경해서
+  // 캘린더의 "오늘" 표시도 함께 갱신한다.
+  const [today, setToday] = useState(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date;
+  });
+
   const todayWeekday = (today.getDay() + 6) % 7;
-  const [selectedDayIndex, setSelectedDayIndex] = useState(todayWeekday);
+
+  const [selectedDayIndex, setSelectedDayIndex] = useState(
+    todayWeekday,
+  );
+
   const [weekOffset, setWeekOffset] = useState(0);
+
   const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - todayWeekday + (weekOffset * 7));
+  weekStart.setDate(
+    today.getDate() - todayWeekday + (weekOffset * 7),
+  );
+
   const weekDates = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(weekStart);
     date.setDate(weekStart.getDate() + index);
     return date;
   });
+
   const [selectedTodo, setSelectedTodo] = useState(null);
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editText, setEditText] = useState('');
@@ -122,20 +156,113 @@ const TodoPage = ({ onNavigate = () => {} }) => {
 
   useEffect(() => {
     let isActive = true;
-    careApi.getTodayTodos().then((data) => {
-      if (!isActive) return;
-      const mapTodo = (todo, role) => ({ id: todo.id, text: todo.content, reason: todo.reason, role, assignee: todo.assignee_name || '담당자', completed: Boolean(todo.completed_at), isPrivate: todo.visibility === 'private' });
-      setTodos([...(data.mother_todos ?? []).map((todo) => mapTodo(todo, 'mom')), ...(data.family_todos ?? []).map((todo) => mapTodo(todo, 'partner'))]);
-    }).catch(() => { if (isActive) setTodos([]); });
-    return () => { isActive = false; };
+
+    const mapTodo = (todo, role) => ({
+      id: todo.id,
+      text: todo.content,
+      reason: todo.reason,
+      role,
+      assignee: todo.assignee_name || '담당자',
+      completed: Boolean(todo.completed_at),
+      isPrivate: todo.visibility === 'private',
+    });
+
+    const loadTodayTodos = async () => {
+      try {
+        const data = await careApi.getTodayTodos();
+
+        if (!isActive) return;
+
+        setTodos([
+          ...(data.mother_todos ?? []).map((todo) =>
+            mapTodo(todo, 'mom'),
+          ),
+          ...(data.family_todos ?? []).map((todo) =>
+            mapTodo(todo, 'partner'),
+          ),
+        ]);
+      } catch (error) {
+        if (!isActive) return;
+
+        console.error('오늘의 할 일 조회 실패:', error);
+        setTodos([]);
+      }
+    };
+
+    // 페이지 최초 진입 시 오늘 Todo 조회
+    loadTodayTodos();
+
+    // 현재 날짜 문자열 저장
+    // 브라우저 로컬 시간 기준
+    let currentDate = new Date().toDateString();
+
+    // 페이지를 켜둔 채 자정이 지나가는 경우를 감지
+    const interval = setInterval(() => {
+      const now = new Date();
+      const newDate = now.toDateString();
+
+      if (newDate !== currentDate) {
+        currentDate = newDate;
+
+        // 새로운 날짜 기준으로 today 갱신
+        const newToday = new Date(now);
+        newToday.setHours(0, 0, 0, 0);
+
+        setToday(newToday);
+
+        // 새로운 주/오늘 위치로 돌아가기
+        const newTodayWeekday =
+          (newToday.getDay() + 6) % 7;
+
+        setSelectedDayIndex(newTodayWeekday);
+        setWeekOffset(0);
+
+        // 이전 날짜 Todo 즉시 제거
+        setTodos([]);
+
+        // 열려 있는 상세/수정 상태도 제거
+        setSelectedTodo(null);
+        setEditingTodoId(null);
+        setEditText('');
+
+        // 새 날짜의 Todo 조회
+        loadTodayTodos();
+      }
+    }, 60 * 1000);
+
+    return () => {
+      isActive = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const toggleTodo = async (id) => {
     const previous = todos;
-    setTodos((items) => items.map((todo) => todo.id === id ? { ...todo, completed: !todo.completed } : todo));
+
+    setTodos((items) =>
+      items.map((todo) =>
+        todo.id === id
+          ? {
+              ...todo,
+              completed: !todo.completed,
+            }
+          : todo,
+      ),
+    );
+
     try {
       const updated = await careApi.checkTodo(id);
-      setTodos((items) => items.map((todo) => todo.id === id ? { ...todo, completed: Boolean(updated.completed_at) } : todo));
+
+      setTodos((items) =>
+        items.map((todo) =>
+          todo.id === id
+            ? {
+                ...todo,
+                completed: Boolean(updated.completed_at),
+              }
+            : todo,
+        ),
+      );
     } catch {
       setTodos(previous);
     }
@@ -143,27 +270,73 @@ const TodoPage = ({ onNavigate = () => {} }) => {
 
   const saveTodoText = async (id, text) => {
     const nextText = text.trim();
+
     if (!nextText) return;
-    const updated = await careApi.updateTodo(id, { content: nextText });
-    setTodos((items) => items.map((todo) => todo.id === id ? { ...todo, text: updated.content ?? nextText } : todo));
+
+    const updated = await careApi.updateTodo(id, {
+      content: nextText,
+    });
+
+    setTodos((items) =>
+      items.map((todo) =>
+        todo.id === id
+          ? {
+              ...todo,
+              text: updated.content ?? nextText,
+            }
+          : todo,
+      ),
+    );
   };
 
   const deleteTodo = async (id) => {
     await careApi.deleteTodo(id);
-    setTodos((items) => items.filter((todo) => todo.id !== id));
+
+    setTodos((items) =>
+      items.filter((todo) => todo.id !== id),
+    );
   };
 
   const toggleVisibility = async (todo) => {
-    const visibility = todo.isPrivate ? 'public' : 'private';
-    await careApi.updateTodoVisibility(todo.id, { visibility });
-    setTodos((items) => items.map((item) => item.id === todo.id ? { ...item, isPrivate: visibility === 'private' } : item));
-    setSelectedTodo((current) => current ? { ...current, isPrivate: visibility === 'private' } : current);
+    const visibility = todo.isPrivate
+      ? 'public'
+      : 'private';
+
+    await careApi.updateTodoVisibility(todo.id, {
+      visibility,
+    });
+
+    setTodos((items) =>
+      items.map((item) =>
+        item.id === todo.id
+          ? {
+              ...item,
+              isPrivate: visibility === 'private',
+            }
+          : item,
+      ),
+    );
+
+    setSelectedTodo((current) =>
+      current
+        ? {
+            ...current,
+            isPrivate: visibility === 'private',
+          }
+        : current,
+    );
   };
 
   const visibleTodos = todos.filter((todo) =>
-    activeTab === 'my' ? todo.role === 'mom' : todo.role === 'partner',
+    activeTab === 'my'
+      ? todo.role === 'mom'
+      : todo.role === 'partner',
   );
-  const sortedTodos = [...visibleTodos].sort((a, b) => Number(a.completed) - Number(b.completed));
+
+  const sortedTodos = [...visibleTodos].sort(
+    (a, b) =>
+      Number(a.completed) - Number(b.completed),
+  );
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-[402px] bg-primary-light">
@@ -194,18 +367,43 @@ const TodoPage = ({ onNavigate = () => {} }) => {
               {weekDates[0].getMonth() + 1}월
             </p>
 
-            <button type="button" aria-label="이전 주" onClick={() => setWeekOffset((offset) => offset - 1)} className="absolute left-2 top-[54px] text-[22px] text-gray-900">‹</button>
-            <button type="button" aria-label="다음 주" onClick={() => setWeekOffset((offset) => offset + 1)} className="absolute right-2 top-[54px] text-[22px] text-gray-900">›</button>
+            <button
+              type="button"
+              aria-label="이전 주"
+              onClick={() =>
+                setWeekOffset((offset) => offset - 1)
+              }
+              className="absolute left-2 top-[54px] text-[22px] text-gray-900"
+            >
+              ‹
+            </button>
+
+            <button
+              type="button"
+              aria-label="다음 주"
+              onClick={() =>
+                setWeekOffset((offset) => offset + 1)
+              }
+              className="absolute right-2 top-[54px] text-[22px] text-gray-900"
+            >
+              ›
+            </button>
+
             <div className="flex h-[61px] w-[305px] items-center gap-[10px]">
               {weekDates.map((date, index) => {
-                const isSelected = selectedDayIndex === index;
-                const isToday = date.getTime() === today.getTime();
+                const isSelected =
+                  selectedDayIndex === index;
+
+                const isToday =
+                  date.getTime() === today.getTime();
 
                 return (
                   <button
                     key={date.toISOString()}
                     type="button"
-                    onClick={() => setSelectedDayIndex(index)}
+                    onClick={() =>
+                      setSelectedDayIndex(index)
+                    }
                     aria-pressed={isSelected}
                     aria-label={`${date.getMonth() + 1}월 ${date.getDate()}일`}
                     className="
@@ -218,7 +416,11 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                         flex h-[35px] w-[35px]
                         items-center justify-center rounded-full
                         text-[20px] font-medium tracking-[-1px]
-                        ${isSelected ? 'bg-primary text-gray-50' : 'text-gray-900'}
+                        ${
+                          isSelected
+                            ? 'bg-primary text-gray-50'
+                            : 'text-gray-900'
+                        }
                       `}
                     >
                       {date.getDate()}
@@ -227,10 +429,16 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     <span
                       className={`
                         text-[12px] tracking-[-0.6px]
-                        ${isToday ? 'font-bold text-primary' : 'font-medium text-gray-900'}
+                        ${
+                          isToday
+                            ? 'font-bold text-primary'
+                            : 'font-medium text-gray-900'
+                        }
                       `}
                     >
-                      {isToday ? '오늘' : calendarDays[index]}
+                      {isToday
+                        ? '오늘'
+                        : calendarDays[index]}
                     </span>
                   </button>
                 );
@@ -251,7 +459,11 @@ const TodoPage = ({ onNavigate = () => {} }) => {
           "
           aria-label="AI 추천 할 일 보기"
         >
-          <img src={todoStarIcon} alt="" className="h-[35px] w-[35px] shrink-0" />
+          <img
+            src={todoStarIcon}
+            alt=""
+            className="h-[35px] w-[35px] shrink-0"
+          />
 
           <p
             className="
@@ -263,7 +475,8 @@ const TodoPage = ({ onNavigate = () => {} }) => {
           >
             요 며칠 수면 시간이 줄고 있어요. 이대로 이어지면
             <br />
-            지칠 수 있으니, 오늘은 휴식 위주의 할 일을 준비했어요.
+            지칠 수 있으니, 오늘은 휴식 위주의 할 일을
+            준비했어요.
           </p>
 
           <span
@@ -296,20 +509,32 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 flex h-[50px] w-[160px] shrink-0
                 items-center justify-center gap-[10px]
                 rounded-[20px]
-                ${activeTab === 'my' ? 'bg-primary' : 'bg-primary-background'}
+                ${
+                  activeTab === 'my'
+                    ? 'bg-primary'
+                    : 'bg-primary-background'
+                }
               `}
             >
               <MomIcon
                 className={`
-                    h-[16px] w-[16px]
-                    ${activeTab === 'my' ? 'text-primary-background' : 'text-primary'}
+                  h-[16px] w-[16px]
+                  ${
+                    activeTab === 'my'
+                      ? 'text-primary-background'
+                      : 'text-primary'
+                  }
                 `}
               />
 
               <span
                 className={`
                   text-[16px] font-medium tracking-[0.48px]
-                  ${activeTab === 'my' ? 'text-primary-background' : 'text-primary'}
+                  ${
+                    activeTab === 'my'
+                      ? 'text-primary-background'
+                      : 'text-primary'
+                  }
                 `}
               >
                 Mom
@@ -318,26 +543,42 @@ const TodoPage = ({ onNavigate = () => {} }) => {
 
             <button
               type="button"
-              onClick={() => setActiveTab('partner')}
-              aria-pressed={activeTab === 'partner'}
+              onClick={() =>
+                setActiveTab('partner')
+              }
+              aria-pressed={
+                activeTab === 'partner'
+              }
               className={`
                 flex h-[50px] w-[160px] shrink-0
                 items-center justify-center gap-[10px]
                 rounded-[20px]
-                ${activeTab === 'partner' ? 'bg-primary' : 'bg-primary-background'}
+                ${
+                  activeTab === 'partner'
+                    ? 'bg-primary'
+                    : 'bg-primary-background'
+                }
               `}
             >
               <PartnerIcon
                 className={`
-                    h-[24px] w-[24px]
-                    ${activeTab === 'partner' ? 'text-primary-background' : 'text-primary'}
+                  h-[24px] w-[24px]
+                  ${
+                    activeTab === 'partner'
+                      ? 'text-primary-background'
+                      : 'text-primary'
+                  }
                 `}
               />
 
               <span
                 className={`
                   text-[16px] font-medium tracking-[0.48px]
-                  ${activeTab === 'partner' ? 'text-primary-background' : 'text-primary'}
+                  ${
+                    activeTab === 'partner'
+                      ? 'text-primary-background'
+                      : 'text-primary'
+                  }
                 `}
               >
                 Partner
@@ -348,20 +589,40 @@ const TodoPage = ({ onNavigate = () => {} }) => {
           {/* TODO 리스트 */}
           <div className="ml-[27px] mt-[33px] flex h-[309px] w-[306px] flex-col items-start gap-[15px] overflow-y-auto pr-[10px]">
             {sortedTodos.map((todo) => (
-              <div key={todo.id} className="flex min-h-[19.5px] w-full shrink-0 items-start gap-[15px]">
+              <div
+                key={todo.id}
+                className="flex min-h-[19.5px] w-full shrink-0 items-start gap-[15px]"
+              >
                 {' '}
+
                 <button
                   type="button"
-                  onClick={() => toggleTodo(todo.id)}
+                  onClick={() =>
+                    toggleTodo(todo.id)
+                  }
                   className={`
-                        mt-[2px] flex h-[19.5px] w-[19.5px] shrink-0
-                        items-center justify-center rounded-[4.5px]
-                        ${todo.completed ? 'bg-primary' : 'bg-[#D9D9D9]'}
-                    `}
-                  aria-label={todo.completed ? '할 일 완료 취소' : '할 일 완료'}
+                    mt-[2px] flex h-[19.5px] w-[19.5px] shrink-0
+                    items-center justify-center rounded-[4.5px]
+                    ${
+                      todo.completed
+                        ? 'bg-primary'
+                        : 'bg-[#D9D9D9]'
+                    }
+                  `}
+                  aria-label={
+                    todo.completed
+                      ? '할 일 완료 취소'
+                      : '할 일 완료'
+                  }
                 >
                   {todo.completed && (
-                    <svg width="13" height="10" viewBox="0 0 13 10" fill="none" aria-hidden="true">
+                    <svg
+                      width="13"
+                      height="10"
+                      viewBox="0 0 13 10"
+                      fill="none"
+                      aria-hidden="true"
+                    >
                       <path
                         d="M1 5L4.5 8.5L12 1"
                         stroke="white"
@@ -372,46 +633,70 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                     </svg>
                   )}
                 </button>
+
                 {editingTodoId === todo.id ? (
                   <input
                     type="text"
                     value={editText}
                     autoFocus
-                    onChange={(e) => setEditText(e.target.value)}
+                    onChange={(e) =>
+                      setEditText(
+                        e.target.value,
+                      )
+                    }
                     onBlur={async () => {
                       try {
-                        await saveTodoText(todo.id, editText);
+                        await saveTodoText(
+                          todo.id,
+                          editText,
+                        );
                       } catch {
                         // 기존 문구를 유지하고 다음 편집을 허용한다.
                       }
+
                       setEditingTodoId(null);
                       setEditText('');
                     }}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (
+                        e.key === 'Enter'
+                      ) {
                         e.currentTarget.blur();
                       }
                     }}
                     className="
-                        min-w-0 flex-1 bg-transparent
-                        text-[16px] font-normal leading-[22px] text-text-black
-                        outline-none
-                        "
+                      min-w-0 flex-1 bg-transparent
+                      text-[16px] font-normal leading-[22px] text-text-black
+                      outline-none
+                    "
                   />
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setSelectedTodo(todo)}
+                    onClick={() =>
+                      setSelectedTodo(todo)
+                    }
                     className={`
-                        min-w-0 flex-1 break-words text-left text-[16px] font-normal leading-[22px] text-text-black
-                        ${todo.completed ? 'line-through' : ''}
+                      min-w-0 flex-1 break-words
+                      text-left text-[16px] font-normal
+                      leading-[22px] text-text-black
+                      ${
+                        todo.completed
+                          ? 'line-through'
+                          : ''
+                      }
                     `}
                   >
                     {todo.text}
                   </button>
                 )}
-                {todo.isPrivate && <PrivateIcon />}
-                {activeTab === 'partner' && (
+
+                {todo.isPrivate && (
+                  <PrivateIcon />
+                )}
+
+                {activeTab ===
+                  'partner' && (
                   <span
                     className="
                       ml-auto shrink-0
@@ -434,18 +719,20 @@ const TodoPage = ({ onNavigate = () => {} }) => {
           <button
             type="button"
             aria-label="상세 닫기"
-            onClick={() => setSelectedTodo(null)}
+            onClick={() =>
+              setSelectedTodo(null)
+            }
             className="fixed inset-0 z-20 bg-black/20"
           />
 
           {/* TODO 상세 바텀시트 */}
           <section
             className="
-                fixed bottom-0 left-1/2 z-30
-                w-full max-w-[402px]
-                -translate-x-1/2
-                rounded-t-[20px] bg-white
-                px-[24px] pb-[32px] pt-[10px]
+              fixed bottom-0 left-1/2 z-30
+              w-full max-w-[402px]
+              -translate-x-1/2
+              rounded-t-[20px] bg-white
+              px-[24px] pb-[32px] pt-[10px]
             "
             aria-label="할 일 상세"
           >
@@ -464,13 +751,23 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 items-center gap-[18px]
                 rounded-[20px] bg-primary-background
                 px-[28px]
-                "
+              "
             >
-              <img src={todoStarIcon} alt="" className="h-[35px] w-[35px] shrink-0" />
+              <img
+                src={todoStarIcon}
+                alt=""
+                className="h-[35px] w-[35px] shrink-0"
+              />
 
               <div>
-                <span className="text-[14px] font-medium text-primary">위 할 일 추천 이유</span>
-                <p className="text-[14px] font-medium text-primary">{selectedTodo.reason || '추천 이유가 없습니다.'}</p>
+                <span className="text-[14px] font-medium text-primary">
+                  위 할 일 추천 이유
+                </span>
+
+                <p className="text-[14px] font-medium text-primary">
+                  {selectedTodo.reason ||
+                    '추천 이유가 없습니다.'}
+                </p>
               </div>
             </div>
 
@@ -479,23 +776,34 @@ const TodoPage = ({ onNavigate = () => {} }) => {
               <button
                 type="button"
                 onClick={() => {
-                  setEditingTodoId(selectedTodo.id);
-                  setEditText(selectedTodo.text);
+                  setEditingTodoId(
+                    selectedTodo.id,
+                  );
+                  setEditText(
+                    selectedTodo.text,
+                  );
                   setSelectedTodo(null);
                 }}
                 className="
-                    flex h-[80px] flex-1
-                    flex-col items-center justify-center gap-[8px]
-                    rounded-[10px] bg-[#E0E0E0]
-                    text-[16px] font-normal text-text-black
+                  flex h-[80px] flex-1
+                  flex-col items-center justify-center gap-[8px]
+                  rounded-[10px] bg-[#E0E0E0]
+                  text-[16px] font-normal text-text-black
                 "
               >
-                <svg width="19" height="19" viewBox="0 0 19 19" fill="none" aria-hidden="true">
+                <svg
+                  width="19"
+                  height="19"
+                  viewBox="0 0 19 19"
+                  fill="none"
+                  aria-hidden="true"
+                >
                   <path
                     d="M3.90625 14.8438H5.01953L12.6562 7.20703L11.543 6.09375L3.90625 13.7305V14.8438ZM2.34375 16.4062V13.0859L12.6562 2.79297C12.8125 2.64974 12.985 2.53906 13.1738 2.46094C13.3626 2.38281 13.5612 2.34375 13.7695 2.34375C13.9779 2.34375 14.1797 2.38281 14.375 2.46094C14.5703 2.53906 14.7396 2.65625 14.8828 2.8125L15.957 3.90625C16.1133 4.04948 16.2272 4.21875 16.2988 4.41406C16.3704 4.60938 16.4062 4.80469 16.4062 5C16.4062 5.20833 16.3704 5.4069 16.2988 5.5957C16.2272 5.78451 16.1133 5.95703 15.957 6.11328L5.66406 16.4062H2.34375ZM12.0898 6.66016L11.543 6.09375L12.6562 7.20703L12.0898 6.66016Z"
                     fill="#2260FF"
                   />
                 </svg>
+
                 수정하기
               </button>
 
@@ -503,25 +811,34 @@ const TodoPage = ({ onNavigate = () => {} }) => {
                 type="button"
                 onClick={async () => {
                   try {
-                    await deleteTodo(selectedTodo.id);
+                    await deleteTodo(
+                      selectedTodo.id,
+                    );
                     setSelectedTodo(null);
                   } catch {
                     // 삭제 실패 시 상세 화면과 기존 항목을 유지한다.
                   }
                 }}
                 className="
-                    flex h-[80px] flex-1
-                    flex-col items-center justify-center gap-[8px]
-                    rounded-[10px] bg-[#E0E0E0]
-                    text-[16px] font-normal text-text-black
+                  flex h-[80px] flex-1
+                  flex-col items-center justify-center gap-[8px]
+                  rounded-[10px] bg-[#E0E0E0]
+                  text-[16px] font-normal text-text-black
                 "
               >
-                <svg width="19" height="19" viewBox="0 0 19 19" fill="none" aria-hidden="true">
+                <svg
+                  width="19"
+                  height="19"
+                  viewBox="0 0 19 19"
+                  fill="none"
+                  aria-hidden="true"
+                >
                   <path
                     d="M4.375 18C3.825 18 3.35417 17.8042 2.9625 17.4125C2.57083 17.0208 2.375 16.55 2.375 16V3H1.375V1H6.375V0H12.375V1H17.375V3H16.375V16C16.375 16.55 16.1792 17.0208 15.7875 17.4125C15.3958 17.8042 14.925 18 14.375 18H4.375ZM14.375 3H4.375V16H14.375V3ZM6.375 14H8.375V5H6.375V14ZM10.375 14H12.375V5H10.375V14Z"
                     fill="#EB2B2B"
                   />
                 </svg>
+
                 삭제하기
               </button>
             </div>
@@ -531,25 +848,38 @@ const TodoPage = ({ onNavigate = () => {} }) => {
               type="button"
               onClick={async () => {
                 try {
-                  await toggleVisibility(selectedTodo);
+                  await toggleVisibility(
+                    selectedTodo,
+                  );
                 } catch {
                   // 변경 실패 시 현재 공개 상태를 유지한다.
                 }
               }}
               className="
-                    mt-[24px] flex items-center gap-[12px]
-                    text-[16px] font-normal text-text-black
-                "
+                mt-[24px] flex items-center gap-[12px]
+                text-[16px] font-normal text-text-black
+              "
             >
-              <img src={hiddenInfoIcon} alt="" className="h-[24px] w-[24px] shrink-0" />
-              {selectedTodo.isPrivate ? '보호자에게 공개하기' : '보호자에게 비공개 하기'}
+              <img
+                src={hiddenInfoIcon}
+                alt=""
+                className="h-[24px] w-[24px] shrink-0"
+              />
+
+              {selectedTodo.isPrivate
+                ? '보호자에게 공개하기'
+                : '보호자에게 비공개 하기'}
             </button>
           </section>
         </>
       )}
 
       <div className="fixed bottom-[22px] left-1/2 z-10 -translate-x-1/2">
-        <BottomNavigation activeKey="todo" items={navigationItems} onChange={onNavigate} />
+        <BottomNavigation
+          activeKey="todo"
+          items={navigationItems}
+          onChange={onNavigate}
+        />
       </div>
     </main>
   );
